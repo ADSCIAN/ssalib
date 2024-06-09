@@ -16,6 +16,6 @@ setup(
         'pandas',
     ],
     extras_require={
-        'full': ['scipy', 'sklearn', 'dask']
+        'full': ['scipy', 'scikit-learn', 'dask']
     }
 )
