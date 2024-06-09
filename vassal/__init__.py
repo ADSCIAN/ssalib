@@ -1,0 +1,1 @@
+from .ssa import SingularSpectrumAnalysis
