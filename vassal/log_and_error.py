@@ -1,5 +1,5 @@
-from functools import wraps
 import logging
+from functools import wraps
 from typing import Any, Callable, TypeVar
 
 R = TypeVar('R')
