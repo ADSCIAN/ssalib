@@ -1,9 +1,92 @@
+"""Singular Value Decomposition (SVD) Solver Handler"""
+
+# Author: Damien Delforge <damien.delforge@adscian.be>
+#         Alice Alonso <alice.alonso@adscian.be>
+#
+# License: BSD 3 clause
+
+from typing import Any
+
 import numpy as np
+from scipy.linalg import svd as scipy_svd
+from scipy.sparse.linalg import svds as scipy_svds
+
 from vassal.log_and_error import ignored_argument_warning
+
 SVDTuple = tuple[np.ndarray, np.ndarray, np.ndarray]
 
+
 class SVDHandler:
-    _method_map = {
+    """Singular Value Decomposition (SVD) Solver Handler
+
+    The SVDHandler class is used to solve the singular value decomposition
+    while chosing among various pre-existing svd solvers and algorithms
+    implemented in Python scientific packages.
+
+    Parameters
+    ----------
+    svd_solver : str
+        Name of the svd solver to use. Valid names are:
+        - 'np_svd': wrapper to the `numpy.linalg.svd` method.
+        - 'sc_svd': wrapper to the `scipy.linalg.svd` method.
+        - 'sc_svds' : wrapper to the `scipy.sparse.linalg.svds` method.
+        - 'sk_rsvd' : wrapper to the `sklearn.utils.extmath.randomized_svd`
+            method.
+        - 'da_svd' : wrapper to the `dask.array.linalg.svd` method.
+        - 'da_csvd' : wrapper to the `dask.array.linalg.svd_compressed` method.
+
+    Attributes
+    ----------
+    eigentriples : SVDTuple
+        Tuple of singular values (s) and left and right eigenvectors (u, vt)
+        returned as (u, s, vt).
+    eigenvalues : np.ndarray
+        Squared singular values.
+    n_components : int
+        Number of components defined by the number singular values.
+    svd_solver: str
+        The name of the user-selected SVD solver.
+    s_ : np.ndarray | None
+        1D array of singular values or None prior to the call of `svd` method.
+    u_ : np.ndarray | None
+        2D array of right eigenvectors or None prior to the call of `svd`
+        method.
+    vt_ : np.ndarray | None
+        2D array of left eigenvectors or None prior to the call of `svd`
+        method.
+
+    Examples
+    --------
+
+    By default, SVDHandler is used to solve the singular value decomposition
+    relying on the 'np_svd' solver.
+
+    >>> A = np.array([[1, 2, 3], [4, 5, 6]])
+    >>> svdh = SVDHandler()
+    >>> u, s, vt = svdh.svd(A) # decomposition
+    >>> u @ np.diag(s) @ vt[:len(s)] # reconstruction
+    array([[1., 2., 3.],
+           [4., 5., 6.]])
+
+    Users may pass additional keyword arguments based on the underlying svd
+    methods, in this case, `np.linalg.svd`.
+
+    >>> u, s, vt = svdh.svd(A, full_matrices=False) # decomposition
+    >>> u @ np.diag(s) @ vt # reconstruction
+    array([[1., 2., 3.],
+           [4., 5., 6.]])
+
+    For truncated svd algorithms, the `svd` method accept a 'n_components'
+    parameter.
+
+    >>> svdh = SVDHandler(svd_solver='sk_rsvd') # randomized svd
+    >>> u, s, vt = svdh.svd(A, n_components=1) # decomposition
+    >>> u @ np.diag(s) @ vt # reconstruction
+    array([[1.57454629, 2.08011388, 2.58568148],
+           [3.75936076, 4.96644562, 6.17353048]])
+
+    """
+    _solver_map = {
         'np_svd': "_numpy_svd",
         'sc_svd': "_scipy_svd",
         'sc_ssvd': "_scipy_sparse_svd",
@@ -14,130 +97,212 @@ class SVDHandler:
 
     def __init__(
             self,
-            svd_method: str
+            svd_solver: str = 'np_svd'
     ):
-        self.svd_method = svd_method
-        self._u = None
-        self._s = None
-        self._v = None
-        if svd_method not in self._method_map:
-            raise ValueError("Invalid parameter 'svd_method'. Valid methods are"
-                             ": " + ", ".join(self._method_map.keys()))
+        self.svd_solver = svd_solver
+        self.u_ = None
+        self.s_ = None
+        self.vt_ = None
+        if svd_solver not in self._solver_map:
+            raise ValueError("Invalid parameter 'svd_solver'. Valid methods are"
+                             ": " + ", ".join(self._solver_map.keys()))
 
-    def _svd(
+    def __repr__(self):
+        return f"SVDHandler(svd_solver={self.svd_solver})"
+
+    def __str__(self):
+        return self.__repr__()
+
+    def svd(
             self,
             matrix: np.ndarray,
-            n_components: int | None,
+            n_components: int | None = None,
             **kwargs
     ) -> SVDTuple:
-        method_name = self._method_map[self.svd_method]
+        """Perform Singular Value Decomposition (SVD)
+
+        Parameters
+        ----------
+        matrix : np.ndarray
+            Matrix to be decomposed.
+        n_components : int | None
+            Number of singular values and vectors to extract. Only used for
+            truncated svd computation, e.g., scipy sparse svd, sklearn
+            randomized svd, or dask compressed svd. Default is None.
+
+        Returns
+        -------
+        u, s, vt : SVDTuple
+            Eigenvectors and singular values.
+
+        See Also
+        --------
+        `SVDHandler`: The `SVDHandler` class is designed to handle SVD
+        decomposition with the `svd` method as a wrapper to pre-existing svd
+        implementations in Python scientific libraries, depending on the
+        `svd_solver` parameter.
+
+        """
+        method_name = self._solver_map[self.svd_solver]
         method = getattr(self, method_name)
         kwargs['n_components'] = n_components
         u, s, v = method(matrix, **kwargs)
-        self._u, self._s, self._v = u, s, v
+        self.u_, self.s_, self.vt_ = u, s, v
         return u, s, v
 
     @staticmethod
     @ignored_argument_warning('n_components')
     def _numpy_svd(
             matrix: np.ndarray,
-            **kwargs
+            full_matrices: bool = True,
+            compute_uv: bool = True,
+            hermitian: bool = False,
+            **kwargs: Any
     ) -> SVDTuple:
-        u, s, v = np.linalg.svd(matrix, full_matrices=True, compute_uv=True,
-                                hermitian=False)
-        return u, s, v
+        """numpy svd wrapper."""
+        u, s, vt = np.linalg.svd(
+            matrix,
+            full_matrices=full_matrices,
+            compute_uv=compute_uv,
+            hermitian=hermitian,
+            **kwargs
+        )
+
+        return u, s, vt
 
     @staticmethod
     @ignored_argument_warning('n_components')
     def _scipy_svd(
             matrix: np.ndarray,
+            check_finite: bool = False,
+            compute_uv: bool = True,
             lapack_driver: str = 'gesdd',
-            **kwargs
+            **kwargs: Any
     ) -> SVDTuple:
-        try:
-            from scipy.linalg import svd as sc_svd
-        except ImportError as e:
-            raise ImportError(
-                "Cannot import svd from scipy.linalg. "
-                "Ensure that SciPy is installed.") from e
-        u, s, v = sc_svd(matrix, check_finite=False, compute_uv=True,
-                         lapack_driver=lapack_driver)
-        return u, s, v
+        """scipy svd wrapper."""
+        u, s, vt = scipy_svd(
+            matrix,
+            check_finite=check_finite,
+            compute_uv=compute_uv,
+            lapack_driver=lapack_driver,
+            **kwargs
+        )
+        return u, s, vt
 
     @staticmethod
     def _scipy_sparse_svd(
             matrix: np.ndarray,
             n_components: int,
-            **kwargs
+            return_singular_vectors: bool = True,
+            **kwargs: Any
     ) -> SVDTuple:
-        try:
-            from scipy.sparse.linalg import svds
-        except ImportError as e:
-            raise ImportError(
-                "Cannot import svds from scipy.sparse.linalg. "
-                "Ensure that SciPy is installed.") from e
-        u, s, v = svds(matrix, k=n_components, return_singular_vectors=True,
-                       **kwargs)
+        """scipy sparse svd wrapper."""
+        u, s, vt = scipy_svds(
+            matrix,
+            k=n_components,
+            return_singular_vectors=return_singular_vectors,
+            **kwargs
+        )
+
         # Sort the singular values and reorder the singular vectors
         sorted_indices = np.argsort(s)[::-1]
         s_sorted = s[sorted_indices]
         u_sorted = u[:, sorted_indices]
-        v_sorted = v[sorted_indices, :]
-        return u_sorted, s_sorted, v_sorted
+        vt_sorted = vt[sorted_indices, :]
+
+        return u_sorted, s_sorted, vt_sorted
 
     @staticmethod
     def _sklearn_randomized_svd(
             matrix: np.ndarray,
             n_components: int,
-            **kwargs
+            **kwargs: Any
     ) -> SVDTuple:
+        """sklearn randomized svd wrapper."""
         try:
             from sklearn.utils.extmath import randomized_svd
         except ImportError as e:
             raise ImportError(
                 "Cannot import randomized_svd from sklearn. "
                 "Ensure that scikit-learn is installed.") from e
-        u, s, v = randomized_svd(matrix, n_components, **kwargs)
-        return u, s, v
+
+        u, s, vt = randomized_svd(
+            matrix,
+            n_components,
+            **kwargs
+        )
+
+        return u, s, vt
 
     @staticmethod
     @ignored_argument_warning('n_components')
     def _dask_svd(
             matrix: np.ndarray,
             coerce_signs: bool = True,
-            **kwargs
+            **kwargs: Any
     ) -> SVDTuple:
-        try:
-            import dask.array as da
-        except ImportError as e:
-            raise ImportError(
-                "Optional dependency 'dask' is not installed.") from e  # TODO harmonize
-        u, s, v = da.linalg.svd(da.array(matrix), coerce_signs=coerce_signs)
-        return np.array(u), np.array(s), np.array(v)
-
-    @staticmethod
-    def _dask_compressed_svd(
-            matrix: np.ndarray,
-            n_components: int,
-            **kwargs
-    ) -> SVDTuple:
+        """dask svd wrapper."""
         try:
             import dask.array as da
         except ImportError as e:
             raise ImportError(
                 "Optional dependency 'dask' is not installed.") from e
-        u, s, v = da.linalg.svd_compressed(da.array(matrix), n_components,
-                                           **kwargs)
-        return np.array(u), np.array(s), np.array(v)
+
+        u, s, vt = da.linalg.svd(
+            da.array(matrix),
+            coerce_signs=coerce_signs,
+            **kwargs
+        )
+
+        return np.array(u), np.array(s), np.array(vt)
+
+    @staticmethod
+    def _dask_compressed_svd(
+            matrix: np.ndarray,
+            n_components: int,
+            **kwargs: Any
+    ) -> SVDTuple:
+        """dask compressed svd wrapper."""
+        try:
+            import dask.array as da
+        except ImportError as e:
+            raise ImportError(
+                "Optional dependency 'dask' is not installed."
+            ) from e
+
+        u, s, vt = da.linalg.svd_compressed(
+            da.array(matrix),
+            n_components,
+            **kwargs
+        )
+
+        return np.array(u), np.array(s), np.array(vt)
+
+    @property
+    def eigentriples(self) -> SVDTuple:
+        """Singular values and eigenvectors of SVD."""
+        return self.u_, self.s_, self.vt_
+
+    @property
+    def eigenvalues(self) -> np.ndarray:
+        """Eigenvalues of SVD."""
+        return self.s_ ** 2
 
     @property
     def n_components(self) -> int | None:
         """Returns the number of singular values."""
-        if self._s is None:
+        if self.s_ is None:
             return None
         else:
-            return len(self._s)
+            return len(self.s_)
 
     @classmethod
-    def available_methods(cls) -> list[str]:
-        return list(cls._method_map.keys())
+    def available_solvers(cls) -> list[str]:
+        """list of available solvers."""
+        return list(cls._solver_map.keys())
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()
