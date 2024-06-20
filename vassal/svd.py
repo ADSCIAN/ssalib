@@ -27,13 +27,15 @@ class SVDHandler:
     ----------
     svd_solver : str
         Name of the svd solver to use. Valid names are:
-        - 'np_svd': wrapper to the `numpy.linalg.svd` method.
-        - 'sc_svd': wrapper to the `scipy.linalg.svd` method.
-        - 'sc_svds' : wrapper to the `scipy.sparse.linalg.svds` method.
-        - 'sk_rsvd' : wrapper to the `sklearn.utils.extmath.randomized_svd`
+            - 'np_svd': wrapper to the `numpy.linalg.svd` method.
+            - 'sc_svd': wrapper to the `scipy.linalg.svd` method.
+            - 'sc_svds' : wrapper to the `scipy.sparse.linalg.svds` method.
+            - 'sk_rsvd' : wrapper to the `sklearn.utils.extmath.randomized_svd`
             method.
-        - 'da_svd' : wrapper to the `dask.array.linalg.svd` method.
-        - 'da_csvd' : wrapper to the `dask.array.linalg.svd_compressed` method.
+            - 'da_svd' : wrapper to the `dask.array.linalg.svd` method.
+            - 'da_csvd' : wrapper to the `dask.array.linalg.svd_compressed`
+            method.
+
 
     Attributes
     ----------
@@ -298,7 +300,7 @@ class SVDHandler:
 
     @classmethod
     def available_solvers(cls) -> list[str]:
-        """list of available solvers."""
+        """List of available solvers."""
         return list(cls._solver_map.keys())
 
 
