@@ -12,38 +12,38 @@ def ssa_no_decomposition(timeseries50):
 
 @pytest.fixture
 def ssa_np_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='np_svd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='np_svd')
     return ssa
 
 @pytest.fixture
 def ssa_sc_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='sc_svd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sc_svd')
     return ssa
 
 @pytest.fixture
 def ssa_sc_ssvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='sc_ssvd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sc_ssvd')
     return ssa
 
 @pytest.fixture
 def ssa_sk_rsvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='sk_rsvd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sk_rsvd')
     return ssa
 
 @pytest.fixture
 def ssa_da_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='da_svd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='da_svd')
     return ssa
 
 @pytest.fixture
 def ssa_da_csvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='da_csvd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='da_csvd')
     return ssa
 
 
 @pytest.fixture
 def ssa_with_decomposition(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_method='sk_rsvd')
+    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sk_rsvd')
     ssa.decompose(n_components=10)
     return ssa
 
