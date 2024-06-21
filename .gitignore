@@ -2,3 +2,5 @@
 R_comparison/
 notebooks/
 doc/
+build/
+vassal.egg-info/
