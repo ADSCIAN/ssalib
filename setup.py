@@ -4,7 +4,10 @@ setup(
     name='vassal',
     version='0.0.1',
     packages=find_packages(),
-    url='',
+    package_data={
+        'vassal': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
+    },
+    url='https://github.com/ADSCIAN/vassal',
     license='BSD-3-Clause',
     author='Damien Delforge',
     author_email='damien.delforge@adscian.be',
