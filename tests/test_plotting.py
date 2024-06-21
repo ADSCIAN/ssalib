@@ -1,6 +1,7 @@
 import logging
 from inspect import signature
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.axes import Axes
@@ -14,13 +15,17 @@ from vassal.ssa import SingularSpectrumAnalysis
 def test_PlotSSA_instantiation():
     with pytest.raises(TypeError,
                        match="Can't instantiate abstract class PlotSSA with "
-                             "abstract methods _reconstruct_group, to_frame"):
+                             "abstract methods _reconstruct_group_matrix, "
+                             "_reconstruct_group_timeseries, to_frame"):
         PlotSSA()
 
 
 @pytest.mark.parametrize("abstract_method, concrete_method", [
     (PlotSSA.to_frame, SingularSpectrumAnalysis.to_frame),
-    (PlotSSA._reconstruct_group, SingularSpectrumAnalysis._reconstruct_group)
+    (PlotSSA._reconstruct_group_matrix,
+     SingularSpectrumAnalysis._reconstruct_group_matrix),
+    (PlotSSA._reconstruct_group_timeseries,
+     SingularSpectrumAnalysis._reconstruct_group_timeseries),
 ])
 def test_methods_signature(abstract_method, concrete_method):
     abstract_sig = signature(abstract_method)
@@ -42,16 +47,17 @@ def test_plot_methods(ssa_with_reconstruction, plot_kind) -> None:
     fig, ax = ssa_with_reconstruction.plot(kind=plot_kind)
     assert isinstance(fig, Figure)
     assert isinstance(ax, (Axes, np.ndarray, list))
+    plt.close()
 
 
 @pytest.mark.parametrize("plot_kind", PlotSSA.available_plots())
 def test_plot_methods_low_window(timeseries50, plot_kind) -> None:
     ssa = SingularSpectrumAnalysis(timeseries50, window=2)
     ssa.decompose()
-    print(ssa.n_components)
     fig, ax = ssa.plot(kind=plot_kind)
     assert isinstance(fig, Figure)
     assert isinstance(ax, (Axes, np.ndarray, list))
+    plt.close()
 
 
 def test_unknown_plot_kind(ssa_with_reconstruction):

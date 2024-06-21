@@ -1,5 +1,13 @@
+"""Plotting Tools for Singular Spectrum Analysis"""
+
+# Author: Damien Delforge <damien.delforge@adscian.be>
+#         Alice Alonso <alice.alonso@adscian.be>
+#
+# License: BSD 3 clause
+
 import abc
 import logging
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,32 +15,42 @@ import pandas as pd
 from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
+from matplotlib.ticker import MaxNLocator
 
 from vassal.log_and_error import DecompositionError, ignored_argument_warning
-from vassal.wcorr import correlation_weights, weighted_correlation_matrix
 
 
 class PlotSSA(metaclass=abc.ABCMeta):
-    """
+    """Plotting base class for SingularSpectrumAnalysis
+
     PlotSSA is an abstract base class that defines the plotting interface for
-    the SingularSpectrumAnalysis class.
+    the SingularSpectrumAnalysis class. Any plot can be plotted using the
+    ´plot´ method.
+
+    See more in the user guide. #TODO
+
     """
-    n_components: int | None = None  # number of components
-    eigenvalues: np.ndarray | None = None  # array of eigenvalues
-    total_variance: float | None = None  # sum of eigenvalues
-    _n: int | None = None  # timeseries length
-    _w: int | None = None  # SSA window length
-    _u: np.ndarray | None = None  # left eigenvectors
-    _s: np.ndarray | None = None  # array of singular values
-    _v: np.ndarray | None = None  # right eigenvectors
+    # n_components: int | None = None  # number of components
+    # eigenvalues: np.ndarray | None = None  # array of eigenvalues
+    # squared_frobenius_norm: float | None = None  # sum of eigenvalues
+    # svd_matrix: np.ndarray  # SVD matrix
+    # wcorr: np.ndarray  # weighted correlation matrix
+    # _n: int | None = None  # timeseries length
+    # _w: int | None = None  # SSA window length
+    # u_: np.ndarray | None = None  # left eigenvectors
+    # s_: np.ndarray | None = None  # array of singular values
+    # vt_: np.ndarray | None = None  # right eigenvectors
+    # _svd_matrix_kind: str  # SVD matrix kind, either BK or VG
 
     _plot_kinds_map = {
+        'matrix': '_plot_matrix',
         'paired': '_plot_paired_vectors',
         'timeseries': '_plot_timeseries',
         'values': '_plot_values',
         'vectors': '_plot_vectors',
         'wcorr': '_plot_wcorr'
     }
+
     _n_components_required = ['paired', 'values', 'vectors', 'wcorr']
 
     def plot(
@@ -40,39 +58,44 @@ class PlotSSA(metaclass=abc.ABCMeta):
             kind: str = 'values',
             n_components: int | None = 10,
             ax: Axes = None,
-            **plt_kw
+            **plt_kw: Any
     ) -> tuple[Figure, Axes]:
-        """
-        Generates plots of various kinds to explore the eigentriple features
-        and reconstructed time series from Singular Spectrum Analysis.
+        """Main method of the plotting API of SingularSpectrumAnalysis
+
+        The ´plot´ method generates plots of various kinds to explore the
+        eigentriple features and reconstructed time series from
+        ´SingularSpectrumAnalysis´ instance.
 
         Parameters
         ----------
         kind : str, default 'values'
             The type of plot to produce, options include:
-            - 'paired': Plots pairs of successive left eigenvectors against
-                each other.
-            - 'timeseries': Displays reconstructed time series based on defined
-                component groups.
-            - 'values': Plots singular values to inspect their magnitudes.
-            - 'vectors': Plots the left eigenvectors.
-            - 'wcorr': Displays a weighted correlation matrix using a heatmap.
+
+            * 'paired': Plots pairs of successive left eigenvectors against
+              each other.
+            * 'timeseries': Displays reconstructed time series based on defined
+              component groups.
+            * 'values': Plots singular values to inspect their magnitudes.
+            * 'vectors': Plots the left eigenvectors.
+            * 'wcorr': Displays a weighted correlation matrix using a heatmap.
+
         n_components : int | None, default 10
             Number of eigentriple components to use in the plot. Only valid for
-            kind 'paired', 'values', 'vectors', and 'wcorr'. If None, use the
-            maximum value
+            kind 'matrix', 'paired', 'values', 'vectors', and 'wcorr'.
         ax : Axes, optional
             An existing matplotlib Axes object to draw the plot on. If None, a
             new figure and axes are created. This parameter is ignored for
             subplots, i.e., kind 'paired' and 'vectors'.
-        plt_kw : dict, optional
+        plt_kw : Any, optional
             Additional keyword arguments for customization of the plot, passed
-            to the respective plotting function.
-            The specific function used depends on the 'kind' of plot:
+            to the respective plotting function. The specific function used
+            depends on the 'kind' of plot:
+
             - 'paired', 'values', 'vectors': `matplotlib.pyplot.plot`
             - 'timeseries': `pandas.DataFrame.plot`
             - 'wcorr': `matplotlib.pyplot.imshow`
-            See the corresponding documentation for more information.
+
+            See Examples.
 
         Returns
         -------
@@ -81,23 +104,34 @@ class PlotSSA(metaclass=abc.ABCMeta):
             generated plot. This allows further customization after the
             function returns.
 
+        Raises
+        ------
+        DecompositionError
+            If the ´plot´ method is called before decomposition for plot 'kind'
+            that does not allow it.
+
         Examples
         --------
+        .. plot::
+            :include-source: True
 
-        >>> from vassal.ssa import SingularSpectrumAnalysis
-        >>> from vassal.datasets import load_sst
-        >>> sst = load_sst()
-        >>> ssa = SingularSpectrumAnalysis(sst)
-        >>> u, s, v = ssa.decompose()
-        >>> ssa.plot(kind='values')  # doctest: +SKIP
+            >>> from vassal.ssa import SingularSpectrumAnalysis
+            >>> from vassal.datasets import load_sst
+            >>> sst = load_sst()
+            >>> ssa = SingularSpectrumAnalysis(sst)
+            >>> ssa.decompose()
+            >>> ssa.available_plots()
+            ['matrix', 'paired', 'timeseries', 'values', 'vectors', 'wcorr']
+
+            >>> ssa.plot(kind='values', n_components=30, marker='.', ls='--')
 
         """
 
         if n_components is None:
             n_components = self.n_components
 
-        # Raise error if no decomposition except for plot kind 'timeseries'
-        if self.n_components is None and kind != 'timeseries':
+        # Raise error if no decomposition except for allowed plot kinds
+        if self.n_components is None and kind not in ['timeseries', 'matrix']:
             raise DecompositionError(
                 "Decomposition must be performed before calling the 'plot' "
                 f"method with with kind='{kind}'. Make sure to call the"
@@ -131,41 +165,57 @@ class PlotSSA(metaclass=abc.ABCMeta):
     ) -> pd.DataFrame:
         pass
 
-    def wcorr(
-            self,
-            n_components: int
-    ) -> np.ndarray:
-        """
-        Parameters
-        ----------
-        n_components : int
-            The number of components used to compute the weighted correlation
-            matrix.
-
-        Returns
-        -------
-        wcorr : np.ndarray
-            The weighted correlation matrix.
-
-        References
-        ----------
-
-
-        #TODO add
-
-        """
-        timeseries = np.array(
-            [self._reconstruct_group([i]) for i in range(n_components)])
-        weights = correlation_weights(self._n, self._w)
-        wcorr = weighted_correlation_matrix(timeseries, weights=weights)
-        return wcorr
-
     @abc.abstractmethod
-    def _reconstruct_group(
+    def _reconstruct_group_matrix(
             self,
             group_indices: int | slice | range | list[int]
     ) -> np.ndarray:
         pass
+
+    @abc.abstractmethod
+    def _reconstruct_group_timeseries(
+            self,
+            group_indices: int | slice | range | list[int]
+    ) -> np.ndarray:
+        pass
+
+    @ignored_argument_warning('n_components', log_level='info')
+    def _plot_matrix(
+            self,
+            indices: int | range | list[int] = None,
+            ax: Axes | None = None,
+            cmap: str | Colormap | None = 'viridis',
+            **plt_kw
+    ):
+        """Plot decomposed or reconstructed matrices.
+        """
+        if not ax:
+            fig = plt.figure()
+            ax = fig.gca()
+        else:
+            fig = ax.get_figure()
+
+        if indices is None:
+            matrix = self.svd_matrix
+            subtitle = f'({self._svd_matrix_kind}, Original)'
+        else:
+            if self.n_components is None:
+                raise DecompositionError(
+                    "Cannot plot reconstructed matrix prior to decomposition. "
+                    "Make sure to call the 'decompose' method first."
+                )
+            matrix = self._reconstruct_group_matrix(group_indices=indices)
+            subtitle = f'({self._svd_matrix_kind}, Group:{indices})'
+
+        im = ax.imshow(matrix, cmap=cmap, **plt_kw)
+        ax.set_aspect('equal')
+        ax.set_title(f'SVD Matrix {subtitle}')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+        fig.colorbar(im)
+
+        return fig, ax
 
     @ignored_argument_warning('ax')
     def _plot_paired_vectors(
@@ -173,10 +223,12 @@ class PlotSSA(metaclass=abc.ABCMeta):
             n_components: int,
             **plt_kw
     ) -> tuple[Figure, Axes]:
+        """Plot successive paired left eigenvectors.
+        """
         pairs = list(zip(range(0, n_components - 1), range(1, n_components)))
-        u = self._u
+        u = self.u_
         eigenvalues = self.eigenvalues
-        total_variance = self.total_variance
+        squared_frobenius_norm = self.squared_frobenius_norm
 
         rows, cols = self._auto_subplot_layout(len(pairs))
 
@@ -191,11 +243,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
                 ax.set_yticks([])
                 ax.set_aspect('auto', 'box')
                 ax.axis('off')
-                captured_var1 = eigenvalues[j] / total_variance * 100
-                captured_var2 = eigenvalues[k] / total_variance * 100
+                contribution_1 = eigenvalues[j] / squared_frobenius_norm * 100
+                contribution_2 = eigenvalues[k] / squared_frobenius_norm * 100
 
-                title = (f'EV{j} ({captured_var1:.1f}%) vs.'
-                         f' {j + 1} ({captured_var2:.1f}%)')
+                title = (f'EV{j} ({contribution_1:.1f}%) vs.'
+                         f' {j + 1} ({contribution_2:.1f}%)')
 
                 ax.set_title(title, {'fontsize': 'small'})
             except IndexError:
@@ -214,8 +266,15 @@ class PlotSSA(metaclass=abc.ABCMeta):
             rescale: bool = False,
             **plt_kw
     ) -> tuple[Figure, Axes]:
+        """Plot all or selected timeseries as a single or a subplot
+        """
         data = self.to_frame(include, exclude, recenter, rescale)
+
+        if subplots and include is not None:
+            data = data.reindex(columns=include)
+
         axes = data.plot(subplots=subplots, ax=ax, **plt_kw)
+
         if isinstance(axes, np.ndarray):
             fig = axes[0].get_figure()
             for ax in axes:
@@ -223,7 +282,9 @@ class PlotSSA(metaclass=abc.ABCMeta):
         else:
             fig = axes.get_figure()
             axes.legend(loc='best')
+
         fig.tight_layout()
+
         return fig, axes
 
     def _plot_values(
@@ -232,15 +293,18 @@ class PlotSSA(metaclass=abc.ABCMeta):
             ax: Axes = None,
             **plt_kw
     ) -> tuple[Figure, Axes]:
-        s = self._s
+        """Plot component norms.
+        """
+        s = self.s_
 
         if not ax:
             fig = plt.figure()
             ax = fig.gca()
 
         ax.semilogy(s[:n_components], **plt_kw)
-        ax.set_ylabel('Singular Values')
-        ax.set_xlabel('Eigentriple Index')
+        ax.set_ylabel('Component Norm')
+        ax.set_xlabel('Component Index')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
         fig = ax.get_figure()
 
@@ -252,8 +316,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
             n_components: int,
             **plt_kw
     ):
-        u = self._u
-        total_variance = self.total_variance
+        """Plot left eigenvectors.
+        """
+        u = self.u_
+        squared_frobenius_norm = self.squared_frobenius_norm
 
         rows, cols = self._auto_subplot_layout(n_components)
 
@@ -267,9 +333,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
                 ax.set_yticks([])
                 ax.set_aspect('auto', 'box')
                 ax.axis('off')
-                captured_variance = self.eigenvalues[i] / total_variance * 100
+                contribution = self.eigenvalues[
+                                   i] / squared_frobenius_norm * 100
 
-                title = f'EV{i} ({captured_variance:.1f}%)'
+                title = f'EV{i} ({contribution:.1f}%)'
                 ax.set_title(title, {'fontsize': 'small'})
             except IndexError:
                 ax.axis('off')
@@ -285,6 +352,8 @@ class PlotSSA(metaclass=abc.ABCMeta):
             vmax: float | None = 1.,
             **plt_kw
     ):
+        """Plot the weighted correlation matrix.
+        """
         wcorr = self.wcorr(n_components)
 
         if not ax:
@@ -300,7 +369,6 @@ class PlotSSA(metaclass=abc.ABCMeta):
         ticks = np.arange(wcorr.shape[0])
         ax.set_xticks(ticks + 0.5, minor=False)
         ax.set_yticks(ticks + 0.5, minor=False)
-
         ax.set_xticklabels(ticks.astype(int), fontsize='x-small')
         ax.set_yticklabels(ticks.astype(int), fontsize='x-small')
 
@@ -314,8 +382,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             self,
             n_components: int,
     ):
-        """
-        Validate the number of components used for plotting.
+        """Validate the number of components requested for plotting.
 
         Parameters
         ----------
@@ -354,10 +421,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
     @staticmethod
     def _auto_subplot_layout(n_plots: int) -> tuple[int, int]:
-        """
-        Calculate the optimal layout for a given number of subplots that favors
-        a 3-column layout until 9 plots, and then favors a squared layout with
-        possibly more columns than rows.
+        """Calculate the optimal layout for a given number of subplots
+
+        The method favors a 3-column layout until 9 plots, and then favors a
+        squared layout with possibly more columns than rows.
 
         Parameters
         ----------
@@ -368,6 +435,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         -------
         tuple[int, int]
             A tuple containing the number of rows and columns for the layout.
+
         """
         if n_plots <= 9:
             rows = np.ceil(n_plots / 3).astype(int)
