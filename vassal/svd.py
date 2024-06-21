@@ -27,15 +27,13 @@ class SVDHandler:
     ----------
     svd_solver : str
         Name of the svd solver to use. Valid names are:
-            - 'np_svd': wrapper to the `numpy.linalg.svd` method.
-            - 'sc_svd': wrapper to the `scipy.linalg.svd` method.
-            - 'sc_svds' : wrapper to the `scipy.sparse.linalg.svds` method.
-            - 'sk_rsvd' : wrapper to the `sklearn.utils.extmath.randomized_svd`
-            method.
-            - 'da_svd' : wrapper to the `dask.array.linalg.svd` method.
-            - 'da_csvd' : wrapper to the `dask.array.linalg.svd_compressed`
-            method.
-
+        * 'np_svd': wrapper to the `numpy.linalg.svd` method.
+        * 'sc_svd': wrapper to the `scipy.linalg.svd` method.
+        * 'sc_svds' : wrapper to the `scipy.sparse.linalg.svds` method.
+        * 'sk_rsvd' : wrapper to the `sklearn.utils.extmath.randomized_svd`
+          method.
+        * 'da_svd' : wrapper to the `dask.array.linalg.svd` method.
+        * 'da_csvd' : wrapper to the `dask.array.linalg.svd_compressed` method.
 
     Attributes
     ----------
@@ -139,10 +137,11 @@ class SVDHandler:
 
         See Also
         --------
-        `SVDHandler`: The `SVDHandler` class is designed to handle SVD
-        decomposition with the `svd` method as a wrapper to pre-existing svd
-        implementations in Python scientific libraries, depending on the
-        `svd_solver` parameter.
+        SVDHandler
+            The `SVDHandler` class is designed to handle SVD decomposition with
+            the `svd` method as a wrapper to pre-existing SVD implementations in
+            Python scientific libraries, depending on the `svd_solver`
+            parameter.
 
         """
         method_name = self._solver_map[self.svd_solver]
