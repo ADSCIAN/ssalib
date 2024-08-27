@@ -1,6 +1,6 @@
 # Visual and Automated Singular Spectrum Analysis Library (VASSAL)
 
-**Early version**
+**Early version under development**
 
 ## Overview
 
@@ -11,10 +11,10 @@ packages, and provides a convenient API along with plotting capabilities.
 
 ## What is SSA?
 
-SSA is a great time series decomposition techniques typically used to explore
-a signal and separate its deterministic components (e.g., trend, or seasonality)
+SSA is a great time series decomposition technique typically used to explore
+a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise. Learn more in the `vassal` project documentation. SSA is a 
-multistep process:
+multi-step process:
 1. Matrix Construction (trajectory embedding);
 2. Singular Value Decomposition (SVD);
 3. Grouping & Signal Reconstruction;
@@ -34,9 +34,9 @@ following features implemented.
 
 ### Embedding Methods 
 
-The `vassal` package support univariate time-series decomposition relying on the
+The `vassal` package supports univariate time-series decomposition relying on the
 SVD of a lagged trajectory matrix (Broomhead & King, 1986). The lagged 
-trajectory matrix is built using a window size parameter window:
+Trajectory matrix is built using a window size parameter window:
 
 ```python
 from vassal import SingularSpectrumAnalysis
@@ -48,8 +48,8 @@ ssa.trajectory
   
 ### Full Singular Value Decomposition (SVD) methods
 
-By default, `vassal` depends on the numpy implementation of SVD, yet, provides
-altenative algorithm, including truncated SVD algorithms for speed performance.
+By default, `vassal` depends on the NumPy implementation of SVD, yet, provides
+alternative algorithms, including truncated SVD algorithms for speed performance.
 
 * [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)  
 * [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)  
