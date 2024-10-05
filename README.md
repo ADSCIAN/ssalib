@@ -37,18 +37,25 @@ of the components of interest.
 ### Datasets
 
 The `vassal` python package is battery-included, providing datasets to
-experience with the implemented classes and methods.
+experience with the implemented classes and methods. The datasets are loaded
+and parsed into a [
+`pandas.DataFrame`](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
+object.
 
-| Dataset   | Loading Function    | Description                                                                                         | Time Range            | Source                                                  | License          |
-|-----------|---------------------|-----------------------------------------------------------------------------------------------------|-----------------------|---------------------------------------------------------|------------------|
-| Mortality | `load_mortality()`   | Daily counts of deaths in Belgium.                                                                   | 1992-01-01 to 2023-12-31 | [STATBEL](https://statbel.fgov.be/en/open-data/number-deaths-day) | Open Data        |
-| SST       | `load_sst()`         | Monthly mean sea surface temperature globally between 60° North and South.                           | 1982-01-01 to 2023-12-31 | [Climate Reanalyzer](https://climatereanalyzer.org/)     | CC-BY            |
-| Sunspots  | `load_sunspots()`    | Monthly mean total sunspot number.                                                                   | 1749-01 to 2023-12     | [Royal Observatory of Belgium](https://www.sidc.be/SILSO/) | CC-BY-NC         |
+| Dataset   | Loading Function   | Description                                                                | Time Range               | Source                                                            | License   |
+|-----------|--------------------|----------------------------------------------------------------------------|--------------------------|-------------------------------------------------------------------|-----------|
+| Mortality | `load_mortality()` | Daily counts of deaths in Belgium.                                         | 1992-01-01 to 2023-12-31 | [STATBEL](https://statbel.fgov.be/en/open-data/number-deaths-day) | Open Data |
+| SST       | `load_sst()`       | Monthly mean sea surface temperature globally between 60° North and South. | 1982-01-01 to 2023-12-31 | [Climate Reanalyzer](https://climatereanalyzer.org/)              | CC-BY     |
+| Sunspots  | `load_sunspots()`  | Monthly mean total sunspot number.                                         | 1749-01 to 2023-12       | [Royal Observatory of Belgium](https://www.sidc.be/SILSO/)        | CC-BY-NC  |
 
 ```python
-from vassal.datasets import load_sst()
+from vassal.datasets import load_sst
+
+()
 ts = load_sst()
+ts.plot(figsize=(8, 2), ylabel='SST °C', lw=1.)
 ```
+![SST Time Series](images/sst_ts.png)
 
 ### Time-delayed Embedding
 
