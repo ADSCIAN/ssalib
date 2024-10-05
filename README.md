@@ -9,17 +9,18 @@
 ## Overview
 
 The `vassal` Python package implements the basic Singular Spectrum
-Analysis (SSA) from Broomhead & King (1986), relying on different Singular Value 
-Decomposition (SVD) algorithms implemented in various Python scientific 
-packages, and provides a convenient API along with plotting capabilities.
+Analysis (SSA) univariate timeseries decomposition technique, relying on 
+different Singular Value Decomposition (SVD) methods form existing Python 
+scientific packages, and provides a convenient API along with plotting 
+capabilities.
 
 ## What is SSA?
 
 SSA is a great time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise. Learn more in the `vassal` project documentation. SSA is a 
-multi-step process:
-1. Matrix Construction (trajectory embedding);
+three-step process:
+1. Matrix Construction (Time-delayed Embedding);
 2. Singular Value Decomposition (SVD);
 3. Grouping & Signal Reconstruction;
 
@@ -51,7 +52,7 @@ ssa = SingularSpectrumAnalysis(sst, window=100)
 ssa.svd_matrix
 ```
   
-### Full Singular Value Decomposition (SVD) methods
+### Singular Value Decomposition (SVD) methods
 
 By default, `vassal` depends on the NumPy implementation of SVD, yet, provides
 alternative algorithms, including truncated SVD algorithms for speed performance.
