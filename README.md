@@ -1,6 +1,6 @@
 # Visually Assisted Singular Spectrum Analysis Library (VASSAL)
 
-`> [!NOTE]
+> [!NOTE]
 > You are currently viewing at an early development version of VASSAL, designed
 > for educational purposes. VASSAL has undergone extensive testing with the 
 > pytest framework; however, it may still exhibit unexpected behavior. If you 
