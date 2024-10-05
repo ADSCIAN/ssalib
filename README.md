@@ -67,7 +67,7 @@ as default. The BK and VG approaches depends on a `window` parameter defining
 the maximum lag, with the default value being set to the half-lenght of the
 time series.
 
-The code snippets below shows how to instantiate a `SingularSpectrumAnalyis`
+The code snippet below shows how to instantiate a `SingularSpectrumAnalyis`
 object, while changing the matrix type and setting the window length manually.
 
 ```python
