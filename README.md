@@ -20,17 +20,35 @@ capabilities.
 pip install vassal
 ```
 
-## What is SSA?
+## Hands-on with SSA
 
 SSA is a great time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise [1,2].
+
+FIGURE
 
 The univariate basic SSA algorithm is a three-step process
 involving (i) the construction of two-dimensional matrix from the time series
 using time-delayed embedding, (ii) the decomposition of the matrix using
 Singular Value Decomposition (SVD), and (iii) the selection and reconstruction
 of the components of interest.
+
+### Datasets
+
+The `vassal` python package is battery-included, providing datasets to
+experience with the implemented classes and methods.
+
+| Dataset   | Loading Function    | Description                                                                                         | Time Range            | Source                                                  | License          |
+|-----------|---------------------|-----------------------------------------------------------------------------------------------------|-----------------------|---------------------------------------------------------|------------------|
+| Mortality | `load_mortality()`   | Daily counts of deaths in Belgium.                                                                   | 1992-01-01 to 2023-12-31 | [STATBEL](https://statbel.fgov.be/en/open-data/number-deaths-day) | Open Data        |
+| SST       | `load_sst()`         | Monthly mean sea surface temperature globally between 60° North and South.                           | 1982-01-01 to 2023-12-31 | [Climate Reanalyzer](https://climatereanalyzer.org/)     | CC-BY            |
+| Sunspots  | `load_sunspots()`    | Monthly mean total sunspot number.                                                                   | 1749-01 to 2023-12     | [Royal Observatory of Belgium](https://www.sidc.be/SILSO/) | CC-BY-NC         |
+
+```python
+from vassal.datasets import load_sst()
+ts = load_sst()
+```
 
 ### Time-delayed Embedding
 
