@@ -1,6 +1,10 @@
-# Visual and Automated Singular Spectrum Analysis Library (VASSAL)
+# Visually Assisted Singular Spectrum Analysis Library (VASSAL)
 
-**Early version under development**
+`> [!NOTE]
+> You are currently viewing at an early development version of VASSAL, designed
+> for educational purposes. VASSAL has undergone extensive testing with the 
+> pytest framework; however, it may still exhibit unexpected behavior. If you 
+> encounter any issues, please report them using GitHub Issues.
 
 ## Overview
 
@@ -41,9 +45,10 @@ Trajectory matrix is built using a window size parameter window:
 ```python
 from vassal import SingularSpectrumAnalysis
 from vassal.datasets import load_sst
+
 sst = load_sst()  # Sea Surface Temperature
 ssa = SingularSpectrumAnalysis(sst, window=100)
-ssa.trajectory
+ssa.svd_matrix
 ```
   
 ### Full Singular Value Decomposition (SVD) methods
