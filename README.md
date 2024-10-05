@@ -1,10 +1,10 @@
 # Visually Assisted Singular Spectrum Analysis Library (VASSAL)
 
 > [!NOTE]
-> You are currently viewing at an early development version of VASSAL, designed
+> This repository contains an early development version of VASSAL, designed
 > for educational purposes. VASSAL has undergone extensive testing with the
-> pytest framework; however, it may still exhibit unexpected behavior. If you
-> encounter any issues, please report them using GitHub Issues.
+> pytest framework; however, users may report any experienced issues using
+> [GitHub Issues](https://github.com/ADSCIAN/vassal/issues).
 
 ## Overview
 
@@ -13,6 +13,12 @@ Analysis (SSA) univariate timeseries decomposition technique, relying on
 different Singular Value Decomposition (SVD) methods form existing Python
 scientific packages. It also provides a convenient API along with plotting
 capabilities.
+
+## Installation
+
+```bash
+pip install vassal
+```
 
 ## What is SSA?
 
@@ -26,11 +32,15 @@ using time-delayed embedding, (ii) the decomposition of the matrix using
 Singular Value Decomposition (SVD), and (iii) the selection and reconstruction
 of the components of interest.
 
+### Time-delayed Embedding
+
 For step (i), two main approaches have been proposed. One
 consists of building a trajectory matrix of unit lags [3], while the other
 proposes to use a lagged covariance matrix for the decomposition [4]. The
 `vassal` python package has both
 implementations ([See Embedding Methods](#embedding-methods)).
+
+### SVD Decomposition
 
 Regarding step (ii), there are many existing SVD implementations, varying in
 accuracy, hypotheses on the underlying structure of the decomposed matrix,
@@ -40,28 +50,23 @@ Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods, yet, beyond the
 scope of `vassal`.
 
+### Selection and Reconstruction
+
 Lastly, the selection step (iii) is typically manually supervised, yet,
 supported by visualizations of the decomposed features, i.e., singular values
-and vectors. The `vassal` python package proposes some the common plotting
-features inspired from the `rSSA` R package [5]. Selected components are
-reconstructed using linear algebra and transformed back into a time series by
-leveraging the structural properties of the original matrix. In general, the
-manual selection of components turns SSA into an exploratory and empirical
-approach, relying on subjective user-defined criteria. While there is no
-all-purpose solution, many automated selection methods are proposed in the
-literature, e.g., grouping singular components based on their relative norms or
-associated frequencies [6].
+and vectors (See [Visualization](#visualization)]. The `vassal` python package
+proposes some the common plotting features inspired from the `rSSA` R
+package [5]. Selected components are reconstructed using linear algebra and
+transformed back into a time series by leveraging the structural properties of
+the original matrix. In general, the manual selection of components turns SSA
+into an exploratory and empirical approach, relying on subjective user-defined
+criteria. While there is no all-purpose solution, many automated selection
+methods are proposed in the literature, e.g., grouping singular components
+based on their relative norms or associated frequencies [6].
 
-## Installation
+## Example
 
-```bash
-pip install vassal
-```
-
-## Features
-
-The `vassal` package implements the `SingularSpectrumAnalysis` class, with the
-following features implemented.
+### Importing `vassal` and Built-in Datasets
 
 ### Embedding Methods
 
