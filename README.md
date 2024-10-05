@@ -18,7 +18,39 @@ capabilities.
 
 SSA is a great time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
-from noise [1][2].
+from noise [1,2].
+
+The univariate basic SSA algorithm is a three-step process
+involving (i) the construction of two-dimensional matrix from the time series
+using time-delayed embedding, (ii) the decomposition of the matrix using
+Singular Value Decomposition (SVD), and (iii) the selection and reconstruction
+of the components of interest.
+
+For step (i), two main approaches have been proposed. One
+consists of building a trajectory matrix of unit lags [3], while the other
+proposes to use a lagged covariance matrix for the decomposition [4]. The
+`vassal` python package has both
+implementations ([See Embedding Methods](#embedding-methods)).
+
+Regarding step (ii), there are many existing SVD implementations, varying in
+accuracy, hypotheses on the underlying structure of the decomposed matrix,
+and computational performance. The `vassal` python package wrap existing methods
+implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
+Most SSA's limitations pertain to SVD's limitations and some advanced
+SSA approaches implement alternative decomposition methods, yet, beyond the
+scope of `vassal`.
+
+Lastly, the selection step (iii) is typically manually supervised, yet,
+supported by visualizations of the decomposed features, i.e., singular values
+and vectors. The `vassal` python package proposes some the common plotting
+features inspired from the `rSSA` R package [5]. Selected components are
+reconstructed using linear algebra and transformed back into a time series by
+leveraging the structural properties of the original matrix. In general, the
+manual selection of components turns SSA into an exploratory and empirical
+approach, relying on subjective user-defined criteria. While there is no
+all-purpose solution, many automated selection methods are proposed in the
+literature, e.g., grouping singular components based on their relative norms or
+associated frequencies [6].
 
 ## Installation
 
@@ -47,7 +79,7 @@ ssa = SingularSpectrumAnalysis(sst, window=100)
 ssa.svd_matrix
 ```
 
-### Singular Value Decomposition (SVD) methods
+### SVD methods
 
 By default, `vassal` depends on the NumPy implementation of SVD, yet, provides
 alternative algorithms, including truncated SVD algorithms for speed
@@ -71,7 +103,7 @@ performance.
 ### Visualization
 
 The `SingularSpectrumAnalysis` class has a `plot` method allowing for multiple
-plot `kind`.
+plot `kind`. Some p
 
 | `kind`       | Description                                               | Decomposition Required | Reconstruction Required |
 |--------------|-----------------------------------------------------------|:----------------------:|:-----------------------:|
@@ -96,4 +128,12 @@ plot `kind`.
    dynamics, with applications to paleoclimatic time series. Physica D:
    Nonlinear Phenomena, 35(3),
    395–424. https://doi.org/10.1016/0167-2789(89)90077-8
+5. Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis for Time
+   Series. Berlin, Heidelberg:
+   Springer. https://doi.org/10.1007/978-3-662-62436-4
+6. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular
+   oscillations in the Presence of Colored Noise. Retrieved
+   from https://journals.ametsoc.org/view/journals/clim/9/12/1520-0442_1996_009_3373_mcsdio_2_0_co_2.xml
+
+
 
