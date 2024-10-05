@@ -51,19 +51,30 @@ object.
 ```python
 from vassal.datasets import load_sst
 
-()
 ts = load_sst()
 ts.plot(figsize=(8, 2), ylabel='SST °C', lw=1.)
 ```
+
 ![SST Time Series](images/sst_ts.png)
 
 ### Time-delayed Embedding
 
-For step (i), two main approaches have been proposed. One
-consists of building a trajectory matrix of unit lags [3], while the other
-proposes to use a lagged covariance matrix for the decomposition [4]. The
-`vassal` python package has both
-implementations ([See Embedding Methods](#embedding-methods)).
+For step (i), two main approaches have been proposed. The Broomhead & Kink (BK)
+consists of building a trajectory matrix of unit lags [3], while the Vautard &
+Ghil (VK) proposes to use a lagged covariance matrix for the decomposition [4].
+The `vassal` python package provides both implementations, using the BK approach
+as default. The BK and VG approaches depends on a `window` parameter defining
+the maximum lag, with the default value being set to the half-lenght of the
+time series.
+
+The code snippets below shows how to instantiate a `SingularSpectrumAnalyis`
+object, while changing the matrix type and setting the window length manually.
+
+```python
+from vassal import SingularSpectrumAnalysis as SSA
+
+ssa = SSA(ts, svd_matrix='VG', window=len(ts)//3)
+```
 
 ### SVD Decomposition
 
