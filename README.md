@@ -61,7 +61,7 @@ ts.plot(figsize=(8, 2), ylabel='SST °C', lw=1.)
 
 For step (i), two main approaches have been proposed. The Broomhead & Kink (BK)
 consists of building a trajectory matrix of unit lags [3], while the Vautard &
-Ghil (VK) proposes to use a lagged covariance matrix for the decomposition [4].
+Ghil (VG) proposes to use a lagged covariance matrix for the decomposition [4].
 The `vassal` python package provides both implementations, using the BK approach
 as default. The BK and VG approaches depends on a `window` parameter defining
 the maximum lag, with the default value being set to the half-lenght of the
