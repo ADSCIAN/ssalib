@@ -107,13 +107,13 @@ ssa.decompose(n_components=20)
 The complete list of available `svd_solver` is:
 
 | Solver Name | Underlying Method                                                                                                                     | Status    |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
-| `np_svd`    | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
-| `sc_svd`    | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
-| `sc_svds`   | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
-| `sk_rsvd`   | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
-| `da_svd`    | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html)                                       | Optional  |
-| `da_ccsvd`  | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)                 | Optional  |
+|------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| `np_svd`   | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
+| `sc_svd`   | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
+| `sc_svds`  | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
+| `sk_rsvd`  | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
+| `da_svd`   | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html)                                       | Optional  |
+| `da_csvd`  | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)                 | Optional  |
 
 ### Step 3: Selection and Reconstruction
 
