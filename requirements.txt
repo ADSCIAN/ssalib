@@ -2,6 +2,6 @@ numpy
 matplotlib
 pandas
 scipy
-sklearn
+scikit-learn
 # Optional dependencies
 # dask  # for dask available svd methods
