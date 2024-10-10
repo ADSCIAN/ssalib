@@ -16,8 +16,9 @@ capabilities.
 
 ## Installation
 
+
 ```bash
-pip install vassal
+pip install git+https://github.com/ADSCIAN/vassal.git
 ```
 
 ## Hands-on with SSA
@@ -73,36 +74,36 @@ object while changing the matrix type and manually setting the window length.
 ```python
 from vassal import SingularSpectrumAnalysis as SSA
 
-ssa = SSA(ts, svd_matrix='VG', window=len(ts)//3)
+ssa = SSA(ts, svd_matrix='VG', window=len(ts) // 3)
 ```
+
 ### Step 2: SVD Decomposition
 
 Regarding step (ii), many existing SVD implementations vary in
 accuracy, hypotheses on the underlying structure of the decomposed matrix,
-and computational performance. The `vassal` Python package wraps existing methods
+and computational performance. The `vassal` Python package wraps existing
+methods
 implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods beyond the
 current scope of `vassal`.
 
-Using `vassal`, you can select a particular SVD solver while instantiating a 
+Using `vassal`, you can select a particular SVD solver while instantiating a
 `SingularSpectrumAnalyis` object. By default, `vassal` relies on the
 [numpy.linalg.svd](https://numpy.org/doc/2.0/reference/generated/numpy.linalg.svd.html)
-method. In the example, we show an alternative using a wrapper to 
+method. In the example, we show an alternative using a wrapper to
 the [sklearn Truncated SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html),
-based on a randomized SVD algorithm [5]. This solver is recommended for 
+based on a randomized SVD algorithm [5]. This solver is recommended for
 speed performance for time series as its length increases.
 
 ```python
 from vassal import SingularSpectrumAnalysis as SSA
 
-ssa = SSA(ts, svd_solver = 'sk_rsvd')
+ssa = SSA(ts, svd_solver='sk_rsvd')
 ssa.decompose(n_components=20)
 ```
 
-
-
-### Selection and Reconstruction
+### Step 3: Selection and Reconstruction
 
 Lastly, the selection step (iii) is typically manually supervised yet
 supported by visualizations of the decomposed features, i.e., singular values
@@ -116,67 +117,34 @@ criteria. While no all-purpose solution exists, many automated selection
 methods are proposed in the literature, e.g., grouping singular components
 based on their relative norms or associated frequencies [e.g., 6].
 
+Visualizations can be created with the `SingularSpectrumAnalysis.plot` method:
+
+```python
+from vassal import SingularSpectrumAnalysis as SSA
+
+ssa = SSA(ts)
+ssa.decompose()
+fig, ax = ssa.plot(kind='values')
+```
+
+The valid plot `kind` arguments are described below. Check the method's
+docstring to inquire about valid optional keyword arguments.
+
 | `kind`       | Description                                               | Decomposition Required | Reconstruction Required |
 |--------------|-----------------------------------------------------------|:----------------------:|:-----------------------:|
+| `matrix`     | Plot the matrix or its group reconstruction               |        Optional        |        Optional         |
 | `paired`     | Plot pairs (x,y) of successive left-eigenvectors          |          Yes           |           No            |
 | `timeseries` | Plot original, preprocessed, or reconstructed time series |        Optional        |        Optional         |
 | `values`     | Plot the singular values                                  |          Yes           |           No            |
 | `vectors`    | Plot the left eigen vectors                               |          Yes           |           No            |
 | `wcorr`      | Plot the weighted correlation matrix                      |          Yes           |           No            |
 
-### Going Further
+### Additional Support
 
+Check the docstring documentation of `vassal` for further details.
 
-
-### Embedding Methods
-
-The `vassal` package supports univariate time-series decomposition relying on
-the
-SVD of a lagged trajectory matrix (Broomhead & King, 1986). The lagged
-Trajectory matrix is built using a window size parameter window:
-
-```python
-from vassal import SingularSpectrumAnalysis
-from vassal.datasets import load_sst
-
-sst = load_sst()  # Sea Surface Temperature
-ssa = SingularSpectrumAnalysis(sst, window=100)
-ssa.svd_matrix
-```
-
-### SVD methods
-
-By default, `vassal` depends on the NumPy implementation of SVD, yet, provides
-alternative algorithms, including truncated SVD algorithms for speed
-performance.
-
-| `svd_solver` |   |   |   |
-|-------------|---|---|---|
-| `np_svd`    | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)  |   |   |
-|             |   |   |   |
-|             |   |   |   |
-|             |   |   |   |
-|             |   |   |   |
-
-* 
-* [
-  `scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)
-* [
-  `scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)
-* [
-  `sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html)
-* [
-  `dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html) (
-  optional)
-* [
-  `dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html) (
-  optional)
-
-### Visualization
-
-The `SingularSpectrumAnalysis` class has a `plot` method allowing for multiple
-plot `kind`. Some p
-
+You may also further learn about SSA using `vassal` by exploring the
+jupyter notebooks in the notebooks folder.
 
 ## References
 
@@ -192,15 +160,19 @@ plot `kind`. Some p
 4. Vautard, R., & Ghil, M. (1989). Singular spectrum analysis in nonlinear
    dynamics, with applications to paleoclimatic time series. Physica D:
    Nonlinear Phenomena, 35(3),
-5. Halko, N., Martinsson, P.-G., & Tropp, J. A. (2010, December 14). Finding structure with randomness: Probabilistic   
-   algorithms for constructing approximate matrix decompositions. arXiv. https://doi.org/10.48550/arXiv.0909.4061
+5. Halko, N., Martinsson, P.-G., & Tropp, J. A. (2010, December 14). Finding
+   structure with randomness: Probabilistic   
+   algorithms for constructing approximate matrix decompositions.
+   arXiv. https://doi.org/10.48550/arXiv.0909.4061
    395–424. https://doi.org/10.1016/0167-2789(89)90077-8
-6. Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis for Time
-   Series. Berlin, Heidelberg:
-   Springer. https://doi.org/10.1007/978-3-662-62436-4
+6. Golyandina, N., Korobeynikov, A., & Zhigljavsky, A. (2018). Singular Spectrum
+   Analysis with R. Berlin, Heidelberg:
+   Springer. https://doi.org/10.1007/978-3-662-57380-8
 7. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular
    oscillations in the Presence of Colored Noise. Retrieved
    from https://journals.ametsoc.org/view/journals/clim/9/12/1520-0442_1996_009_3373_mcsdio_2_0_co_2.xml
 
+## How to Cite
 
+TODO
 
