@@ -71,6 +71,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         kind : str, default 'values'
             The type of plot to produce, options include:
 
+            * 'matrix': Plots the decomposed or reconstructed matrix.
             * 'paired': Plots pairs of successive left eigenvectors against
               each other.
             * 'timeseries': Displays reconstructed time series based on defined
@@ -91,6 +92,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             to the respective plotting function. The specific function used
             depends on the 'kind' of plot:
 
+            - 'matrix': `matplotlib.pyplot.imshow`
             - 'paired', 'values', 'vectors': `matplotlib.pyplot.plot`
             - 'timeseries': `pandas.DataFrame.plot`
             - 'wcorr': `matplotlib.pyplot.imshow`
