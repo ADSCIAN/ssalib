@@ -116,7 +116,7 @@ the original matrix. In general, the manual selection of components turns SSA
 into an exploratory and empirical approach, relying on subjective, user-defined
 criteria. While no all-purpose solution exists, many automated selection
 methods are proposed in the literature, e.g., grouping singular components
-based on their relative norms or associated frequencies [e.g., 6].
+based on their relative norms or associated frequencies [e.g., 7].
 
 Visualizations can be created with the `SingularSpectrumAnalysis.plot` method:
 
