@@ -1,4 +1,4 @@
-# Visually Assisted Singular Spectrum Analysis Library (VASSAL)
+# Visually Assisted Singular Spectrum AnaLysis (VASSAL)
 
 > [!NOTE]
 > This repository contains an early development version of VASSAL, designed
@@ -10,7 +10,7 @@
 
 The `vassal` Python package implements the basic Singular Spectrum
 Analysis (SSA) univariate timeseries decomposition technique, relying on
-different Singular Value Decomposition (SVD) methods form existing Python
+different Singular Value Decomposition (SVD) methods from existing Python
 scientific packages. It also provides a convenient API along with plotting
 capabilities.
 
@@ -29,7 +29,7 @@ from noise [1,2].
 FIGURE
 
 The univariate basic SSA algorithm is a three-step process
-involving (i) the construction of two-dimensional matrix from the time series
+involving (i) the construction of a two-dimensional matrix from the time series
 using time-delayed embedding, (ii) the decomposition of the matrix using
 Singular Value Decomposition (SVD), and (iii) the selection and reconstruction
 of the components of interest.
@@ -61,14 +61,14 @@ ts.plot(figsize=(8, 2), ylabel='SST °C', lw=1.)
 
 For step (i), two main approaches have been proposed. The Broomhead & Kink (BK)
 consists of building a trajectory matrix of unit lags [3], while the Vautard &
-Ghil (VG) proposes to use a lagged covariance matrix for the decomposition [4].
+Ghil (VG) proposes using a lagged covariance matrix for decomposition [4].
 The `vassal` python package provides both implementations, using the BK approach
-as default. The BK and VG approaches depends on a `window` parameter defining
-the maximum lag, with the default value being set to the half-lenght of the
+as default. The BK and VG approaches depend on a `window` parameter defining
+the maximum lag, with the default value being set to the half length of the
 time series.
 
 The code snippet below shows how to instantiate a `SingularSpectrumAnalyis`
-object, while changing the matrix type and setting the window length manually.
+object while changing the matrix type and manually setting the window length.
 
 ```python
 from vassal import SingularSpectrumAnalysis as SSA
@@ -78,31 +78,54 @@ ssa = SSA(ts, svd_matrix='VG', window=len(ts)//3)
 
 ### SVD Decomposition
 
-Regarding step (ii), there are many existing SVD implementations, varying in
+Regarding step (ii), many existing SVD implementations vary in
 accuracy, hypotheses on the underlying structure of the decomposed matrix,
-and computational performance. The `vassal` python package wrap existing methods
+and computational performance. The `vassal` Python package wraps existing methods
 implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
-SSA approaches implement alternative decomposition methods, yet, beyond the
-scope of `vassal`.
+SSA approaches implement alternative decomposition methods beyond the
+current scope of `vassal`.
+
+Using `vassal`, you can select a particular SVD solver while instantiating a 
+`SingularSpectrumAnalyis` object. By default, `vassal` relies on the
+[numpy.linalg.svd](https://numpy.org/doc/2.0/reference/generated/numpy.linalg.svd.html)
+method. In the example, we show an alternative using a wrapper to 
+the [sklearn Truncated SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html),
+based on a randomized SVD algorithm [5]. This solver is recommended for 
+speed performance for time series as its length increases.
+
+```python
+from vassal import SingularSpectrumAnalysis as SSA
+
+ssa = SSA(ts, svd_solver = 'sk_rsvd')
+ssa.decompose(n_components=20)
+```
 
 ### Selection and Reconstruction
 
-Lastly, the selection step (iii) is typically manually supervised, yet,
+Lastly, the selection step (iii) is typically manually supervised yet
 supported by visualizations of the decomposed features, i.e., singular values
 and vectors (See [Visualization](#visualization)]. The `vassal` python package
-proposes some the common plotting features inspired from the `rSSA` R
-package [5]. Selected components are reconstructed using linear algebra and
+proposes some of the standard plotting features inspired by the `rSSA` R
+package [6]. Selected components are reconstructed using linear algebra and
 transformed back into a time series by leveraging the structural properties of
 the original matrix. In general, the manual selection of components turns SSA
-into an exploratory and empirical approach, relying on subjective user-defined
-criteria. While there is no all-purpose solution, many automated selection
+into an exploratory and empirical approach, relying on subjective, user-defined
+criteria. While no all-purpose solution exists, many automated selection
 methods are proposed in the literature, e.g., grouping singular components
-based on their relative norms or associated frequencies [6].
+based on their relative norms or associated frequencies [e.g., 6].
 
-## Example
+| `kind`       | Description                                               | Decomposition Required | Reconstruction Required |
+|--------------|-----------------------------------------------------------|:----------------------:|:-----------------------:|
+| `paired`     | Plot pairs (x,y) of successive left-eigenvectors          |          Yes           |           No            |
+| `timeseries` | Plot original, preprocessed, or reconstructed time series |        Optional        |        Optional         |
+| `values`     | Plot the singular values                                  |          Yes           |           No            |
+| `vectors`    | Plot the left eigen vectors                               |          Yes           |           No            |
+| `wcorr`      | Plot the weighted correlation matrix                      |          Yes           |           No            |
 
-### Importing `vassal` and Built-in Datasets
+### Going Further
+
+
 
 ### Embedding Methods
 
@@ -146,13 +169,6 @@ performance.
 The `SingularSpectrumAnalysis` class has a `plot` method allowing for multiple
 plot `kind`. Some p
 
-| `kind`       | Description                                               | Decomposition Required | Reconstruction Required |
-|--------------|-----------------------------------------------------------|:----------------------:|:-----------------------:|
-| `paired`     | Plot pairs (x,y) of successive left-eigenvectors          |          Yes           |           No            |
-| `timeseries` | Plot original, preprocessed, or reconstructed time series |        Optional        |        Optional         |
-| `values`     | Plot the singular values                                  |          Yes           |           No            |
-| `vectors`    | Plot the left eigen vectors                               |          Yes           |           No            |
-| `wcorr`      | Plot the weighted correlation matrix                      |          Yes           |           No            |
 
 ## References
 
@@ -168,11 +184,13 @@ plot `kind`. Some p
 4. Vautard, R., & Ghil, M. (1989). Singular spectrum analysis in nonlinear
    dynamics, with applications to paleoclimatic time series. Physica D:
    Nonlinear Phenomena, 35(3),
+5. Halko, N., Martinsson, P.-G., & Tropp, J. A. (2010, December 14). Finding structure with randomness: Probabilistic   
+   algorithms for constructing approximate matrix decompositions. arXiv. https://doi.org/10.48550/arXiv.0909.4061
    395–424. https://doi.org/10.1016/0167-2789(89)90077-8
-5. Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis for Time
+6. Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis for Time
    Series. Berlin, Heidelberg:
    Springer. https://doi.org/10.1007/978-3-662-62436-4
-6. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular
+7. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular
    oscillations in the Presence of Colored Noise. Retrieved
    from https://journals.ametsoc.org/view/journals/clim/9/12/1520-0442_1996_009_3373_mcsdio_2_0_co_2.xml
 
