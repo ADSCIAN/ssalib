@@ -1,7 +1,7 @@
 numpy
 matplotlib
 pandas
+scipy
+sklearn
 # Optional dependencies
-# scipy  # for scipy available svd methods
-# sklearn  # for sklearn randomized svd method
 # dask  # for dask available svd methods
