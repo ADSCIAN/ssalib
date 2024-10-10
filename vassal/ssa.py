@@ -7,7 +7,7 @@
 
 import inspect
 import logging
-from typing import Any, Self, Sequence
+from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
@@ -396,7 +396,7 @@ groups: {groups}
             self,
             n_components: int | None = None,
             **kwargs
-    ) -> Self:
+    ) -> "SingularSpectrumAnalysis":
         """Perform Singular Value Decomposition (SVD) of the constructed matrix.
 
         SVD is applied on the ´SingularSpectrumAnalysis.svd_matrix´ using the
@@ -451,7 +451,7 @@ groups: {groups}
     def reconstruct(
             self,
             groups: dict[str, int | list[int]]
-    ) -> Self:
+    ) -> "SingularSpectrumAnalysis":
         """Reconstruct components based on eigen-triples indices.
 
         Define user groups for the signal reconstruction.
