@@ -16,6 +16,7 @@ capabilities.
 
 ## Installation
 
+Check the requirements.txt file. 
 
 ```bash
 pip install git+https://github.com/ADSCIAN/vassal.git
@@ -27,7 +28,7 @@ SSA is a great time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise [1,2].
 
-FIGURE
+![SST Time Series](images/decomposed_signal.png)
 
 The univariate basic SSA algorithm is a three-step process
 involving (i) the construction of a two-dimensional matrix from the time series
