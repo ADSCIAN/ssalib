@@ -57,7 +57,7 @@ ts.plot(figsize=(8, 2), ylabel='SST °C', lw=1.)
 
 ![SST Time Series](images/sst_ts.png)
 
-### Time-delayed Embedding
+### Step 1: Time-delayed Embedding
 
 For step (i), two main approaches have been proposed. The Broomhead & Kink (BK)
 consists of building a trajectory matrix of unit lags [3], while the Vautard &
@@ -75,8 +75,7 @@ from vassal import SingularSpectrumAnalysis as SSA
 
 ssa = SSA(ts, svd_matrix='VG', window=len(ts)//3)
 ```
-
-### SVD Decomposition
+### Step 2: SVD Decomposition
 
 Regarding step (ii), there are many existing SVD implementations, varying in
 accuracy, hypotheses on the underlying structure of the decomposed matrix,
@@ -85,6 +84,8 @@ implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods, yet, beyond the
 scope of `vassal`.
+
+
 
 ### Selection and Reconstruction
 
@@ -126,8 +127,15 @@ By default, `vassal` depends on the NumPy implementation of SVD, yet, provides
 alternative algorithms, including truncated SVD algorithms for speed
 performance.
 
-* [
-  `numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)
+| `svd_solver` |   |   |   |
+|-------------|---|---|---|
+| `np_svd`    | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)  |   |   |
+|             |   |   |   |
+|             |   |   |   |
+|             |   |   |   |
+|             |   |   |   |
+
+* 
 * [
   `scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)
 * [
