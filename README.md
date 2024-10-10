@@ -144,7 +144,7 @@ docstring to inquire about valid optional keyword arguments.
 
 Check the docstring documentation of `vassal` for further details.
 
-You may also further learn about SSA using `vassal` by exploring the
+You may also learn about SSA using `vassal` by exploring the
 jupyter notebooks in the notebooks folder.
 
 ## References
