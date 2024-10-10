@@ -1,6 +1,7 @@
 .idea/
 R_comparison/
-notebooks/
+notebooks/.ipynb_checkpoints/
+notebooks_tmp/
 doc/
 build/
 vassal.egg-info/
