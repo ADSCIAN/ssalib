@@ -116,11 +116,12 @@ The complete list of available `svd_solver` is:
 
 ### Step 3: Selection and Reconstruction
 
-Lastly, the selection step (iii) is typically manually supervised yet
-supported by visualizations of the decomposed features, i.e., singular values
-and vectors (See [Visualization](#visualization)]. The `vassal` python package
-proposes some of the standard plotting features inspired by the `rSSA` R
-package [6]. Selected components are reconstructed using linear algebra and
+The selection step is usually supervised manually. It is
+supported by the visualizations of the decomposed features, i.e., singular values
+and vectors (See [Visualization](#visualization)]. 
+
+The `vassal` python package proposes some of the standard plotting features inspired by the `rSSA` R
+package [6]. The selected components are reconstructed using linear algebra and
 transformed back into a time series by leveraging the structural properties of
 the original matrix. In general, the manual selection of components turns SSA
 into an exploratory and empirical approach, relying on subjective, user-defined
