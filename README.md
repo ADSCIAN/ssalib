@@ -24,7 +24,7 @@ pip install git+https://github.com/ADSCIAN/vassal.git
 
 ## Hands-on with SSA
 
-SSA is a great time series decomposition technique typically used to explore
+SSA is a time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise [1,2].
 
