@@ -80,7 +80,9 @@ ssa = SSA(ts, svd_matrix='VG', window=len(ts) // 3)
 
 ### Step 2: SVD Decomposition
 
-Numerous SVD implementations differ in their accuracy, assumptions about the matrix’s underlying structure, and computational performance. The `vassal` Python package wraps existing
+There exist numerous SVD implementations. They differ in their accuracy, assumptions about the matrix’s underlying structure, and computational performance. 
+
+The `vassal` Python package includes existing
 methods implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods beyond the
