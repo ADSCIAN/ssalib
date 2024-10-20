@@ -24,7 +24,7 @@ pip install git+https://github.com/ADSCIAN/vassal.git
 
 ## Hands-on with SSA
 
-SSA is a great time series decomposition technique typically used to explore
+SSA is a time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
 from noise [1,2].
 
@@ -80,11 +80,10 @@ ssa = SSA(ts, svd_matrix='VG', window=len(ts) // 3)
 
 ### Step 2: SVD Decomposition
 
-Regarding step (ii), many existing SVD implementations vary in
-accuracy, hypotheses on the underlying structure of the decomposed matrix,
-and computational performance. The `vassal` Python package wraps existing
-methods
-implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
+There exist numerous SVD implementations. They differ in their accuracy, assumptions about the matrix’s underlying structure, and computational performance. 
+
+The `vassal` Python package includes existing
+methods implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods beyond the
 current scope of `vassal`.
@@ -117,11 +116,12 @@ The complete list of available `svd_solver` is:
 
 ### Step 3: Selection and Reconstruction
 
-Lastly, the selection step (iii) is typically manually supervised yet
-supported by visualizations of the decomposed features, i.e., singular values
-and vectors (See [Visualization](#visualization)]. The `vassal` python package
-proposes some of the standard plotting features inspired by the `rSSA` R
-package [6]. Selected components are reconstructed using linear algebra and
+The selection step is usually supervised manually. It is
+supported by the visualizations of the decomposed features, i.e., singular values
+and vectors (See [Visualization](#visualization)]. 
+
+The `vassal` python package proposes some of the standard plotting features inspired by the `rSSA` R
+package [6]. The selected components are reconstructed using linear algebra and
 transformed back into a time series by leveraging the structural properties of
 the original matrix. In general, the manual selection of components turns SSA
 into an exploratory and empirical approach, relying on subjective, user-defined
