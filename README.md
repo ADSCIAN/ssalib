@@ -16,7 +16,7 @@ capabilities.
 
 ## Installation
 
-Check the requirements.txt file.
+Check the requirements.txt file for dependencies.
 
 ```bash
 pip install git+https://github.com/ADSCIAN/vassal.git
@@ -166,7 +166,9 @@ docstring to inquire about valid optional keyword arguments.
 Check the docstring documentation of `vassal` for further details.
 
 You may also learn about SSA using `vassal` by exploring the
-jupyter notebooks in the notebooks folder.
+jupyter notebooks in the notebooks folder:
+
+- [Tutorial 1: Introduction to Singular Spectrum Analysis](/notebooks/01_basic_ssa_introduction.ipynb)
 
 ## References
 
