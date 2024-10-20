@@ -16,13 +16,18 @@ capabilities.
 
 ## Installation
 
-Check the requirements.txt file. 
+Check the requirements.txt file.
 
 ```bash
 pip install git+https://github.com/ADSCIAN/vassal.git
 ```
 
 ## Hands-on with SSA
+
+> [!NOTE]
+> For more in-depth tutorials, check the
+> [Additional Support](#additional-support) section.
+
 
 SSA is a time series decomposition technique typically used to explore
 a signal and separate its deterministic components (e.g., trend or seasonality)
@@ -80,10 +85,13 @@ ssa = SSA(ts, svd_matrix='VG', window=len(ts) // 3)
 
 ### Step 2: SVD Decomposition
 
-There exist numerous SVD implementations. They differ in their accuracy, assumptions about the matrix’s underlying structure, and computational performance. 
+There exist numerous SVD implementations. They differ in their accuracy,
+assumptions about the matrix’s underlying structure, and computational
+performance.
 
 The `vassal` Python package includes existing
-methods implemented in Python scientific packages (See [SVD Methods](#svd-methods)).
+methods implemented in Python scientific packages (
+See [SVD Methods](#svd-methods)).
 Most SSA's limitations pertain to SVD's limitations and some advanced
 SSA approaches implement alternative decomposition methods beyond the
 current scope of `vassal`.
@@ -106,21 +114,23 @@ ssa.decompose(n_components=20)
 The complete list of available `svd_solver` is:
 
 | Solver Name | Underlying Method                                                                                                                     | Status    |
-|------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
-| `np_svd`   | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
-| `sc_svd`   | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
-| `sc_svds`  | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
-| `sk_rsvd`  | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
-| `da_svd`   | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html)                                       | Optional  |
-| `da_csvd`  | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)                 | Optional  |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| `np_svd`    | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
+| `sc_svd`    | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
+| `sc_svds`   | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
+| `sk_rsvd`   | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
+| `da_svd`    | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html)                                       | Optional  |
+| `da_csvd`   | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)                 | Optional  |
 
 ### Step 3: Selection and Reconstruction
 
 The selection step is usually supervised manually. It is
-supported by the visualizations of the decomposed features, i.e., singular values
-and vectors (See [Visualization](#visualization)]. 
+supported by the visualizations of the decomposed features, i.e., singular
+values
+and vectors (See [Visualization](#visualization)].
 
-The `vassal` python package proposes some of the standard plotting features inspired by the `rSSA` R
+The `vassal` python package proposes some of the standard plotting features
+inspired by the `rSSA` R
 package [6]. The selected components are reconstructed using linear algebra and
 transformed back into a time series by leveraging the structural properties of
 the original matrix. In general, the manual selection of components turns SSA
