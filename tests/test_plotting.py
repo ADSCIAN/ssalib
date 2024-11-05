@@ -16,11 +16,17 @@ from vassal.ssa import SingularSpectrumAnalysis
 
 
 def test_PlotSSA_instantiation():
-    with pytest.raises(TypeError,
-                       match="Can't instantiate abstract class PlotSSA with "
-                             "abstract methods _reconstruct_group_matrix, "
-                             "_reconstruct_group_timeseries, to_frame"):
+    """Test that PlotSSA cannot be instantiated as it's an abstract class."""
+    with pytest.raises(TypeError) as excinfo:
         PlotSSA()
+
+    # Check that the error message mentions all required abstract methods
+    error_msg = str(excinfo.value)
+    assert all(method in error_msg for method in [
+        '_reconstruct_group_matrix',
+        '_reconstruct_group_timeseries',
+        'to_frame'
+    ]), "Error message should mention all abstract methods"
 
 
 @pytest.mark.parametrize("abstract_method, concrete_method", [
