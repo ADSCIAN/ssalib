@@ -20,7 +20,7 @@ setup(
     author_email='damien.delforge@adscian.be',
     description='Visual and Automated Singular Spectrum Analysis (VASSAL)',
     long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',  # Add this for proper README rendering on PyPI
+    long_description_content_type='text/markdown',
     install_requires=parse_requirements('requirements.txt'),
     extras_require={
         'full': ['dask'],
@@ -36,16 +36,15 @@ setup(
             'dask',  # include optional dependency for development
         ]
     },
-    python_requires='>=3.8',  # We can adjust this based on test results
+    python_requires='>=3.10',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering',
     ],
     keywords='singular spectrum analysis, time series, decomposition',
