@@ -52,8 +52,7 @@ jobs:
 
     - name: Run tests with coverage
       run: |
-        cd vassal
-        python -m pytest tests/ -v --cov=./ --cov-report=term-missing:skip-covered
+        python -m pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered
 
     - name: Upload test results
       if: always()
@@ -61,5 +60,5 @@ jobs:
       with:
         name: pytest-results-py${{ matrix.python-version }}${{ matrix.full && '-full' || '' }}
         path: |
-          vassal/.pytest_cache
-          vassal/.coverage
+          .pytest_cache
+          .coverage
