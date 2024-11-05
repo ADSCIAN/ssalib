@@ -16,15 +16,15 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-py${{ matrix.python-version }}-pip-${{ hashFiles('requirements.txt', 'setup.py') }}
@@ -46,13 +46,19 @@ jobs:
       env:
         PYTHONPATH: ${{ github.workspace }}
       run: |
-        pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered
+        # Create a directory for test results
+        mkdir -p test-results
+        # Run tests and generate coverage
+        pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered --cov-report=xml:test-results/coverage.xml
 
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pytest-results-py${{ matrix.python-version }}
         path: |
-          .pytest_cache
-          .coverage
+          test-results/
+          # Using globs to ensure files exist
+          **/.pytest_cache/
+          **/.coverage
+        if-no-files-found: warn  # Options: warn, error, ignore
