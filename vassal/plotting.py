@@ -7,7 +7,7 @@
 
 import abc
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
+from scipy.signal import periodogram
 
 from vassal.log_and_error import DecompositionError, ignored_argument_warning
 
@@ -27,9 +28,9 @@ class PlotSSA(metaclass=abc.ABCMeta):
     the SingularSpectrumAnalysis class. Any plot can be plotted using the
     ´plot´ method.
 
-    See more in the user guide. #TODO
-
     """
+    # Inherited arguments:
+    # --------------------
     # n_components: int | None = None  # number of components
     # eigenvalues: np.ndarray | None = None  # array of eigenvalues
     # squared_frobenius_norm: float | None = None  # sum of eigenvalues
@@ -45,19 +46,22 @@ class PlotSSA(metaclass=abc.ABCMeta):
     _plot_kinds_map = {
         'matrix': '_plot_matrix',
         'paired': '_plot_paired_vectors',
+        'periodogram': '_plot_periodogram',
         'timeseries': '_plot_timeseries',
         'values': '_plot_values',
         'vectors': '_plot_vectors',
         'wcorr': '_plot_wcorr'
     }
 
-    _n_components_required = ['paired', 'values', 'vectors', 'wcorr']
+    _n_components_required = ['paired', 'periodogram', 'values', 'vectors',
+                              'wcorr']
 
     def plot(
             self,
             kind: str = 'values',
             n_components: int | None = 10,
             ax: Axes = None,
+            scale: Literal['loglog', 'semilogx', 'semilogy'] = None,
             **plt_kw: Any
     ) -> tuple[Figure, Axes]:
         """Main method of the plotting API of SingularSpectrumAnalysis
@@ -74,6 +78,8 @@ class PlotSSA(metaclass=abc.ABCMeta):
             * 'matrix': Plots the decomposed or reconstructed matrix.
             * 'paired': Plots pairs of successive left eigenvectors against
               each other.
+            * 'periodogram': Plots power spectral density associated with each
+              eigenvector.
             * 'timeseries': Displays reconstructed time series based on defined
               component groups.
             * 'values': Plots singular values to inspect their magnitudes.
@@ -82,11 +88,19 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         n_components : int | None, default 10
             Number of eigentriple components to use in the plot. Only valid for
-            kind 'matrix', 'paired', 'values', 'vectors', and 'wcorr'.
+            kind 'matrix', 'paired', 'periodogram', 'values', 'vectors', and
+            'wcorr'.
         ax : Axes, optional
             An existing matplotlib Axes object to draw the plot on. If None, a
             new figure and axes are created. This parameter is ignored for
-            subplots, i.e., kind 'paired' and 'vectors'.
+            subplots, i.e., kind 'paired', 'periodogram', and 'vectors'.
+        scale: str, optional
+            Scale for 'periodogram' kind of plots. One of:
+
+            - 'loglog': logarithmic scaling on both axes
+            - 'plot': linear scaling on both axes
+            - 'semilogx': logarithmic scaling on x-axis only
+            - 'semilogy': logarithmic scaling on y-axis only
         plt_kw : Any, optional
             Additional keyword arguments for customization of the plot, passed
             to the respective plotting function. The specific function used
@@ -94,6 +108,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
             - 'matrix': `matplotlib.pyplot.imshow`
             - 'paired', 'values', 'vectors': `matplotlib.pyplot.plot`
+            - 'periodogram': `matplotlib.pyplot.semilogy`
             - 'timeseries': `pandas.DataFrame.plot`
             - 'wcorr': `matplotlib.pyplot.imshow`
 
@@ -123,17 +138,17 @@ class PlotSSA(metaclass=abc.ABCMeta):
             >>> ssa = SingularSpectrumAnalysis(sst)
             >>> ssa.decompose()
             >>> ssa.available_plots()
-            ['matrix', 'paired', 'timeseries', 'values', 'vectors', 'wcorr']
+            ['matrix', 'paired', 'periodogram', 'timeseries', 'values', 'vectors', 'wcorr']
 
             >>> ssa.plot(kind='values', n_components=30, marker='.', ls='--')
 
         """
 
         if n_components is None:
-            n_components = self.n_components
+            n_components = self.n_components  # - 1 ?
 
         # Raise error if no decomposition except for allowed plot kinds
-        if self.n_components is None and kind not in ['timeseries', 'matrix']:
+        if self.n_components is None and kind in self._n_components_required:
             raise DecompositionError(
                 "Decomposition must be performed before calling the 'plot' "
                 f"method with with kind='{kind}'. Make sure to call the"
@@ -151,6 +166,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         fig, ax = plot_method(
             n_components=n_components,
             ax=ax,
+            scale=scale,
             **plt_kw
         )
         fig.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -181,7 +197,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
     ) -> np.ndarray:
         pass
 
-    @ignored_argument_warning('n_components', log_level='info')
+    @ignored_argument_warning('n_components', 'scale', log_level='info')
     def _plot_matrix(
             self,
             indices: int | range | list[int] = None,
@@ -219,7 +235,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, ax
 
-    @ignored_argument_warning('ax')
+    @ignored_argument_warning('ax', 'scale')
     def _plot_paired_vectors(
             self,
             n_components: int,
@@ -257,7 +273,59 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, axes
 
-    @ignored_argument_warning('n_components', log_level='info')
+    @ignored_argument_warning('ax')
+    def _plot_periodogram(
+            self,
+            n_components: int,
+            scale: Literal['loglog', 'plot', 'semilogx', 'semilogy'] | None,
+            **plt_kw
+    ) -> tuple[Figure, Axes]:
+        """Plot the power spectral density of signals associated with eigenvectors.
+        """
+
+        freq_original, psd_original = periodogram(self._timeseries_pp)
+
+        unit = None
+
+        if self._ix is not None:
+            if isinstance(self._ix, pd.DatetimeIndex):
+                unit = pd.infer_freq(self._ix)
+
+        if unit is None:
+            unit = ''
+
+        if scale is None:
+            scale = 'loglog'
+
+        rows, cols = self._auto_subplot_layout(n_components)
+
+        fig, axes = plt.subplots(rows, cols, figsize=(1.5 * cols, 1.5 * rows))
+
+        for i in range(rows * cols):
+            ax = axes.ravel()[i]
+            ax.axis('off')
+            plot_method = getattr(ax, scale)
+
+            if i >= self.n_components:
+                continue
+            plot_method(freq_original[1:], psd_original[1:], lw=.5,
+                        color='lightgrey')
+            freq, psd = periodogram(self[i])
+            plot_method(freq[1:], psd[1:], **plt_kw)
+            dominant_freq = freq[np.argmax(psd)]
+            period = 1 / dominant_freq
+            if period > self._w:
+                period = 0
+            title = f'EV{i} (T={period:.1f}{unit})'
+            ax.set_title(title, {'fontsize': 'small'})
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_aspect('auto', 'box')
+
+
+        return fig, fig.get_axes()
+
+    @ignored_argument_warning('n_components', 'scale', log_level='info')
     def _plot_timeseries(
             self,
             ax: Axes,
@@ -289,10 +357,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, axes
 
+    @ignored_argument_warning('scale')
     def _plot_values(
             self,
             n_components: int,
-            ax: Axes = None,
+            ax: Axes | None = None,
             **plt_kw
     ) -> tuple[Figure, Axes]:
         """Plot component norms.
@@ -312,7 +381,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, ax
 
-    @ignored_argument_warning('ax')
+    @ignored_argument_warning('ax', 'scale')
     def _plot_vectors(
             self,
             n_components: int,
@@ -345,6 +414,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, fig.get_axes()
 
+    @ignored_argument_warning('scale')
     def _plot_wcorr(
             self,
             n_components: int,

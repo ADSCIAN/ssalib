@@ -1,11 +1,14 @@
 import logging
 from inspect import signature
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+
+matplotlib.use('Agg')
 
 from vassal.log_and_error import DecompositionError
 from vassal.plotting import PlotSSA
