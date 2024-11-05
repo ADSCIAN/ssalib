@@ -14,10 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
-        include:
-          # Test with full extras on latest Python
-          - python-version: "3.11"
-            full: true
 
     steps:
     - uses: actions/checkout@v3
@@ -38,27 +34,25 @@ jobs:
     - name: Install package
       run: |
         python -m pip install --upgrade pip
-        # Install the package with test dependencies
-        if [ "${{ matrix.full }}" = "true" ]; then
-          pip install -e ".[test,full]"
-        else
-          pip install -e ".[test]"
-        fi
+        # Install the package with all dependencies including optional ones
+        pip install -e ".[test,full]"
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y tk-dev python3-tk
 
-    - name: Run tests with coverage
+    - name: Run tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
-        python -m pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered
+        pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: pytest-results-py${{ matrix.python-version }}${{ matrix.full && '-full' || '' }}
+        name: pytest-results-py${{ matrix.python-version }}
         path: |
           .pytest_cache
           .coverage
