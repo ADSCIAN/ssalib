@@ -1,5 +1,12 @@
 # Visually Assisted Singular Spectrum AnaLysis (VASSAL)
 
+# Visually Assisted Singular Spectrum AnaLysis (VASSAL)
+
+[![Tests](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml/badge.svg)](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml)
+[![Python Version](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://www.python.org)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-green)](https://github.com/ADSCIAN/vassal/actions)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
 > [!NOTE]
 > This repository contains an early development version of VASSAL, designed
 > for educational purposes. VASSAL has undergone extensive testing with the
