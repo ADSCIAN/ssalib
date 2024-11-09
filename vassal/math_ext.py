@@ -5,10 +5,14 @@
 #
 # License: BSD 3 clause
 
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
+import statsmodels.api as sm
+from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
+from statsmodels.tsa.arima_process import arma_generate_sample
+from statsmodels.tsa.statespace.sarimax import SARIMAXResults
 
 
 def correlation_weights(
@@ -297,6 +301,233 @@ def average_antidiagonals(matrix: np.ndarray) -> np.ndarray:
     ])
 
     return timeseries
+
+
+def autoregressive_model_score(
+        timeseries: Sequence[float],
+        order: int,
+        criterion: Literal['aic', 'bic'] = 'bic',
+):
+    """
+    Compute the information criterion score for an autoregressive model.
+
+    This function fits an autoregressive (AR) model of a specified order to the
+    given time series data and computes the selected information criterion
+    score ('aic' or 'bic'). The AR model is fitted using the `SARIMAX` class
+    from the `statsmodels` library, with no differencing or moving average
+    components.
+
+    Parameters
+    ----------
+    timeseries : Sequence[float]
+        The time series data to which the autoregressive model is to be fitted.
+    order : int
+        The order of the autoregressive model.
+    criterion : {'aic', 'bic'}, optional
+        The information criterion used to evaluate the model. Either 'aic'
+        (Akaike Information Criterion) or 'bic' (Bayesian Information Criterion).
+        Default is 'bic'.
+
+    Returns
+    -------
+    score : float
+        The computed information criterion score for the fitted autoregressive
+        model.
+
+    References
+    ----------
+    .. [1] "statsmodels.tsa.statespace.sarimax.SARIMAX" `statsmodels` documentation.
+           https://www.statsmodels.org/devel/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html
+    """
+    # Input validation
+    if len(timeseries) == 0:  # Check for empty sequence
+        raise ValueError("timeseries cannot be empty")
+    if order < 0:
+        raise ValueError("order must be non-negative")
+    if len(timeseries) <= order:
+        raise ValueError("timeseries length must be greater than order")
+
+
+    arp = sm.tsa.statespace.SARIMAX(
+        timeseries,
+        order=(order, 0, 0),
+        trend=None
+    ).fit()
+
+    if criterion == 'bic':
+        score = arp.bic
+    elif criterion == 'aic':
+        score = arp.aic
+
+    return score
+
+
+def fit_autoregressive_model(
+        timeseries: Sequence[float],
+        max_order: int = 1,
+        criterion: Literal['aic', 'bic'] = 'bic',
+        n_jobs: int | None = None,
+) -> SARIMAXResults:
+    """
+    Fits an autoregressive model to the given time series data using the
+    specified criterion to select the best order.
+
+    This function evaluates autoregressive models of orders ranging from 0 to
+    `max_order` and selects the model that minimizes the specified information
+    criterion ('aic' or 'bic').
+
+    The fitting process can be parallelized across multiple CPU cores if
+    `n_jobs` is specified.
+
+    Parameters
+    ----------
+    timeseries : Sequence[float]
+        The time series data to which the autoregressive model is to be fitted.
+    max_order : int, optional
+        The maximum order of the autoregressive model to be evaluated. Default
+        is 1.
+    criterion : {'aic', 'bic'}, optional
+        The information criterion used to select the best model. Default is
+        'bic'.
+    n_jobs : int or None, optional
+        The number of CPU cores to use for parallel processing. If None, all
+        available cores are used. If -1, also uses all available cores. Default
+        is None.
+
+    Returns
+    -------
+    autoregressive_model : statsmodels.tsa.statespace.sarimax.SARIMAXResults
+        The fitted SARIMAX model object from the `statsmodels` library.
+
+    References
+    ----------
+    .. [1] "statsmodels.tsa.statespace.sarimax.SARIMAX" `statsmodels` documentation.
+           https://www.statsmodels.org/devel/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html
+
+    """
+
+    if max_order < 0:
+        raise ValueError("max_order must be non-negative")
+    if not isinstance(max_order, int):
+        raise TypeError("max_order must be an integer")
+    if len(timeseries) <= max_order:
+        raise ValueError("timeseries length must be greater than max_order")
+
+    if n_jobs is None:
+        n_jobs = -1
+    order_list = list(range(max_order + 1))
+    model_scores = Parallel(n_jobs=n_jobs)(
+        delayed(autoregressive_model_score)(
+            timeseries,
+            order,
+            criterion
+        ) for order in order_list
+    )
+    best_order = order_list[np.argmin(model_scores)]
+    autoregressive_model = sm.tsa.statespace.SARIMAX(
+        timeseries,
+        order=(best_order, 0, 0),
+        trend=None
+    ).fit()
+
+    return autoregressive_model
+
+
+def generate_autoregressive_surrogate(
+        ar_coefficients: Sequence[float],
+        n_samples: int,
+        scale: float,
+        seed: int | None = None,
+        burnin: int = 100
+):
+    """
+    Generate a surrogate time series using an autoregressive (AR) process.
+
+    This function generates an autoregressive surrogate time series based on
+    specified AR coefficients.
+
+    Parameters
+    ----------
+    ar_coefficients : Sequence[float]
+        The coefficient for autoregressive lag polynomial, including zero lag.
+    n_samples : int
+        The number of samples to generate in the surrogate time series.
+    scale : float
+        The standard deviation of the white noise component added to the AR model.
+    seed : int or None, optional
+        Random seed for reproducibility. If `None`, the random number generator
+        is not seeded.
+    burnin : int
+        Number of initial samples to discard to reduce the effect of initial
+        conditions. Default is 100.
+
+    Raises
+    ------
+    ValueError
+        If max_order is negative or greater than the length of timeseries
+    TypeError
+        If max_order is not an integer
+
+    Returns
+    -------
+    np.ndarray
+        An array containing the generated autoregressive surrogate time series.
+
+    Notes
+    -----
+
+    - The function uses `statsmodels.tsa.arima_process.arma_generate_sample`
+      [1]_ to generate the AR time series.
+    - As noted in [1]_, the AR components should include the coefficient on the
+      zero-lag. This is typically 1. Further, the AR parameters should have the
+      opposite sign of what you might expect. See the examples below.
+    - Standardizing the generated series helps in preventing any scale-related
+      issues in further analysis.
+    - The function sets a burn-in period of 100 samples to mitigate the
+      influence of initial conditions.
+
+    References
+    ----------
+    .. [1] "ARMA Process." `statsmodels` documentation.
+           https://www.statsmodels.org/devel/generated/statsmodels.tsa.arima_process.arma_generate_sample.html
+
+    Examples
+    --------
+
+    >>> ar_coefficients = [1, -0.9]
+    >>> n_samples = 5
+    >>> scale = 1.0
+    >>> seed = 42
+    >>> surrogate = generate_autoregressive_surrogate(ar_coefficients, n_samples, scale, seed)
+    >>> print(surrogate)
+    [ 1.28271453  0.6648326   0.36050652 -1.39807629 -0.90997736]
+
+    Raises
+    ------
+    ValueError
+        If n_samples or scale is not positive, or if ar_coefficients is empty
+        or doesn't start with 1.
+    """
+    if n_samples <= 0:
+        raise ValueError("n_samples must be positive")
+    if scale <= 0:
+        raise ValueError("scale must be positive")
+    if not ar_coefficients:
+        raise ValueError("ar_coefficients must not be empty")
+    if ar_coefficients[0] != 1:
+        raise ValueError("First AR coefficient must be 1")
+
+    if seed is not None:
+        np.random.seed(seed)
+    surrogate = arma_generate_sample(
+        ar_coefficients,
+        [1],
+        n_samples,
+        scale=scale,
+        burnin=burnin
+    )
+
+    return surrogate
 
 
 if __name__ == '__main__':

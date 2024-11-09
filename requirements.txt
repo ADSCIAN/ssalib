@@ -1,7 +1,9 @@
+joblib
 numpy
 matplotlib
 pandas
 scipy
 scikit-learn
+statsmodels
 # Optional dependencies
 # dask  # for dask available svd methods
