@@ -181,7 +181,8 @@ def test_autoregressive_model_score_order_greater_than_length():
     timeseries = [1.0, 2.0, 3.0, 4.0, 5.0]
     order = 10
     with pytest.raises(ValueError,
-                       match="timeseries length must be greater than order"):
+                       match="Argument timeseries must have length greater "
+                             "than order"):
         autoregressive_model_score(timeseries, order)
 
 
@@ -209,14 +210,16 @@ def test_fit_autoregressive_model_specified_max_order(ar1_timeseries50):
 def test_fit_autoregressive_model_empty_timeseries():
     timeseries = []
     with pytest.raises(ValueError,
-                       match="timeseries length must be greater than max_order"):
+                       match="Argument timeseries must have length greater "
+                             "than max_order"):
         fit_autoregressive_model(timeseries)
 
 
 def test_fit_autoregressive_model_max_order_greater_than_length():
     timeseries = [1.0, 2.0, 3.0, 4.0, 5.0]
     with pytest.raises(ValueError,
-                       match="timeseries length must be greater than max_order"):
+                       match="Argument timeseries must have length greater "
+                             "than max_order"):
         fit_autoregressive_model(timeseries, max_order=10)
 
 
@@ -308,7 +311,9 @@ def test_generate_ar_surrogate_first_coeff_not_one():
     ar_coefficients = [0.5, -0.5]
     n_samples = 100
     scale = 1.0
-    with pytest.raises(ValueError, match="First AR coefficient must be 1"):
+    with pytest.raises(ValueError,
+                       match="Argument ar_cofficients should have 1 as first "
+                             "element"):
         generate_autoregressive_surrogate(ar_coefficients, n_samples, scale)
 
 

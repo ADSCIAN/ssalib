@@ -8,6 +8,7 @@
 from typing import Literal, Sequence
 
 import numpy as np
+from numpy.typing import NDArray
 import statsmodels.api as sm
 from joblib import Parallel, delayed
 from scipy.linalg import toeplitz
@@ -18,7 +19,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAXResults
 def correlation_weights(
         timeseries_length: int,
         window: int
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     """Calculate the default weights for the weighted correlation matrix.
 
     Parameters
@@ -30,7 +31,7 @@ def correlation_weights(
 
     Returns
     -------
-    np.ndarray
+    NDArray[np.float64]
         Calculated weights.
 
     Notes
@@ -47,7 +48,30 @@ def correlation_weights(
     for Time Series. Berlin, Heidelberg: Springer.
     https://doi.org/10.1007/978-3-662-62436-4
 
+        Examples
+    --------
+    >>> weights = correlation_weights(5, 2)
+    >>> print(weights)
+    [1. 2. 2. 2. 1.]
+
+    >>> weights = correlation_weights(4, 4)
+    >>> print(weights)
+    [1. 1. 1. 1.]
+
     """
+
+    if not isinstance(timeseries_length, int):
+        raise TypeError("Argument timeseries_length must be an integer")
+    if not isinstance(window, int):
+        raise TypeError("Argument window must be an integer")
+    if timeseries_length <= 0:
+        raise ValueError("Argument timeseries_length must be positive")
+    if window <= 0:
+        raise ValueError("Argument window must be positive")
+    if window > timeseries_length:
+        raise ValueError("Argument window cannot be larger than "
+                         "timeseries_length")
+
     k = timeseries_length - window + 1
     ls = min(window, k)
     ks = max(window, k)
@@ -58,13 +82,13 @@ def correlation_weights(
     else:
         weights = np.ones(timeseries_length)
 
-    return weights
+    return weights.astype(np.float64)
 
 
 def weighted_correlation_matrix(
         reconstructed_series: Sequence[float],
-        weights: np.ndarray
-) -> np.ndarray:
+        weights: NDArray[np.float64]
+) -> NDArray[np.float64]:
     """Calculate the weighted correlation matrix.
 
     Parameters
@@ -73,12 +97,12 @@ def weighted_correlation_matrix(
         Input datasets matrix (or datasets frame) containing reconstructed
         time series of length `N` for the desired number of components
         (columns).
-    weights : array-like
+    weights : NDArray[np.float64]
         Weights for the computation.
 
     Returns
     -------
-    np.ndarray
+    NDArray[np.float64]
         Weighted correlation matrix.
 
     Notes
@@ -339,14 +363,22 @@ def autoregressive_model_score(
     .. [1] "statsmodels.tsa.statespace.sarimax.SARIMAX" `statsmodels` documentation.
            https://www.statsmodels.org/devel/generated/statsmodels.tsa.statespace.sarimax.SARIMAX.html
     """
-    # Input validation
-    if len(timeseries) == 0:  # Check for empty sequence
-        raise ValueError("timeseries cannot be empty")
-    if order < 0:
-        raise ValueError("order must be non-negative")
-    if len(timeseries) <= order:
-        raise ValueError("timeseries length must be greater than order")
 
+    if not isinstance(order, int):
+        raise TypeError("Argument order must be an integer")
+    if not isinstance(criterion, str):
+        raise TypeError("Argument criterion must be a string")
+
+    if len(timeseries) == 0:  # Check for empty sequence
+        raise ValueError("Argument timeseries cannot be empty")
+    if order < 0:
+        raise ValueError("Argument order must be non-negative")
+    if len(timeseries) <= order:
+        raise ValueError(
+            "Argument timeseries must have length greater than order")
+    if criterion not in ['aic', 'bic']:
+        raise ValueError(
+            "Argument criterion must be either 'aic' or 'bic'")
 
     arp = sm.tsa.statespace.SARIMAX(
         timeseries,
@@ -407,11 +439,15 @@ def fit_autoregressive_model(
     """
 
     if max_order < 0:
-        raise ValueError("max_order must be non-negative")
+        raise ValueError("Argument max_order must be non-negative")
     if not isinstance(max_order, int):
-        raise TypeError("max_order must be an integer")
+        raise TypeError("Argument max_order must be an integer")
     if len(timeseries) <= max_order:
-        raise ValueError("timeseries length must be greater than max_order")
+        raise ValueError(
+            "Argument timeseries must have length greater than max_order")
+    if criterion not in ['aic', 'bic']:
+        raise ValueError(
+            "Argument criterion must be either 'aic' or 'bic'")
 
     if n_jobs is None:
         n_jobs = -1
@@ -481,8 +517,6 @@ def generate_autoregressive_surrogate(
     - As noted in [1]_, the AR components should include the coefficient on the
       zero-lag. This is typically 1. Further, the AR parameters should have the
       opposite sign of what you might expect. See the examples below.
-    - Standardizing the generated series helps in preventing any scale-related
-      issues in further analysis.
     - The function sets a burn-in period of 100 samples to mitigate the
       influence of initial conditions.
 
@@ -500,7 +534,7 @@ def generate_autoregressive_surrogate(
     >>> seed = 42
     >>> surrogate = generate_autoregressive_surrogate(ar_coefficients, n_samples, scale, seed)
     >>> print(surrogate)
-    [ 1.28271453  0.6648326   0.36050652 -1.39807629 -0.90997736]
+    [-2.29389472 -2.48515057 -2.57935003 -3.1236923  -2.97260878]
 
     Raises
     ------
@@ -508,14 +542,26 @@ def generate_autoregressive_surrogate(
         If n_samples or scale is not positive, or if ar_coefficients is empty
         or doesn't start with 1.
     """
+
+    # Type checking
+    if not isinstance(n_samples, int):
+        raise TypeError("Argument n_samples must be an integer")
+    if not isinstance(scale, (int, float)):
+        raise TypeError("Argument scale must be a number")
+    if seed is not None and not isinstance(seed, int):
+        raise TypeError("Argument seed must be None or an integer")
+    if not isinstance(burnin, int):
+        raise TypeError("Argument burnin must be an integer")
+
     if n_samples <= 0:
-        raise ValueError("n_samples must be positive")
+        raise ValueError("Argument n_samples must be positive")
     if scale <= 0:
-        raise ValueError("scale must be positive")
+        raise ValueError("Argument scale must be positive")
     if not ar_coefficients:
-        raise ValueError("ar_coefficients must not be empty")
+        raise ValueError("Argument ar_coefficients must not be empty")
     if ar_coefficients[0] != 1:
-        raise ValueError("First AR coefficient must be 1")
+        raise ValueError(
+            "Argument ar_cofficients should have 1 as first element")
 
     if seed is not None:
         np.random.seed(seed)
