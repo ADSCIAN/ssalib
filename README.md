@@ -107,11 +107,13 @@ ssa = SingularSpectrumAnalysis(ts, svd_solver='sk_rsvd')
 
 ### Available Visualizations
 
+#TODO Update Table
+
 | `kind`       | Description                                                | Decomposition Required | Reconstruction Required |
 |--------------|------------------------------------------------------------|:----------------------:|:-----------------------:|
 | `matrix`     | Plot the matrix or its group reconstruction                |        Optional        |        Optional         |
 | `paired`     | Plot pairs (x,y) of successive left-eigenvectors           |          Yes           |           No            |
-| `paired`     | Plot periodogram associated with eigenvectors              |          Yes           |                         |
+| `paired`     | Plot periodogram associated with eigenvectors              |          Yes           |           No            |
 | `timeseries` | Plot original, preprocessed, or reconstructed time series  |        Optional        |        Optional         |
 | `values`     | Plot the singular values                                   |          Yes           |           No            |
 | `vectors`    | Plot the left eigen vectors                                |          Yes           |           No            |
