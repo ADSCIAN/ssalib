@@ -109,15 +109,15 @@ ssa = SingularSpectrumAnalysis(ts, svd_solver='sk_rsvd')
 
 #TODO Update Table
 
-| `kind`       | Description                                                | Decomposition Required | Reconstruction Required |
-|--------------|------------------------------------------------------------|:----------------------:|:-----------------------:|
-| `matrix`     | Plot the matrix or its group reconstruction                |        Optional        |        Optional         |
-| `paired`     | Plot pairs (x,y) of successive left-eigenvectors           |          Yes           |           No            |
-| `paired`     | Plot periodogram associated with eigenvectors              |          Yes           |           No            |
-| `timeseries` | Plot original, preprocessed, or reconstructed time series  |        Optional        |        Optional         |
-| `values`     | Plot the singular values                                   |          Yes           |           No            |
-| `vectors`    | Plot the left eigen vectors                                |          Yes           |           No            |
-| `wcorr`      | Plot the weighted correlation matrix                       |          Yes           |           No            |
+| `kind`        | Description                                                                   | Decomposition Required | Reconstruction Required |
+|---------------|-------------------------------------------------------------------------------|:----------------------:|:-----------------------:|
+| `matrix`      | Plot the matrix or its group reconstruction                                   |        Optional        |        Optional         |
+| `paired`      | Plot pairs (x,y) of successive left-eigenvectors                              |          Yes           |           No            |
+| `periodogram` | Plot periodogram associated with eigenvectors                                 |          Yes           |           No            |
+| `timeseries`  | Plot original, preprocessed, or reconstructed time series                     |        Optional        |        Optional         |
+| `values`      | Plot the singular values ranked by value norm or dominant component frequency |          Yes           |           No            |
+| `vectors`     | Plot the left eigen vectors                                                   |          Yes           |           No            |
+| `wcorr`       | Plot the weighted correlation matrix                                          |          Yes           |           No            |
 
 Pass the `kind` argument to the `SingularSpectrumAnalysis.plot` method.  
 
