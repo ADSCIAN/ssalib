@@ -7,16 +7,18 @@
 
 import inspect
 import logging
-from typing import Any, Sequence
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 
 from vassal.log_and_error import DecompositionError, ReconstructionError
-from vassal.math_ext import (
+from vassal.math_ext.matrix_operations import (
     average_antidiagonals,
     construct_SVD_matrix,
     construct_BK_trajectory_matrix,
+    construct_BK_covariance_matrix,
     construct_VG_covariance_matrix,
     correlation_weights,
     weighted_correlation_matrix
@@ -28,6 +30,8 @@ from vassal.svd import SVDHandler
 class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     """Singular Spectrum Analysis (SSA).
 
+    #TODO: document methods and attributes
+
     Singular Spectrum Analysis (SSA) provides non-parametric linear
     decomposition of a time series relying on the Singular Value Decomposition
     (SVD) of a matrix constructed from the time series. The SVD decomposed
@@ -35,11 +39,9 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     trajectory matrix approach, or a Toeplitz lagged covariance matrix,
     following the Vautard and Ghil (VG) approach.
 
-    Read more in the Notes and in the # TODO add ref to user guide.
-
     Parameters
     ----------
-    timeseries : array-like
+    timeseries : ArrayLike
         The timeseries data as a one-dimensional array-like sequence of
         float, e.g, a python list,  numpy array, or pandas series.
         If timeseries is a pd.Series with a pd.DatetimeIndex, the index
@@ -52,10 +54,16 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         Matrix to use for the SVD algorithm, either 'BK' or 'VG', with
         defaults to 'BK' (see Notes).
     svd_solver : str, default 'np_svd'
-        The method of singular value decomposition to use.
+        The method of singular value decomposition to use. Call the
+        available_solver method for possible options.
     standardize : bool, default True
         Whether to standardize the timeseries by removing the mean and
         scaling to unit variance.
+    na_strategy : str, default 'raise_error'
+        Strategy to handle missing values in the timeseries. If 'raise_error'
+        (default), ValueError is raised. If 'fill_mean', missing values are
+        replaced by the mean of the timeseries (i.e., zeros if standardize
+        is True).
 
     Notes
     -----
@@ -65,7 +73,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     hereafter VG [2]_, relies instead on the SVD of a lagged covariance
     matrix showing a Toeplitz structure.
 
-    Both implementation are explained in [3]_. #TODO add ref to user guide
+    Both implementation are explained in [3]_.
 
     References
     ----------
@@ -86,11 +94,13 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
 
     def __init__(
             self,
-            timeseries: Sequence[float],
+            timeseries: ArrayLike,
             window: int | None = None,
-            svd_matrix: str = 'BK',
+            svd_matrix: Literal['BK', 'VG'] = 'BK',
             svd_solver: str = 'np_svd',
-            standardize: bool = True
+            standardize: bool = True,
+            na_strategy: Literal['raise_error', 'fill_mean'] = 'raise_error',
+            # TODO test na_strategy
     ) -> None:
 
         SVDHandler.__init__(self, svd_solver)
@@ -101,10 +111,28 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         else:
             self._ix = None
 
-        self._timeseries: np.ndarray = self.__validate_timeseries(timeseries)
-        self._n = self._timeseries.shape[0]
-        self.mean_ = np.mean(self._timeseries)
-        self.std_ = np.std(self._timeseries)
+        if na_strategy not in ['raise_error', 'fill_mean']:
+            raise ValueError(f"Argument na_strategy should be either "
+                             f"'raise_error' or 'fill_mean', got {na_strategy} "
+                             f"instead.")
+
+        if na_strategy == 'raise_error':
+            allow_na = False
+            self.na_mask = np.zeros_like(timeseries, dtype=bool)
+        else:
+            allow_na = True
+            self.na_mask = np.isnan(timeseries)
+
+        self._na_strategy: str = na_strategy
+        self._timeseries: NDArray = self.__validate_timeseries(timeseries,
+                                                               allow_na)
+        self._has_na: bool = np.isnan(self._timeseries).any()
+
+        self._n: int = self._timeseries.shape[0]
+        self.mean_: float = np.nanmean(self._timeseries)
+        self.std_: float = np.nanstd(self._timeseries)
+        if self._na_strategy == 'fill_mean':
+            self._timeseries[self.na_mask] = self.mean_
 
         if standardize:
             self._timeseries_pp = (self._timeseries - self.mean_) / self.std_
@@ -174,7 +202,7 @@ groups: {groups}
     def __getitem__(
             self,
             item: int | slice | list[int] | str
-    ) -> np.ndarray:
+    ) -> NDArray | pd.Series:
         """API to access SSA timeseries data."""
         self.__validate_item_keys(item)
 
@@ -285,14 +313,16 @@ groups: {groups}
 
     @staticmethod
     def __validate_timeseries(
-            timeseries: Sequence[float]
-    ) -> np.ndarray:
+            timeseries: ArrayLike,
+            allow_na: bool = False
+    ) -> NDArray:
         """Validates the timeseries data.
         """
         timeseries = np.squeeze(np.array(timeseries))
         if not np.issubdtype(timeseries.dtype, np.number):
             raise ValueError("All elements must be integers or floats.")
-        if np.any(np.isinf(timeseries)) or np.any(np.isnan(timeseries)):
+        if not allow_na and (
+                np.any(np.isinf(timeseries)) or np.any(np.isnan(timeseries))):
             raise ValueError("The array contains inf or NaN values.")
         if timeseries.ndim != 1:
             raise ValueError("Timeseries must be one-dimensional.")
@@ -422,7 +452,7 @@ groups: {groups}
 
         See Also
         --------
-        SingularSpectrumAnalysis
+        SVDHandler
             For details about available solvers and SVD algorithms.
 
         """
@@ -563,7 +593,7 @@ groups: {groups}
         return signals
 
     @property
-    def groups(self):
+    def groups(self) -> dict[str, list[int] | None] | None:
         """ Return tgroup names and their eigentriple indices.
 
         Any group name registered in `groups` is a key to get the values of
@@ -607,7 +637,6 @@ groups: {groups}
         SingularSpectrumAnalysis.reconstruct
             Method used for reconstructing components based on eigentriple
             indices.
-
 
         """
 
@@ -664,12 +693,18 @@ groups: {groups}
 
     @property
     def _covariance_matrix(self):
-        """Return Vautard & Ghil covariance matrix.
+        """Return Broomhead & King or Vautard & Ghil covariance matrix.
         """
-        covariance_matrix = construct_VG_covariance_matrix(
-            timeseries=self._timeseries_pp,
-            window=self._w
-        )
+        if self._svd_matrix_kind == 'BK':
+            covariance_matrix = construct_BK_covariance_matrix(
+                timeseries=self._timeseries_pp,
+                window=self._w
+            )
+        elif self._svd_matrix_kind == 'VG':
+            covariance_matrix = construct_VG_covariance_matrix(
+                timeseries=self._timeseries_pp,
+                window=self._w
+            )
         return covariance_matrix
 
     @property
@@ -783,7 +818,7 @@ groups: {groups}
     def _reconstruct_group_matrix(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> np.ndarray:
+    ) -> NDArray:
         """ Reconstructs a group matrix using components group indices.
 
         Parameters
@@ -823,18 +858,18 @@ groups: {groups}
     def _reconstruct_group_timeseries(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> np.ndarray:
+    ) -> NDArray:
         """ Reconstructs a time series using the group component indices.
 
         Parameters
         ----------
         group_indices : int | slice | range | list of int
             Eigentriple indices used to group and reconstruct the time series.
-            Time series can be reconstructed using a slice `group_indices`.
+            Time series can be reconstructed using a slice group_indices.
 
         Returns
         -------
-        reconstructed_timeseries : np.ndarray
+        reconstructed_timeseries : NDArray
             The reconstructed time series.
 
         """
