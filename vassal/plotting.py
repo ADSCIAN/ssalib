@@ -16,6 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
+from numpy.typing import NDArray
 from scipy.signal import periodogram
 
 from vassal.log_and_error import DecompositionError, ignored_argument_warning
@@ -187,14 +188,14 @@ class PlotSSA(metaclass=abc.ABCMeta):
     def _reconstruct_group_matrix(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> np.ndarray:
+    ) -> NDArray:
         pass
 
     @abc.abstractmethod
     def _reconstruct_group_timeseries(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> np.ndarray:
+    ) -> NDArray:
         pass
 
     @ignored_argument_warning('n_components', 'scale', log_level='info')
@@ -206,6 +207,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             **plt_kw
     ):
         """Plot decomposed or reconstructed matrices.
+        # TODO: refactor and improve (including main doc)
         """
         if not ax:
             fig = plt.figure()
@@ -281,6 +283,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
             **plt_kw
     ) -> tuple[Figure, Axes]:
         """Plot the power spectral density of signals associated with eigenvectors.
+
+        # TODO: offer the possiblity to show the original periodogram if
+        # TODO: ncomp is 0 or None?
+
         """
 
         freq_original, psd_original = periodogram(self._timeseries_pp)
@@ -312,16 +318,14 @@ class PlotSSA(metaclass=abc.ABCMeta):
                         color='lightgrey')
             freq, psd = periodogram(self[i])
             plot_method(freq[1:], psd[1:], **plt_kw)
-            dominant_freq = freq[np.argmax(psd)]
+            dominant_freq = freq[
+                np.argmax(psd)]  # TODO: rely on proprety dominant_frequencies
             period = 1 / dominant_freq
-            if period > self._w:
-                period = 0
             title = f'EV{i} (T={period:.1f}{unit})'
             ax.set_title(title, {'fontsize': 'small'})
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_aspect('auto', 'box')
-
 
         return fig, fig.get_axes()
 
@@ -361,21 +365,62 @@ class PlotSSA(metaclass=abc.ABCMeta):
     def _plot_values(
             self,
             n_components: int,
+            rank_by: Literal['values', 'freq'] = 'values',
+            conf_level: float | None = None,
+            two_tailed: bool = True,
             ax: Axes | None = None,
             **plt_kw
     ) -> tuple[Figure, Axes]:
         """Plot component norms.
+        # TODO: update tutorial and test the new freq feature (rank_by etc)
         """
         s = self.s_
+
+        if rank_by == 'freq':
+            dominant_frequencies = self.get_dominant_frequencies(n_components)
+            order = np.argsort(dominant_frequencies)
+            s = s[order][:n_components]
+            x_values = dominant_frequencies[order]
+            x_label = 'Dominant Frequency (Cycle/Unit)'
+        else:
+            order = np.arange(n_components)
+            x_values = order
+            s = s[:n_components]
+            x_label = 'Component Index'
 
         if not ax:
             fig = plt.figure()
             ax = fig.gca()
 
-        ax.semilogy(s[:n_components], **plt_kw)
+        ax.semilogy(x_values, s, **plt_kw)
         ax.set_ylabel('Component Norm')
-        ax.set_xlabel('Component Index')
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_xlabel(x_label)
+        if rank_by == 'values':
+            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+        if hasattr(self, 'n_surrogates'):
+            lower, upper = self.get_confidence_interval(
+                n_components,
+                conf_level,
+                two_tailed,
+            )
+
+            center = (lower + upper) / 2
+            errorbar_length = (upper - lower) / 2
+
+            ax.errorbar(
+                x_values,
+                center[order],
+                yerr=errorbar_length[order],
+                fmt='none',
+                capsize=1,
+                elinewidth=.5,
+                capthick=.5,
+                color='k',
+                label=f'AR{len(self.autoregressive_model.arparams)} Surrogate '
+                      f'{conf_level * 100:g}% CI'
+                      f'\nn={self.n_surrogates}')
+            ax.legend()
 
         fig = ax.get_figure()
 
@@ -529,6 +574,30 @@ class PlotSSA(metaclass=abc.ABCMeta):
         """ List of available plot kinds.
         """
         return list(cls._plot_kinds_map.keys())
+
+    def get_dominant_frequencies(
+            self,
+            n_components: int | None = None
+    ) -> np.ndarray:
+        """Return the dominant frequency associated with n eigenvector.
+        """
+
+        if self.n_components is None:
+            raise DecompositionError(
+                f"Cannot access 'dominant_frequencies' prior to decomposition. "
+                f"Make sure to call the decompose' and 'reconstruct' method "
+                f"first."
+            )
+
+        if n_components is None:
+            n_components = self.n_components
+
+        dominant_freqs = []
+        for i in range(n_components):
+            freq, psd = periodogram(self[i])
+            dominant_freqs.append(freq[np.argmax(psd)])
+
+        return np.array(dominant_freqs)
 
 
 if __name__ == '__main__':
