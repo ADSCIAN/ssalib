@@ -1,145 +1,11 @@
 import numpy as np
 import pytest
 
-from vassal.math_ext import (
-    correlation_weights,
-    weighted_correlation_matrix,
-    construct_SVD_matrix,
-    construct_BK_trajectory_matrix,
-    construct_VG_covariance_matrix,
-    average_antidiagonals,
+from vassal.math_ext.ar_modeling import (
     autoregressive_model_score,
     fit_autoregressive_model,
     generate_autoregressive_surrogate
 )
-
-
-def test_correlation_weights():
-    weights = correlation_weights(10, 4)
-    assert weights.shape[0] == 10
-    assert np.isfinite(weights).all()
-
-
-def test_weighted_correlation_matrix():
-    series = np.random.randn(5, 10)  # 5 timeseries of length 10
-    weights = np.ones(10)
-    wcorr = weighted_correlation_matrix(series, weights)
-    assert wcorr.shape == (5, 5)
-    assert np.allclose(np.diag(wcorr), 1)
-
-    # Check symmetry
-    assert np.allclose(wcorr, wcorr.T)
-
-    # Test with different weights
-    weights = np.linspace(1, 10, 10)
-    wcorr = weighted_correlation_matrix(series, weights)
-    assert np.allclose(wcorr, wcorr.T)
-    assert (wcorr >= -1).all() and (wcorr <= 1).all()
-
-
-def test_construct_SVD_matrix_BK():
-    ts = np.array([1, 3, 0, -3, -2, -1])
-    expected_matrix = np.array([
-        [1., 3., 0.],
-        [3., 0., -3.],
-        [0., -3., -2.],
-        [-3., -2., -1.]
-    ])
-    result = construct_SVD_matrix(ts, window=4, kind='BK')
-    np.testing.assert_array_almost_equal(result, expected_matrix)
-
-
-def test_construct_SVD_matrix_VG():
-    ts = np.array([1, 3, 0, -3, -2, -1])
-    expected_matrix = np.array([
-        [4., 2.2, -1.5],
-        [2.2, 4., 2.2],
-        [-1.5, 2.2, 4.]
-    ])
-    result = construct_SVD_matrix(ts, window=3, kind='VG')
-    np.testing.assert_array_almost_equal(result, expected_matrix)
-
-
-def test_construct_BK_trajectory_matrix():
-    ts = np.array([1, 3, 0, -3, -2, -1])
-    expected_matrix = np.array([
-        [1., 3., 0.],
-        [3., 0., -3.],
-        [0., -3., -2.],
-        [-3., -2., -1.]
-    ])
-    result = construct_BK_trajectory_matrix(ts, window=4)
-    np.testing.assert_array_almost_equal(result, expected_matrix)
-
-
-def test_construct_VG_covariance_matrix():
-    ts = np.array([1, 3, 0, -3, -2, -1])
-    expected_matrix = np.array([
-        [4., 2.2, -1.5],
-        [2.2, 4., 2.2],
-        [-1.5, 2.2, 4.]
-    ])
-    result = construct_VG_covariance_matrix(ts, window=3)
-    np.testing.assert_array_almost_equal(result, expected_matrix)
-
-
-def test_construct_SVD_matrix_invalid_kind():
-    ts = np.array([1, 3, 0, -3, -2, -1])
-    with pytest.raises(
-            ValueError,
-            match="SVD matrix 'kind' must be either 'BK_trajectory', "
-                  "'BK_covariance', or 'VG_covariance'"):
-        construct_SVD_matrix(ts, window=3, kind='invalid')
-
-
-def test_construct_SVD_matrix_default_window():
-    ts = np.array([1, 2, 3, 4, 5, 6])
-    expected_matrix = np.array([
-        [1., 2., 3., 4.],
-        [2., 3., 4., 5.],
-        [3., 4., 5., 6.]
-    ])
-    result = construct_SVD_matrix(ts, kind='BK')
-    np.testing.assert_array_almost_equal(result, expected_matrix)
-
-
-def test_average_antidiagonals():
-    matrix = np.arange(12).reshape(4, 3)
-    expected_timeseries = np.array([0., 2., 4., 7., 9., 11.])
-    result = average_antidiagonals(matrix)
-    np.testing.assert_array_almost_equal(result, expected_timeseries)
-
-
-def test_average_antidiagonals_square_matrix():
-    matrix = np.array([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
-    ])
-    expected_timeseries = np.array([1., 3., 5., 7., 9.])
-    result = average_antidiagonals(matrix)
-    np.testing.assert_array_almost_equal(result, expected_timeseries)
-
-
-def test_average_antidiagonals_single_row():
-    matrix = np.array([[1, 2, 3]])
-    expected_timeseries = np.array([1., 2., 3.])
-    result = average_antidiagonals(matrix)
-    np.testing.assert_array_almost_equal(result, expected_timeseries)
-
-
-def test_average_antidiagonals_single_column():
-    matrix = np.array([[1], [2], [3]])
-    expected_timeseries = np.array([1., 2., 3.])
-    result = average_antidiagonals(matrix)
-    np.testing.assert_array_almost_equal(result, expected_timeseries)
-
-
-def test_average_antidiagonals_empty():
-    matrix = np.array([[]])
-    expected_timeseries = np.array([])
-    result = average_antidiagonals(matrix)
-    np.testing.assert_array_almost_equal(result, expected_timeseries)
 
 
 def test_autoregressive_model_score_valid_ar0(ar1_timeseries50):
@@ -184,6 +50,28 @@ def test_autoregressive_model_score_order_greater_than_length():
                        match="Argument timeseries must have length greater "
                              "than order"):
         autoregressive_model_score(timeseries, order)
+
+
+def test_autoregressive_model_score_non_integer_order(ar1_timeseries50):
+    """Test that non-integer order raises TypeError."""
+    with pytest.raises(TypeError, match="order must be an integer"):
+        autoregressive_model_score(ar1_timeseries50, order=1.5)
+
+
+def test_autoregressive_model_score_non_string_criterion(
+        ar1_timeseries50):
+    """Test that non-string criterion raises TypeError."""
+    with pytest.raises(TypeError, match="criterion must be a string"):
+        autoregressive_model_score(ar1_timeseries50, order=1,
+                                   criterion=123)
+
+
+def test_autoregressive_model_score_invalid_criterion(ar1_timeseries50):
+    """Test that invalid criterion value raises ValueError."""
+    with pytest.raises(ValueError,
+                       match="criterion must be either 'aic' or 'bic'"):
+        autoregressive_model_score(ar1_timeseries50, order=1,
+                                   criterion='invalid')
 
 
 def test_fit_autoregressive_model_default(ar1_timeseries50):
@@ -242,6 +130,104 @@ def test_fit_autoregressive_model_parallel_jobs(ar1_timeseries50):
     assert hasattr(model, 'bic')
 
 
+def test_fit_autoregressive_model_invalid_criterion(ar1_timeseries50):
+    """Test that invalid criterion value raises ValueError in fit function."""
+    with pytest.raises(ValueError,
+                       match="criterion must be either 'aic' or 'bic'"):
+        fit_autoregressive_model(ar1_timeseries50, criterion='invalid')
+
+
+def test_fit_autoregressive_model_n_jobs_none(ar1_timeseries50):
+    """Test model fitting with n_jobs=None with proper validation."""
+    model = fit_autoregressive_model(ar1_timeseries50, n_jobs=None)
+
+    # Check information criteria are valid
+    assert np.isfinite(model.aic), "AIC should be a finite number"
+    assert np.isfinite(model.bic), "BIC should be a finite number"
+    assert model.bic > model.aic, "BIC should be greater than AIC"
+
+    # Validate model parameters
+    assert len(model.params) > 0, "Model should have parameters"
+    assert all(np.isfinite(model.params)), "All parameters should be finite"
+
+    # Test prediction capability
+    predictions = model.predict(start=0, end=len(ar1_timeseries50) - 1)
+    assert len(predictions) == len(ar1_timeseries50)
+    assert all(np.isfinite(predictions)), "All predictions should be finite"
+
+
+def test_fit_autoregressive_model_n_jobs_positive(ar1_timeseries50):
+    """Test model fitting with positive n_jobs with proper validation."""
+    model = fit_autoregressive_model(ar1_timeseries50, n_jobs=2)
+
+    assert np.isfinite(model.aic), "AIC should be a finite number"
+    assert np.isfinite(model.bic), "BIC should be a finite number"
+    assert model.bic > model.aic, "BIC should be greater than AIC"
+
+    predictions = model.predict(start=0, end=len(ar1_timeseries50) - 1)
+    assert len(predictions) == len(ar1_timeseries50)
+    assert all(np.isfinite(predictions)), "All predictions should be finite"
+
+
+def test_fit_autoregressive_model_n_jobs_negative(ar1_timeseries50):
+    """Test model fitting with n_jobs=-1 with proper validation."""
+    model = fit_autoregressive_model(ar1_timeseries50, n_jobs=-1)
+
+    assert np.isfinite(model.aic), "AIC should be a finite number"
+    assert np.isfinite(model.bic), "BIC should be a finite number"
+    assert model.bic > model.aic, "BIC should be greater than AIC"
+
+    predictions = model.predict(start=0, end=len(ar1_timeseries50) - 1)
+    assert len(predictions) == len(ar1_timeseries50)
+    assert all(np.isfinite(predictions)), "All predictions should be finite"
+
+
+def test_fit_autoregressive_model_results_consistent_across_n_jobs(
+        ar1_timeseries50):
+    """Test that results are consistent regardless of n_jobs value."""
+    model_single = fit_autoregressive_model(ar1_timeseries50, n_jobs=1)
+    model_multi = fit_autoregressive_model(ar1_timeseries50, n_jobs=2)
+    model_all = fit_autoregressive_model(ar1_timeseries50, n_jobs=-1)
+
+    # Compare information criteria
+    for criterion in ['aic', 'bic']:
+        values = [getattr(model, criterion) for model in
+                  [model_single, model_multi, model_all]]
+        assert all(
+            np.isfinite(values)), f"All {criterion} values should be finite"
+        assert np.allclose(values, values[0],
+                           rtol=1e-10), f"{criterion} values should be consistent"
+
+    # Compare model parameters
+    for model in [model_multi, model_all]:
+        np.testing.assert_allclose(
+            model_single.params,
+            model.params,
+            rtol=1e-10,
+            atol=1e-10,
+            err_msg="Model parameters should be consistent across different "
+                    "n_jobs values"
+        )
+
+    # Compare predictions
+    pred_single = model_single.predict(start=0, end=len(ar1_timeseries50) - 1)
+    pred_multi = model_multi.predict(start=0, end=len(ar1_timeseries50) - 1)
+    pred_all = model_all.predict(start=0, end=len(ar1_timeseries50) - 1)
+
+    np.testing.assert_allclose(
+        pred_single,
+        pred_multi,
+        rtol=1e-10,
+        err_msg="Predictions should be consistent between single and multi-core"
+    )
+    np.testing.assert_allclose(
+        pred_single,
+        pred_all,
+        rtol=1e-10,
+        err_msg="Predictions should be consistent between single and all-core"
+    )
+
+
 def test_generate_ar_surrogate_valid_parameters():
     ar_coefficients = [1, -0.5]
     n_samples = 100
@@ -254,6 +240,7 @@ def test_generate_ar_surrogate_valid_parameters():
 
     np.testing.assert_allclose(-model.params[0], ar_coefficients[-1], atol=1e-1)
     np.testing.assert_allclose(model.params[-1], scale, atol=1e-1)
+
 
 def test_generate_ar_surrogate_with_seed():
     ar_coefficients = [1, -0.5]
@@ -328,3 +315,31 @@ def test_generate_ar_surrogate_burnin_effect():
                                                               n_samples, scale,
                                                               seed, burnin=100)
     assert not np.array_equal(surrogate_without_burnin, surrogate_with_burnin)
+
+
+def test_generate_surrogate_non_integer_n_samples():
+    """Test that non-integer n_samples raises TypeError."""
+    with pytest.raises(TypeError, match="n_samples must be an integer"):
+        generate_autoregressive_surrogate([1, -0.5],
+                                          n_samples=10.5, scale=1.0)
+
+
+def test_generate_surrogate_non_numeric_scale():
+    """Test that non-numeric scale raises TypeError."""
+    with pytest.raises(TypeError, match="scale must be a number"):
+        generate_autoregressive_surrogate([1, -0.5], n_samples=10,
+                                          scale="1.0")
+
+
+def test_generate_surrogate_non_integer_seed():
+    """Test that non-integer seed raises TypeError."""
+    with pytest.raises(TypeError, match="seed must be None or an integer"):
+        generate_autoregressive_surrogate([1, -0.5], n_samples=10,
+                                          scale=1.0, seed=1.5)
+
+
+def test_generate_surrogate_non_integer_burnin():
+    """Test that non-integer burnin raises TypeError."""
+    with pytest.raises(TypeError, match="burnin must be an integer"):
+        generate_autoregressive_surrogate([1, -0.5], n_samples=10,
+                                          scale=1.0, burnin=10.5)
