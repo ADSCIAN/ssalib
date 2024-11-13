@@ -1,7 +1,7 @@
 # Visually Assisted Singular Spectrum AnaLysis (VASSAL)
 
 [![Tests](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml/badge.svg)](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml)
-[![Python Version](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://www.python.org)
+[![Python Version](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)](https://www.python.org)
 [![Coverage](https://img.shields.io/badge/coverage-88%25-green)](https://github.com/ADSCIAN/vassal/actions)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Development Status](https://img.shields.io/badge/Development%20Status-Alpha-yellow)](https://pypi.org/project/your-package-name/)
