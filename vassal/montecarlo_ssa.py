@@ -1,3 +1,6 @@
+"""Monte Carlo Singular Spectrum Analysis"""
+from __future__ import annotations
+
 from typing import Literal
 
 import numpy as np
@@ -21,7 +24,6 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
     # TODO: document methods and attributes
     # TODO: Test
-    # TODO: Fit with NaN
     # TODO: Custimize repr & str
 
     Proposed by [1]_, Monte Carlo Singular Spectrum Analysis relies on
@@ -409,6 +411,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             # Slice the eigenvectors matrix to use only first n_components
             u = u[:, :n_components]
 
+        #TODO: consider construct_SVD_matrix instead
         if svd_matrix_kind == 'BK':
             trajectory_matrix_surr = construct_BK_trajectory_matrix(
                 surrogate,

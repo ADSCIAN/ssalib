@@ -1,9 +1,5 @@
 """Singular Spectrum Analysis"""
-
-# Author: Damien Delforge <damien.delforge@adscian.be>
-#         Alice Alonso <alice.alonso@adscian.be>
-#
-# License: BSD 3 clause
+from __future__ import annotations
 
 import inspect
 import logging

@@ -1,9 +1,6 @@
-"""Plotting Tools for Singular Spectrum Analysis"""
-
-# Author: Damien Delforge <damien.delforge@adscian.be>
-#         Alice Alonso <alice.alonso@adscian.be>
-#
-# License: BSD 3 clause
+"""Plotting Tools for Singular Spectrum Analysis
+"""
+from __future__ import annotations
 
 import abc
 import logging
