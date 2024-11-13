@@ -1,19 +1,16 @@
 """Singular Value Decomposition (SVD) Solver Handler"""
-
-# Author: Damien Delforge <damien.delforge@adscian.be>
-#         Alice Alonso <alice.alonso@adscian.be>
-#
-# License: BSD 3 clause
+from __future__ import annotations
 
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.linalg import svd as scipy_svd
 from scipy.sparse.linalg import svds as scipy_svds
 
 from vassal.log_and_error import ignored_argument_warning
 
-SVDTuple = tuple[np.ndarray, np.ndarray, np.ndarray]
+SVDTuple = tuple[NDArray, NDArray, NDArray]
 
 
 class SVDHandler:
@@ -40,18 +37,18 @@ class SVDHandler:
     eigentriples : SVDTuple
         Tuple of singular values (s) and left and right eigenvectors (u, vt)
         returned as (u, s, vt).
-    eigenvalues : np.ndarray
+    eigenvalues : NDArray
         Squared singular values.
     n_components : int
         Number of components defined by the number singular values.
     svd_solver: str
         The name of the user-selected SVD solver.
-    s_ : np.ndarray | None
+    s_ : NDArray | None
         1D array of singular values or None prior to the call of `svd` method.
-    u_ : np.ndarray | None
+    u_ : NDArray | None
         2D array of right eigenvectors or None prior to the call of `svd`
         method.
-    vt_ : np.ndarray | None
+    vt_ : NDArray | None
         2D array of left eigenvectors or None prior to the call of `svd`
         method.
 
@@ -115,7 +112,7 @@ class SVDHandler:
 
     def svd(
             self,
-            matrix: np.ndarray,
+            matrix: NDArray,
             n_components: int | None = None,
             **kwargs
     ) -> SVDTuple:
@@ -123,7 +120,7 @@ class SVDHandler:
 
         Parameters
         ----------
-        matrix : np.ndarray
+        matrix : NDArray
             Matrix to be decomposed.
         n_components : int | None
             Number of singular values and vectors to extract. Only used for
@@ -154,7 +151,7 @@ class SVDHandler:
     @staticmethod
     @ignored_argument_warning('n_components')
     def _numpy_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             full_matrices: bool = True,
             compute_uv: bool = True,
             hermitian: bool = False,
@@ -174,7 +171,7 @@ class SVDHandler:
     @staticmethod
     @ignored_argument_warning('n_components')
     def _scipy_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             check_finite: bool = False,
             compute_uv: bool = True,
             lapack_driver: str = 'gesdd',
@@ -192,7 +189,7 @@ class SVDHandler:
 
     @staticmethod
     def _scipy_sparse_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             n_components: int,
             return_singular_vectors: bool = True,
             **kwargs: Any
@@ -215,7 +212,7 @@ class SVDHandler:
 
     @staticmethod
     def _sklearn_randomized_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             n_components: int,
             **kwargs: Any
     ) -> SVDTuple:
@@ -238,7 +235,7 @@ class SVDHandler:
     @staticmethod
     @ignored_argument_warning('n_components')
     def _dask_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             coerce_signs: bool = True,
             **kwargs: Any
     ) -> SVDTuple:
@@ -259,7 +256,7 @@ class SVDHandler:
 
     @staticmethod
     def _dask_compressed_svd(
-            matrix: np.ndarray,
+            matrix: NDArray,
             n_components: int,
             **kwargs: Any
     ) -> SVDTuple:
@@ -285,7 +282,7 @@ class SVDHandler:
         return self.u_, self.s_, self.vt_
 
     @property
-    def eigenvalues(self) -> np.ndarray:
+    def eigenvalues(self) -> NDArray | None:
         """Eigenvalues of SVD."""
         return self.s_ ** 2
 
