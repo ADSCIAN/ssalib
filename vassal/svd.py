@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from enum import Enum
 from inspect import signature
-from typing import Any, TypeAlias
+from typing import Any
 
 import numpy as np
 import scipy
@@ -53,8 +53,7 @@ class SVDSolverType(Enum):
 
 
 # Custom type for SVD results
-FloatArray: TypeAlias = NDArray[float]
-SVDDecomposition = tuple[FloatArray, FloatArray, FloatArray]
+SVDDecomposition = tuple[NDArray[float], NDArray[float], NDArray[float]]
 
 
 class SVDHandler:
@@ -74,18 +73,18 @@ class SVDHandler:
     decomposition_results : SVDDecomposition | None
         Tuple of singular values (s) and left and right eigenvectors (u, vt)
         returned as (u, s, vt). None if svd() hasn't been called yet.
-    eigenvalues : FloatArray | None
+    eigenvalues : NDArray[float] | None
         Squared singular values. None if svd() hasn't been called yet.
     n_components : int | None
         Number of components defined by the number singular values. None if
         svd() hasn't been called yet.
     svd_solver : str
         Name value of the selected SVD solver.
-    s_ : FloatArray | None
+    s_ : NDArray[float] | None
         1D array of singular values. None if svd() hasn't been called yet.
-    u_ : FloatArray | None
+    u_ : NDArray[float] | None
         2D array of left eigenvectors. None if svd() hasn't been called yet.
-    vt_ : FloatArray | None
+    vt_ : NDArray[float] | None
         2D array of right eigenvectors. None if svd() hasn't been called yet.
 
     Examples
@@ -202,7 +201,7 @@ class SVDHandler:
 
     def svd(
             self,
-            matrix: FloatArray,
+            matrix: NDArray[float],
             n_components: int | None = None,
             **solver_kwargs
     ) -> SVDDecomposition:
@@ -210,7 +209,7 @@ class SVDHandler:
 
         Parameters
         ----------
-        matrix : FloatArray
+        matrix : NDArray[float]
             Two-dimensional matrix to be decomposed.
         n_components : int | None, default None
             Number of singular values and vectors to extract. Only used for
@@ -240,7 +239,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_numpy_standard(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             full_matrices: bool = True,
             compute_uv: bool = True,
             hermitian: bool = False,
@@ -259,7 +258,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_scipy_standard(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             check_finite: bool = False,
             compute_uv: bool = True,
             lapack_driver: str = 'gesdd',
@@ -277,7 +276,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_scipy_sparse(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             n_components: int,
             return_singular_vectors: bool = True,
             **kwargs: Any
@@ -300,7 +299,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_sklearn_randomized(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             n_components: int,
             **kwargs: Any
     ) -> SVDDecomposition:
@@ -315,7 +314,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_dask_standard(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             **kwargs: Any
     ) -> SVDDecomposition:
         """dask svd wrapper."""
@@ -330,7 +329,7 @@ class SVDHandler:
 
     @staticmethod
     def _svd_dask_compressed(
-            matrix: FloatArray,
+            matrix: NDArray[float],
             n_components: int,
             **kwargs: Any
     ) -> SVDDecomposition:
@@ -350,21 +349,21 @@ class SVDHandler:
         return self._svd_solver.value
 
     @property
-    def s_(self) -> FloatArray | None:
+    def s_(self) -> NDArray[float] | None:
         """Singular values of SVD."""
         if self.decomposition_results is not None:
             return self.decomposition_results[1]
         return None
 
     @property
-    def u_(self) -> FloatArray | None:
+    def u_(self) -> NDArray[float] | None:
         """Left eigenvectors of SVD."""
         if self.decomposition_results is not None:
             return self.decomposition_results[0]
         return None
 
     @property
-    def vt_(self) -> FloatArray | None:
+    def vt_(self) -> NDArray[float] | None:
         """Right eigenvectors of SVD."""
         if self.decomposition_results is not None:
             return self.decomposition_results[2]
@@ -376,7 +375,7 @@ class SVDHandler:
         return len(self.s_) if self.s_ is not None else None
 
     @property
-    def eigenvalues(self) -> FloatArray | None:
+    def eigenvalues(self) -> NDArray[float] | None:
         """Eigenvalues of SVD."""
         return self.s_ ** 2 if self.s_ is not None else None
 
