@@ -2,6 +2,24 @@ import numpy as np
 import pytest
 
 from vassal.ssa import SingularSpectrumAnalysis
+from vassal.svd import SVDSolverType
+
+
+@pytest.fixture
+def sample_matrix() -> np.ndarray:
+    return np.random.random((10, 10))
+
+
+@pytest.fixture
+def n_components() -> int:
+    return 5
+
+
+@pytest.fixture
+def full_svd_solvers() -> list[str]:
+    return [SVDSolverType.NUMPY_STANDARD.value,
+            SVDSolverType.SCIPY_STANDARD.value,
+            SVDSolverType.DASK_STANDARD.value]
 
 
 @pytest.fixture
@@ -27,44 +45,51 @@ def ssa_no_decomposition(timeseries50):
 
 
 @pytest.fixture
-def ssa_np_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='np_svd')
+def ssa_numpy_standard(timeseries50):
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.NUMPY_STANDARD)
     return ssa
 
 
 @pytest.fixture
-def ssa_sc_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sc_svd')
+def ssa_scipy_standard(timeseries50):
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.SCIPY_STANDARD)
     return ssa
 
 
 @pytest.fixture
-def ssa_sc_ssvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sc_ssvd')
+def ssa_scipy_sparse(timeseries50):
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.SCIPY_SPARSE)
     return ssa
 
 
 @pytest.fixture
-def ssa_sk_rsvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sk_rsvd')
+def ssa_sklearn_randomized(timeseries50):
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
     return ssa
 
 
 @pytest.fixture
-def ssa_da_svd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='da_svd')
+def ssa_dask_standard(timeseries50):
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.DASK_STANDARD)
     return ssa
 
 
 @pytest.fixture
 def ssa_da_csvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='da_csvd')
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.DASK_COMPRESSED)
     return ssa
 
 
 @pytest.fixture
 def ssa_with_decomposition(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50, svd_solver='sk_rsvd')
+    ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
     ssa.decompose(n_components=10)
     return ssa
 

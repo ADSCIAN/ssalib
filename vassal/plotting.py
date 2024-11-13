@@ -1,5 +1,4 @@
-"""Plotting Tools for Singular Spectrum Analysis
-"""
+"""Plotting Tools for Singular Spectrum Analysis"""
 from __future__ import annotations
 
 import abc
@@ -17,7 +16,7 @@ from numpy.typing import NDArray
 from scipy.signal import periodogram
 
 from vassal.log_and_error import DecompositionError, ignored_argument_warning
-
+#TODO: remove ignored_argument warning
 
 class PlotSSA(metaclass=abc.ABCMeta):
     """Plotting base class for SingularSpectrumAnalysis

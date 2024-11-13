@@ -6,6 +6,7 @@ import pytest
 
 from vassal.ssa import SingularSpectrumAnalysis, DecompositionError, \
     ReconstructionError
+from vassal.svd import SVDSolverType
 
 
 def test_correct_initialization(ssa_no_decomposition):
@@ -14,7 +15,7 @@ def test_correct_initialization(ssa_no_decomposition):
     assert ssa_no_decomposition._w == 25  # Default window size is half of n
     assert ssa_no_decomposition._standardized is True  # Default should be True
     assert ssa_no_decomposition._timeseries is not None
-    assert ssa_no_decomposition.svd_solver == 'np_svd'  # Default
+    assert ssa_no_decomposition._svd_solver == SVDSolverType.NUMPY_STANDARD  # Default
     assert ssa_no_decomposition._svd_matrix_kind == 'BK'
 
 
@@ -118,94 +119,107 @@ def test_svd_methods(timeseries50, svd_solver: str):
     ssa = SingularSpectrumAnalysis(timeseries50, svd_solver=svd_solver)
     assert ssa.svd_solver == svd_solver
 
+
 # Test __repr__ and __str__
 def test_repr_str_no_decomposition(ssa_no_decomposition):
     ssa_no_decomposition.__repr__()
     ssa_no_decomposition.__str__()
 
+
 def test_repr_str_decomposition(ssa_with_decomposition):
     ssa_with_decomposition.__repr__()
     ssa_with_decomposition.__str__()
+
 
 def test_repr_str_reconstruction(ssa_with_reconstruction):
     ssa_with_reconstruction.__repr__()
     ssa_with_reconstruction.__str__()
 
+
 # Test decomposition
-def test_np_svd(ssa_np_svd):
-    ssa_np_svd.decompose()
+def test_numpy_standard_svd(ssa_numpy_standard):
+    ssa_numpy_standard.decompose()
 
 
-def test_sc_svd(ssa_sc_svd):
-    ssa_sc_svd.decompose()
+def test_scipy_standard_svd(ssa_scipy_standard):
+    ssa_scipy_standard.decompose()
 
 
-def test_sc_ssvd(ssa_sc_ssvd):
-    ssa_sc_ssvd.decompose(n_components=10)
+def test_scipy_sparse_svd(ssa_scipy_sparse):
+    ssa_scipy_sparse.decompose(n_components=10)
 
 
-def test_sc_ssvd_no_comp(ssa_sc_ssvd):
-    with pytest.raises(ValueError, match=f"The selected solver 'sc_ssvd'"):
-        ssa_sc_ssvd.decompose()
+def test_scipy_sparse_svd_no_comp(ssa_scipy_sparse):
+    with pytest.raises(ValueError, match=f"Solver 'scipy_sparse' requires "
+                                         f"'n_components'"):
+        ssa_scipy_sparse.decompose()
 
 
-def test_sk_rsvd(ssa_sk_rsvd):
-    ssa_sk_rsvd.decompose(n_components=10)
+def test_sklearn_randomized_svd(ssa_sklearn_randomized):
+    ssa_sklearn_randomized.decompose(n_components=10)
 
 
-def test_sk_rsvd_no_comp(ssa_sk_rsvd):
-    with pytest.raises(ValueError, match=f"The selected solver 'sk_rsvd'"):
-        ssa_sk_rsvd.decompose()
+def test_sklearn_randomized_svd_no_comp(ssa_sklearn_randomized):
+    with pytest.raises(ValueError, match=f"Solver 'sklearn_randomized' requires "
+                                         f"'n_components'"):
+        ssa_sklearn_randomized.decompose()
 
 
-def test_da_svd(ssa_da_svd):
-    ssa_da_svd.decompose()
+def test_dask__standard_svd(ssa_dask_standard):
+    ssa_dask_standard.decompose()
 
 
 def test_da_csvd(ssa_da_csvd):
     ssa_da_csvd.decompose(n_components=10)
 
 
-def test_da_csvd_no_comp(ssa_da_csvd):
-    with pytest.raises(ValueError, match=f"The selected solver 'da_csvd'"):
+def test_dask_compressed_svd_no_comp(ssa_da_csvd):
+    with pytest.raises(ValueError, match=f"Solver 'dask_compressed' requires "
+                                         f"'n_components'"):
         ssa_da_csvd.decompose()
 
 
-def test_sc_svd_close(ssa_np_svd):
-    _, s1, _ = ssa_np_svd.decompose().eigentriples
-    ssa = SingularSpectrumAnalysis(ssa_np_svd._timeseries, svd_solver='sc_svd')
-    _, s2, _ = ssa.decompose().eigentriples
+def test_sc_svd_close(ssa_numpy_standard):
+    _, s1, _ = ssa_numpy_standard.decompose().decomposition_results
+    ssa = SingularSpectrumAnalysis(ssa_numpy_standard._timeseries,
+                                   svd_solver=SVDSolverType.SCIPY_STANDARD)
+    _, s2, _ = ssa.decompose().decomposition_results
     np.testing.assert_allclose(s1, s2)
 
 
-def test_sc_ssvd_close(ssa_np_svd):
+def test_scipy_sparse_svd_close(ssa_numpy_standard):
     up_to = 10
-    _, s1, _ = ssa_np_svd.decompose().eigentriples
-    ssa = SingularSpectrumAnalysis(ssa_np_svd._timeseries, svd_solver='sc_ssvd')
-    _, s2, _ = ssa.decompose(n_components=up_to).eigentriples
+    _, s1, _ = ssa_numpy_standard.decompose().decomposition_results
+    ssa = SingularSpectrumAnalysis(ssa_numpy_standard._timeseries,
+                                   svd_solver=SVDSolverType.SCIPY_SPARSE)
+    _, s2, _ = ssa.decompose(n_components=up_to).decomposition_results
     np.testing.assert_allclose(s1[:up_to], s2[:up_to], rtol=1e-4)
 
 
-def test_sk_rsvd_close(ssa_np_svd):
+def test_sklearn_randomized_svd_close(ssa_numpy_standard):
     up_to = 10
-    _, s1, _ = ssa_np_svd.decompose().eigentriples
-    ssa = SingularSpectrumAnalysis(ssa_np_svd._timeseries, svd_solver='sk_rsvd')
-    _, s2, _ = ssa.decompose(n_components=up_to).eigentriples
+    _, s1, _ = ssa_numpy_standard.decompose().decomposition_results
+    ssa = SingularSpectrumAnalysis(ssa_numpy_standard._timeseries,
+                                   svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
+    _, s2, _ = ssa.decompose(n_components=up_to).decomposition_results
     np.testing.assert_allclose(s1[:up_to], s2[:up_to], rtol=1e-4)
 
 
-def test_da_svd_close(ssa_np_svd):
-    _, s1, _ = ssa_np_svd.decompose().eigentriples
-    ssa = SingularSpectrumAnalysis(ssa_np_svd._timeseries, svd_solver='da_svd')
-    _, s2, _ = ssa.decompose().eigentriples
+def test_dask_standard_svd_close(ssa_numpy_standard):
+    _, s1, _ = ssa_numpy_standard.decompose().decomposition_results
+    ssa = SingularSpectrumAnalysis(ssa_numpy_standard._timeseries,
+                                   svd_solver=SVDSolverType.DASK_STANDARD)
+    _, s2, _ = ssa.decompose().decomposition_results
     np.testing.assert_allclose(s1, s2)
 
 
-def test_da_csvd_close(ssa_np_svd):
+def test_dask_compressed_svd_close(ssa_numpy_standard):
     up_to = 10
-    _, s1, _ = ssa_np_svd.decompose().eigentriples
-    ssa = SingularSpectrumAnalysis(ssa_np_svd._timeseries, svd_solver='da_csvd')
-    _, s2, _ = ssa.decompose(n_components=up_to, n_power_iter=4).eigentriples
+    _, s1, _ = ssa_numpy_standard.decompose().decomposition_results
+    ssa = SingularSpectrumAnalysis(ssa_numpy_standard._timeseries,
+                                   svd_solver=SVDSolverType.DASK_COMPRESSED)
+    _, s2, _ = ssa.decompose(n_components=up_to,
+                             n_power_iter=4).decomposition_results
     np.testing.assert_allclose(s1[:up_to], s2[:up_to], rtol=1e-4)
 
 

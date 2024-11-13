@@ -49,7 +49,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     svd_matrix: str, default 'BK'
         Matrix to use for the SVD algorithm, either 'BK' or 'VG', with
         defaults to 'BK' (see Notes).
-    svd_solver : str, default 'np_svd'
+    svd_solver : str, default 'numpy_standard'
         The method of singular value decomposition to use. Call the
         available_solver method for possible options.
     standardize : bool, default True
@@ -93,7 +93,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             timeseries: ArrayLike,
             window: int | None = None,
             svd_matrix: Literal['BK', 'VG'] = 'BK',
-            svd_solver: str = 'np_svd',
+            svd_solver: str = 'numpy_standard',
             standardize: bool = True,
             na_strategy: Literal['raise_error', 'fill_mean'] = 'raise_error',
             # TODO test na_strategy
@@ -452,26 +452,19 @@ groups: {groups}
             For details about available solvers and SVD algorithms.
 
         """
-        solver_name = self._solver_map[self.svd_solver]
-        solver = getattr(self, solver_name)
-        signature = inspect.signature(solver)
-        is_truncated = 'n_components' in signature.parameters
+        # Input check is done by self.svd
+        self.svd(self.svd_matrix, n_components, **kwargs)
+        p, _, _ = self.decomposition_results
 
-        if n_components is None and is_truncated:
-            raise ValueError(f"The selected solver '{self.svd_solver}' requires"
-                             f" 'n_components' to be specified within the "
-                             f"'decompose' method. Please provide a value for "
-                             f"'n_components'.")
-
-        p, _, _ = self.svd(self.svd_matrix, n_components, **kwargs)
-
+        # Extra-processing for the 'VG' algorithm
+        # TODO: Explain in docstring
         if self._svd_matrix_kind == 'VG':
             S = self._trajectory_matrix.T @ p
             s = np.linalg.norm(S, axis=0)
             ix_sorted = np.argsort(s)[::-1]
             q = S / s
             p, s, q = p[:, ix_sorted], s[ix_sorted], q[ix_sorted]
-            self.u_, self.s_, self.vt_ = p, s, q.T  # TODO explain in docstring
+            self.decomposition_results = p, s, q.T
         return self
 
     def reconstruct(

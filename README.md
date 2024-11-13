@@ -9,8 +9,8 @@
 
 > [!NOTE]
 > This repository contains an early alpha development version of VASSAL,
-> designed for educational purposes. VASSAL has undergone extensive testing 
-> with the pytest framework; however, users may report any experienced issues 
+> designed for educational purposes. VASSAL has undergone extensive testing
+> with the pytest framework; however, users may report any experienced issues
 > using [GitHub Issues](https://github.com/ADSCIAN/vassal/issues).
 
 ## Overview
@@ -83,14 +83,14 @@ df_ssa = ssa.to_frame()
 
 VASSAL supports multiple SVD solvers:
 
-| Solver Name | Underlying Method                                                                                                                     | Status    |
-|-------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
-| `np_svd`    | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
-| `sc_svd`    | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
-| `sc_svds`   | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
-| `sk_rsvd`   | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
-| `da_svd`    | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html)                                       | Optional  |
-| `da_csvd`   | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)                 | Optional  |
+| Solver Name          | Underlying Method                          | Status      |
+|----------------------|--------------------------------------------|-------------|
+| `numpy_standard`     | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)      | Default     |
+| `scipy_standard`     | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)      | Available   |
+| `scipy_sparse`       | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html) | Available   |
+| `sklearn_randomized` | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available   |
+| `dask_standard`      | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html) | Optional    |
+| `dask_compressed`    | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)  | Optional    |
 
 Select the solver with the `svd_solver` argument.
 
@@ -101,13 +101,11 @@ from vassal.datasets import load_sst
 # Load example data
 ts = load_sst()
 
-# Create SSA instance with solver 'sk_rsvd'
-ssa = SingularSpectrumAnalysis(ts, svd_solver='sk_rsvd')
+# Create SSA instance with solver 'sklearn_randomized'
+ssa = SingularSpectrumAnalysis(ts, svd_solver='sklearn_randomized')
 ```
 
 ### Available Visualizations
-
-#TODO Update Table
 
 | `kind`        | Description                                                                   | Decomposition Required | Reconstruction Required |
 |---------------|-------------------------------------------------------------------------------|:----------------------:|:-----------------------:|
@@ -119,7 +117,7 @@ ssa = SingularSpectrumAnalysis(ts, svd_solver='sk_rsvd')
 | `vectors`     | Plot the left eigen vectors                                                   |          Yes           |           No            |
 | `wcorr`       | Plot the weighted correlation matrix                                          |          Yes           |           No            |
 
-Pass the `kind` argument to the `SingularSpectrumAnalysis.plot` method.  
+Pass the `kind` argument to the `SingularSpectrumAnalysis.plot` method.
 
 ## Documentation
 
