@@ -75,7 +75,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
     svd_matrix: NDArray[float]  # SVD matrix
     _ix: pd.Index | None  # time series index
     _n: int | None = None  # timeseries length
-    _na_strategy: str
+    _na_strategy: str # missing data strategy
     _w: int | None = None  # SSA window length
     u_: NDArray[float] | None = None  # left eigenvectors
     s_: NDArray[float] | None = None  # array of singular values
@@ -83,11 +83,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
     _svd_matrix_kind: str  # SVD matrix kind, either 'BK' or 'VG'
     _timeseries_pp: NDArray  # preprocessed timeseries
 
-    autoregressive_model: SARIMAXResults  # See MonteCarloSSA
-    n_surrogates: int  #
+    autoregressive_model: SARIMAXResults  # Surrogate model (MonteCarloSSA)
+    n_surrogates: int  # Number of surrogates (MontecarloSSA)
 
-    _N_COMPONENTS_SENTINEL = object()
-    _N_COMPONENTS_DEFAULT: int = 10
+    _N_COMPONENTS_SENTINEL = object() # track if n_components was user-defined
+    _N_COMPONENTS_DEFAULT: int = 10 # default number of components to plot
 
     available_plots: list[str] = SSAPlotType.available_plots
     _PLOT_METHOD_MAPPING = {
@@ -440,10 +440,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
         """
         if not isinstance(scale, str):
             raise ValueError(
+                f"Parameter scale must be a string, got {type(scale)}"
             )
         if scale not in ['loglog', 'plot', 'semilogx', 'semilogy']:
             raise ValueError(
-                f"Parameter 'scale' must be one of 'loglog', 'plot', "
+                f"Parameter scale must be one of 'loglog', 'plot', "
                 f"'semilogx', or 'semilogy', got {scale}"
             )
 
@@ -705,7 +706,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         Notes
         -----
 
-        - If the standardize argument was passed the periodogram is calculated
+        - If the standardize argument was passed, the periodogram is calculated
           on the z-standardized series.
         - Uses the scipy periodogram function [1]_.
 
