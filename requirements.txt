@@ -7,3 +7,7 @@ scikit-learn
 statsmodels
 # Optional dependencies
 # dask  # for dask available svd methods
+
+vassal
+pytest
+setuptools

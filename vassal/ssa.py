@@ -467,6 +467,16 @@ groups: {groups}
             self.decomposition_results = p, s, q.T
         return self
 
+    def get_confidence_interval(
+            self,
+            n_components: int | None = None,
+            confidence_level: float = 0.95,
+            two_tailed: bool = True,
+            return_lower: bool = True,
+    ) -> tuple[NDArray[float], NDArray[float]] | NDArray[float]:
+        raise NotImplementedError("Method get_confidence_interval is only"
+                                  "available for class MonteCarloSSA")
+
     def reconstruct(
             self,
             groups: dict[str, int | list[int]]
@@ -504,11 +514,19 @@ groups: {groups}
 
         return self
 
+    def test_significance(
+            self,
+            n_components: int | None = None,
+            confidence_level: float = 0.95,
+            two_tailed: bool = True
+    ) -> NDArray[np.bool_]:
+        raise NotImplementedError("Method test_significance is only"
+                                  "available for class MonteCarloSSA")
+
     def to_frame(
             self,
             include: list[str] | None = None,
             exclude: list[str] | None = None,
-            recenter: bool = False,
             rescale: bool = False
     ) -> pd.DataFrame:
         """Return signals as a pandas.DataFrame.
@@ -530,9 +548,7 @@ groups: {groups}
             is specified.
         rescale : bool, default=False
             If True, rescale the signals relative to the original signal's
-            standard deviation.
-        recenter : bool, default=False
-            If True, recenter the signal relative to the original signal's mean
+            standard deviation and reintroduce the original mean.
 
         Returns
         -------
@@ -575,9 +591,6 @@ groups: {groups}
 
         if rescale:
             signals.apply(self._rescale)
-
-        if recenter:
-            signals.apply(self._recenter)
 
         return signals
 
@@ -757,7 +770,7 @@ groups: {groups}
     def wcorr(
             self,
             n_components: int
-    ) -> np.ndarray:
+    ) -> NDArray:
         """Calculate the weighted correlation matrix for a number of components.
 
         Parameters
@@ -784,30 +797,22 @@ groups: {groups}
         wcorr = weighted_correlation_matrix(timeseries, weights=weights)
         return wcorr
 
-    def _recenter(
-            self,
-            timeseries: np.ndarray
-    ) -> np.ndarray:
-        """Recenter a signal using the original timeseries mean.
-        """
-        if not np.isclose(timeseries.mean(), self.mean_):
-            timeseries += self.mean_
-        return timeseries
-
     def _rescale(
             self,
             timeseries: pd.Series
     ) -> pd.Series:
-        """Rescale the timeseries signal to its original variance.
+        """Rescale the timeseries signal to its original standard deviation
+        and reintroduce the original mean.
         """
         if self._standardized and timeseries.name != 'ssa_original':
             timeseries *= self.std_
+            timeseries += self.mean_
         return timeseries
 
     def _reconstruct_group_matrix(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> NDArray:
+    ) -> NDArray[float]:
         """ Reconstructs a group matrix using components group indices.
 
         Parameters
@@ -819,7 +824,7 @@ groups: {groups}
 
         Returns
         -------
-        np.ndarray
+        NDArray[float]
             The reconstructed matrix.
 
         """
@@ -847,7 +852,7 @@ groups: {groups}
     def _reconstruct_group_timeseries(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> NDArray:
+    ) -> NDArray[float]:
         """ Reconstructs a time series using the group component indices.
 
         Parameters
@@ -858,7 +863,7 @@ groups: {groups}
 
         Returns
         -------
-        reconstructed_timeseries : NDArray
+        reconstructed_timeseries : NDArray[float]
             The reconstructed time series.
 
         """

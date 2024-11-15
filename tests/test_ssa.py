@@ -65,7 +65,7 @@ def test_window_size(timeseries50):
 
 
 def test_svd_method_attribution():
-    print(SingularSpectrumAnalysis.available_solvers())
+    print(SingularSpectrumAnalysis.available_solvers)
 
 
 def test_reject_non_numeric_data():
@@ -115,7 +115,7 @@ def test_window_parameter():
 
 
 @pytest.mark.parametrize("svd_solver",
-                         SingularSpectrumAnalysis.available_solvers())
+                         SingularSpectrumAnalysis.available_solvers)
 def test_svd_methods(timeseries50, svd_solver: str):
     ssa = SingularSpectrumAnalysis(timeseries50, svd_solver=svd_solver)
     assert ssa.svd_solver == svd_solver

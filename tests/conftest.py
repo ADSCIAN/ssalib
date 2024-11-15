@@ -27,6 +27,12 @@ def full_svd_solvers() -> list[str]:
 def timeseries50():
     return np.random.rand(50)
 
+@pytest.fixture
+def timeseries50_withna():
+    ts = np.random.rand(50)
+    na_indices = np.random.choice(50, size=5, replace=False)
+    ts[na_indices] = np.nan
+    return ts
 
 @pytest.fixture
 def ar1_timeseries50():
@@ -90,6 +96,14 @@ def ssa_da_csvd(timeseries50):
 @pytest.fixture
 def ssa_with_decomposition(timeseries50):
     ssa = SingularSpectrumAnalysis(timeseries50,
+                                   svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
+    ssa.decompose(n_components=10)
+    return ssa
+
+@pytest.fixture
+def ssa_with_decomposition_fill_mean(timeseries50_withna):
+    ssa = SingularSpectrumAnalysis(timeseries50_withna,
+                                   na_strategy='fill_mean',
                                    svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
     ssa.decompose(n_components=10)
     return ssa

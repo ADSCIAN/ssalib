@@ -51,6 +51,10 @@ class SVDSolverType(Enum):
             self.DASK_COMPRESSED
         }
 
+    @classmethod
+    def available_solvers(cls) -> list[str]:
+        return [solver.value for solver in cls]
+
 
 # Custom type for SVD results
 SVDDecomposition = tuple[NDArray[float], NDArray[float], NDArray[float]]
@@ -117,6 +121,7 @@ class SVDHandler:
            [3.75936076, 4.96644562, 6.17353048]])
 
     """
+    available_solvers: list[str] = SVDSolverType.available_solvers()
     _SOLVER_METHOD_MAPPING = {
         SVDSolverType.NUMPY_STANDARD: "_svd_numpy_standard",
         SVDSolverType.SCIPY_STANDARD: "_svd_scipy_standard",
@@ -154,10 +159,8 @@ class SVDHandler:
         """Validate input parameters for SVD decomposition."""
         if not isinstance(matrix, np.ndarray):
             raise TypeError("Input matrix must be a numpy array")
-
         if matrix.ndim != 2:
             raise ValueError("Input matrix must be 2-dimensional")
-
         if not np.isfinite(matrix).all():
             raise ValueError("Input contains non-finite values")
 
@@ -176,12 +179,12 @@ class SVDHandler:
             if n_components is None:
                 raise ValueError(
                     f"Solver '{self._svd_solver.value}' requires "
-                    f"'n_components' to be specified."
+                    f"'n_components' to be specified"
                 )
         elif n_components is not None:
             logger.warning(
                 f"Parameter n_components is not supported by "
-                f"{self._svd_solver.value} solver and will be ignored"
+                f"{self._svd_solver.value} solver and is ignored"
             )
 
         if n_components is not None and self._svd_solver.supports_n_components:
@@ -232,8 +235,8 @@ class SVDHandler:
             solver_kwargs['n_components'] = n_components
 
         svd_method_name = self._SOLVER_METHOD_MAPPING[self._svd_solver]
-        method = getattr(self, svd_method_name)
-        u, s, vt = method(matrix, **solver_kwargs)
+        svd_method = getattr(self, svd_method_name)
+        u, s, vt = svd_method(matrix, **solver_kwargs)
         self.decomposition_results: SVDDecomposition = u, s, vt
         return self.decomposition_results
 
@@ -378,11 +381,6 @@ class SVDHandler:
     def eigenvalues(self) -> NDArray[float] | None:
         """Eigenvalues of SVD."""
         return self.s_ ** 2 if self.s_ is not None else None
-
-    @classmethod
-    def available_solvers(cls) -> list[str]:
-        """Get list of available solver types."""
-        return [solver.value for solver in SVDSolverType]
 
 
 if __name__ == '__main__':

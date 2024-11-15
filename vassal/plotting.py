@@ -3,113 +3,258 @@ from __future__ import annotations
 
 import abc
 import logging
+from enum import Enum
+from functools import cached_property
 from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
-from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from matplotlib.ticker import MaxNLocator
 from numpy.typing import NDArray
 from scipy.signal import periodogram
+from statsmodels.tsa.statespace.sarimax import SARIMAXResults
 
-from vassal.log_and_error import DecompositionError, ignored_argument_warning
-#TODO: remove ignored_argument warning
+from vassal.log_and_error import DecompositionError
+
+logger = logging.getLogger(__name__)
+
+
+class SSAPlotType(Enum):
+    """Available plot types for SingularSpectrumAnalysis
+    """
+    MATRIX = 'matrix'
+    PAIRED = 'paired'
+    PERIODOGRAM = 'periodogram'
+    TIMESERIES = 'timeseries'
+    VALUES = 'values'
+    VECTORS = 'vectors'
+    WCORR = 'wcorr'
+    
+    @property
+    def requires_decomposition(self):
+        """Whether this plot type requires decomposition"""
+        return self in {
+            self.PAIRED,
+            self.PERIODOGRAM,
+            self.VALUES,
+            self.VECTORS,
+            self.WCORR
+        }
+
+    @property
+    def supports_ax(self) -> bool:
+        """Whether this plot type supports the ax argument."""
+        return self in {
+            self.MATRIX,
+            self.PERIODOGRAM,
+            self.TIMESERIES,
+            self.VALUES,
+            self.WCORR
+        }
+
+    @classmethod
+    def available_plots(cls) -> list[str]:
+        return [solver.value for solver in cls]
+
 
 class PlotSSA(metaclass=abc.ABCMeta):
-    """Plotting base class for SingularSpectrumAnalysis
+    """Abstract Base Class for Singular Spectrum Analysis Plotting.
 
-    PlotSSA is an abstract base class that defines the plotting interface for
-    the SingularSpectrumAnalysis class. Any plot can be plotted using the
-    ´plot´ method.
-
+    This class defines the interface for creating plots in the context of
+    Singular Spectrum Analysis (SSA). Any subclass of PlotSSA must implement
+    the `plot` method.
     """
-    # Inherited arguments:
-    # --------------------
-    # n_components: int | None = None  # number of components
-    # eigenvalues: np.ndarray | None = None  # array of eigenvalues
-    # squared_frobenius_norm: float | None = None  # sum of eigenvalues
-    # svd_matrix: np.ndarray  # SVD matrix
-    # wcorr: np.ndarray  # weighted correlation matrix
-    # _n: int | None = None  # timeseries length
-    # _w: int | None = None  # SSA window length
-    # u_: np.ndarray | None = None  # left eigenvectors
-    # s_: np.ndarray | None = None  # array of singular values
-    # vt_: np.ndarray | None = None  # right eigenvectors
-    # _svd_matrix_kind: str  # SVD matrix kind, either BK or VG
+    # Child-defined arguments
+    na_mask: NDArray[bool]
+    n_components: int | None = None  # number of components
+    eigenvalues: NDArray[float] | None = None  # array of eigenvalues
+    squared_frobenius_norm: float | None = None  # sum of eigenvalues
+    svd_matrix: NDArray[float]  # SVD matrix
+    _ix: pd.Index | None  # time series index
+    _n: int | None = None  # timeseries length
+    _na_strategy: str
+    _w: int | None = None  # SSA window length
+    u_: NDArray[float] | None = None  # left eigenvectors
+    s_: NDArray[float] | None = None  # array of singular values
+    vt_: NDArray[float] | None = None  # right eigenvectors
+    _svd_matrix_kind: str  # SVD matrix kind, either 'BK' or 'VG'
+    _timeseries_pp: NDArray  # preprocessed timeseries
 
-    _plot_kinds_map = {
-        'matrix': '_plot_matrix',
-        'paired': '_plot_paired_vectors',
-        'periodogram': '_plot_periodogram',
-        'timeseries': '_plot_timeseries',
-        'values': '_plot_values',
-        'vectors': '_plot_vectors',
-        'wcorr': '_plot_wcorr'
+    autoregressive_model: SARIMAXResults  # See MonteCarloSSA
+    n_surrogates: int  #
+
+    _N_COMPONENTS_SENTINEL = object()
+    _N_COMPONENTS_DEFAULT: int = 10
+
+    available_plots: list[str] = SSAPlotType.available_plots
+    _PLOT_METHOD_MAPPING = {
+        SSAPlotType.MATRIX: '_plot_matrix',
+        SSAPlotType.PAIRED: '_plot_paired_vectors',
+        SSAPlotType.PERIODOGRAM: '_plot_periodogram',
+        SSAPlotType.TIMESERIES: '_plot_timeseries',
+        SSAPlotType.VALUES: '_plot_values',
+        SSAPlotType.VECTORS: '_plot_vectors',
+        SSAPlotType.WCORR: '_plot_wcorr'
     }
 
-    _n_components_required = ['paired', 'periodogram', 'values', 'vectors',
-                              'wcorr']
+    def __validate_main_plot_inputs(
+            self,
+            kind: SSAPlotType | str,
+            n_components: int | None | object,  # object _N_COMPONENTS_SENTINEL
+            ax: Axes | None
+    ) -> None:
+        """Validate input parameters for plotting.
+        """
+        # Validate plot kind
+        if isinstance(kind, str):
+            try:
+                kind = SSAPlotType(kind)
+            except ValueError:
+                valid_kinds = [plot_type.value for plot_type in SSAPlotType]
+                raise ValueError(
+                    f"Unknown plot kind '{kind}'. "
+                    f"Valid plot kinds are: {', '.join(valid_kinds)}"
+                )
+
+        # Validate decomposition requirement
+        if kind.requires_decomposition and self.n_components is None:
+            raise DecompositionError(
+                f"Decomposition must be performed before calling the 'plot' "
+                f"method with kind='{kind.value}'. "
+                f"Call 'decompose' method first"
+            )
+
+        # Validate n_components parameter
+        if kind.requires_decomposition:
+            if (not isinstance(n_components, (int, type(None))) and
+                    n_components is not self._N_COMPONENTS_SENTINEL):
+                raise TypeError(
+                    f"Argument 'n_components' must be integer or None, "
+                    f"got {type(n_components)}"
+                )
+            if (isinstance(n_components, int) and
+                    n_components > self.n_components):
+                raise ValueError(
+                    f"Argument 'n_components' must be less than or equal to the "
+                    f"number of components ({self.n_components}), "
+                    f"got {n_components}"
+                )
+        elif (n_components is not self._N_COMPONENTS_SENTINEL):
+            logger.warning(
+                f"Parameter 'n_components' is not supported for plot kind "
+                f"'{kind.value}' and will be ignored"
+            )
+
+        # Validate axes parameter
+        if not kind.supports_ax:
+            if ax is not None:
+                logger.warning(
+                    f"Parameter 'ax' is not supported for plot kind "
+                    f"'{kind.value}' and will be ignored"
+                )
+        elif ax is not None and not isinstance(ax, Axes):
+            raise ValueError(
+                f"Parameter 'ax' must be an instance of matplotlib.axes.Axes, "
+                f"got {type(ax)}"
+            )
 
     def plot(
             self,
-            kind: str = 'values',
-            n_components: int | None = 10,
+            kind: SSAPlotType | str = SSAPlotType.VALUES,
+            n_components: int | None = _N_COMPONENTS_SENTINEL,
             ax: Axes = None,
-            scale: Literal['loglog', 'semilogx', 'semilogy'] = None,
-            **plt_kw: Any
-    ) -> tuple[Figure, Axes]:
+            **plot_kwargs: Any
+    ) -> tuple[Figure, Axes | NDArray[Axes]]:
         """Main method of the plotting API of SingularSpectrumAnalysis
 
-        The ´plot´ method generates plots of various kinds to explore the
+        The `plot` method generates plots of various kinds to explore the
         eigentriple features and reconstructed time series from
-        ´SingularSpectrumAnalysis´ instance.
+        `SingularSpectrumAnalysis` instance.
 
         Parameters
         ----------
-        kind : str, default 'values'
-            The type of plot to produce, options include:
-
+        kind : SSAPlotType | str, default SSAPlotType.VALUES
+            The type of plot to produce, user options include:
             * 'matrix': Plots the decomposed or reconstructed matrix.
             * 'paired': Plots pairs of successive left eigenvectors against
               each other.
-            * 'periodogram': Plots power spectral density associated with each
-              eigenvector.
-            * 'timeseries': Displays reconstructed time series based on defined
-              component groups.
+            * 'periodogram': Plots power spectral density of the original
+              series or the one associated with each eigenvector.
+            * 'timeseries': Displays reconstructed time series based on
+              component groups defined with the
+              'SingularSpectrumAnalysis.reconstruct' method.
             * 'values': Plots singular values to inspect their magnitudes.
             * 'vectors': Plots the left eigenvectors.
             * 'wcorr': Displays a weighted correlation matrix using a heatmap.
-
         n_components : int | None, default 10
             Number of eigentriple components to use in the plot. Only valid for
-            kind 'matrix', 'paired', 'periodogram', 'values', 'vectors', and
-            'wcorr'.
+            kind 'paired', 'periodogram', 'values', 'vectors', and
+            'wcorr'. If None, the maximum number of components is used.
         ax : Axes, optional
             An existing matplotlib Axes object to draw the plot on. If None, a
             new figure and axes are created. This parameter is ignored for
-            subplots, i.e., kind 'paired', 'periodogram', and 'vectors'.
-        scale: str, optional
-            Scale for 'periodogram' kind of plots. One of:
+            subplots, i.e., kind 'paired', 'vectors', as well as 'periodogram'
+            if n_components is not None.
 
-            - 'loglog': logarithmic scaling on both axes
-            - 'plot': linear scaling on both axes
-            - 'semilogx': logarithmic scaling on x-axis only
-            - 'semilogy': logarithmic scaling on y-axis only
-        plt_kw : Any, optional
+        Other Parameters
+        ----------------
+        'indices' : int | range | list[int], optional
+            For kind 'matrix' only. If passed, plot the reconsconstructed
+            matrix for the component index (int), a range of component indices
+            (range), or a list of component indices (list[int]). If None, plot
+            the original matrix being decomposed.
+        'scale' : Literal['loglog', 'plot', 'semilogx', 'semilogy'], optional
+            For kind 'periodogram' only. Scale used for each periodogram
+            subplot.
+        'include' : list[str] | None, optional, default None
+            For kind 'timeseries' only. List of time series names to include
+            in the time series plot. Passed to the
+            SingularSpectrumAnalysis.to_frame method. If None and 'exclude' is
+            None, all time series are included.
+        'exclude' : list[str] | None, optional, default None
+            For kind 'timeseries' only. List of time series names to exclude
+            in the time series plot. Passed to the
+            SingularSpectrumAnalysis.to_frame method. If None and 'include' is
+            None, all time series are included.
+        'rescale' : bool, optional, default False
+            For kind 'timeseries' only. Whether to rescale the series with
+            the original standard deviation and mean.
+        'rank_by' : Literal['values', 'freq'], optional, default 'values'.
+            For kind 'values' only. Whether to sort the singular values
+            by decreasing values or by increasing frequencies.
+        'confidence_level' : float | None, optional, default None
+            For kind 'values' only and class 'MonteCarloSSA'. Defines the
+            confidence level for defining the percentile interval of the
+            surrogate value distribution.
+        'two_tailed' : bool, optional, default True
+            For kind 'values' only and class 'MonteCarloSSA'. Controls how
+            surrogate value distribution percentile intervals are calculated.
+            - If True, uses two-tailed confidence intervals with
+              (1-confidence_level) / 2 on each tail. Example: For 95%
+              confidence (confidence_level = 0.95), uses 2.5th and 97.5th
+              percentiles.
+            - If False, uses one-tailed confidence intervals with
+              intervals are defined between 0 and
+              100 * (1 - confidence_level) / 2. Example: For 95% confidence,
+              (confidence_level = 0.95), uses the minimum value and 95th
+              percentile.
+        'errorbar_kwargs' : dict[str, Any], optional, default None
+            For kind 'values' only and class 'MonteCarloSSA'. Dictionary of
+            keyword arguments to pass to the matplotlib errorbar function to
+            control the display of surrogate confidence intervals.
+        plot_kwargs : Any, optional
             Additional keyword arguments for customization of the plot, passed
-            to the respective plotting function. The specific function used
-            depends on the 'kind' of plot:
-
+            to the respective main plotting function. The specific function used
+            depends on the 'kind' of plot. See corresponding documentation for
+            details.
             - 'matrix': `matplotlib.pyplot.imshow`
             - 'paired', 'values', 'vectors': `matplotlib.pyplot.plot`
             - 'periodogram': `matplotlib.pyplot.semilogy`
             - 'timeseries': `pandas.DataFrame.plot`
             - 'wcorr': `matplotlib.pyplot.imshow`
-
-            See Examples.
 
         Returns
         -------
@@ -133,49 +278,61 @@ class PlotSSA(metaclass=abc.ABCMeta):
             >>> from vassal.datasets import load_sst
             >>> sst = load_sst()
             >>> ssa = SingularSpectrumAnalysis(sst)
-            >>> ssa.decompose()
+            >>> _ = ssa.decompose()
             >>> ssa.available_plots()
             ['matrix', 'paired', 'periodogram', 'timeseries', 'values', 'vectors', 'wcorr']
 
-            >>> ssa.plot(kind='values', n_components=30, marker='.', ls='--')
+            >>> ssa.plot(kind='values', n_components=30, marker='.', ls='--') # doctest: +SKIP
 
         """
 
-        if n_components is None:
-            n_components = self.n_components  # - 1 ?
-
-        # Raise error if no decomposition except for allowed plot kinds
-        if self.n_components is None and kind in self._n_components_required:
-            raise DecompositionError(
-                "Decomposition must be performed before calling the 'plot' "
-                f"method with with kind='{kind}'. Make sure to call the"
-                "'decompose' method before the 'plot' method.")
-
-        if kind in self._n_components_required:
-            n_components = self.__validate_n_components(n_components)
-
-        if kind not in self._plot_kinds_map.keys():
-            valid_kinds = ','.join(self._plot_kinds_map.keys())
-            raise ValueError(f"Unknown plot kind '{kind}'. "
-                             f"Valid plot kinds are {valid_kinds}.")
-
-        plot_method = getattr(self, self._plot_kinds_map[kind])
-        fig, ax = plot_method(
+        self.__validate_main_plot_inputs(
+            kind=kind,
             n_components=n_components,
-            ax=ax,
-            scale=scale,
-            **plt_kw
+            ax=ax
         )
+
+        kind = SSAPlotType(kind)
+
+        # Adjust _N_COMPONENTS_DEFAULT based on self.n_components
+        if (self.n_components is not None and
+                self.n_components < self._N_COMPONENTS_DEFAULT):
+            self._N_COMPONENTS_DEFAULT = self.n_components
+
+        if n_components is None and kind.requires_decomposition:
+            n_components = self.n_components
+
+        if (n_components is self._N_COMPONENTS_SENTINEL and
+                kind.requires_decomposition):
+            plot_kwargs['n_components'] = self._N_COMPONENTS_DEFAULT
+        if (n_components is not self._N_COMPONENTS_SENTINEL and
+                kind.requires_decomposition):
+            plot_kwargs['n_components'] = n_components
+
+        if ax is not None and kind.supports_ax:
+            plot_kwargs['ax'] = ax
+
+        plot_method = getattr(self, self._PLOT_METHOD_MAPPING[kind])
+        fig, ax = plot_method(**plot_kwargs)
         fig.tight_layout(rect=[0, 0.03, 1, 0.95])
 
         return fig, ax
+
+    @abc.abstractmethod
+    def get_confidence_interval(
+            self,
+            n_components: int | None = None,
+            confidence_level: float = 0.95,
+            two_tailed: bool = True,
+            return_lower: bool = True,
+    ) -> tuple[NDArray[float], NDArray[float]] | NDArray[float]:
+        pass
 
     @abc.abstractmethod
     def to_frame(
             self,
             include: list[str] | None = None,
             exclude: list[str] | None = None,
-            recenter: bool = False,
             rescale: bool = False
     ) -> pd.DataFrame:
         pass
@@ -184,26 +341,27 @@ class PlotSSA(metaclass=abc.ABCMeta):
     def _reconstruct_group_matrix(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> NDArray:
+    ) -> NDArray[float]:
         pass
 
     @abc.abstractmethod
     def _reconstruct_group_timeseries(
             self,
             group_indices: int | slice | range | list[int]
-    ) -> NDArray:
+    ) -> NDArray[float]:
         pass
 
-    @ignored_argument_warning('n_components', 'scale', log_level='info')
+    @abc.abstractmethod
+    def wcorr(self, n_components: int) -> NDArray:
+        pass
+
     def _plot_matrix(
             self,
             indices: int | range | list[int] = None,
             ax: Axes | None = None,
-            cmap: str | Colormap | None = 'viridis',
-            **plt_kw
+            **plot_kwargs: Any
     ):
         """Plot decomposed or reconstructed matrices.
-        # TODO: refactor and improve (including main doc)
         """
         if not ax:
             fig = plt.figure()
@@ -211,10 +369,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
         else:
             fig = ax.get_figure()
 
-        if indices is None:
+        if indices is None:  # plot decomposed
             matrix = self.svd_matrix
             subtitle = f'({self._svd_matrix_kind}, Original)'
-        else:
+        else:  # plot reconstructed
             if self.n_components is None:
                 raise DecompositionError(
                     "Cannot plot reconstructed matrix prior to decomposition. "
@@ -223,7 +381,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             matrix = self._reconstruct_group_matrix(group_indices=indices)
             subtitle = f'({self._svd_matrix_kind}, Group:{indices})'
 
-        im = ax.imshow(matrix, cmap=cmap, **plt_kw)
+        im = ax.imshow(matrix, **plot_kwargs)
         ax.set_aspect('equal')
         ax.set_title(f'SVD Matrix {subtitle}')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -233,11 +391,10 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, ax
 
-    @ignored_argument_warning('ax', 'scale')
     def _plot_paired_vectors(
             self,
             n_components: int,
-            **plt_kw
+            **plot_kwargs: Any
     ) -> tuple[Figure, Axes]:
         """Plot successive paired left eigenvectors.
         """
@@ -254,7 +411,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             ax = axes.ravel()[i] if isinstance(axes, np.ndarray) else axes
             try:
                 j, k = pairs[i]
-                ax.plot(u[:, k], u[:, j], **plt_kw)
+                ax.plot(u[:, k], u[:, j], **plot_kwargs)
                 ax.set_xticks([])
                 ax.set_yticks([])
                 ax.set_aspect('auto', 'box')
@@ -271,33 +428,36 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, axes
 
-    @ignored_argument_warning('ax')
     def _plot_periodogram(
             self,
-            n_components: int,
-            scale: Literal['loglog', 'plot', 'semilogx', 'semilogy'] | None,
-            **plt_kw
-    ) -> tuple[Figure, Axes]:
-        """Plot the power spectral density of signals associated with eigenvectors.
-
-        # TODO: offer the possiblity to show the original periodogram if
-        # TODO: ncomp is 0 or None?
-
+            n_components: int | None,
+            ax: Axes | None = None,
+            scale: Literal['loglog', 'plot', 'semilogx', 'semilogy'] = 'loglog',
+            **plot_kwargs
+    ) -> tuple[Figure, Axes] | tuple[Figure, list[Axes]]:
+        """Plot the power spectral density of signals associated with
+        eigenvectors.
         """
+        if not isinstance(scale, str):
+            raise ValueError(
+            )
+        if scale not in ['loglog', 'plot', 'semilogx', 'semilogy']:
+            raise ValueError(
+                f"Parameter 'scale' must be one of 'loglog', 'plot', "
+                f"'semilogx', or 'semilogy', got {scale}"
+            )
 
-        freq_original, psd_original = periodogram(self._timeseries_pp)
-
-        unit = None
-
-        if self._ix is not None:
-            if isinstance(self._ix, pd.DatetimeIndex):
-                unit = pd.infer_freq(self._ix)
-
-        if unit is None:
-            unit = ''
+        freq_original, psd_original = self.periodogram
 
         if scale is None:
             scale = 'loglog'
+
+        unit = None
+        if self._ix is not None:
+            if isinstance(self._ix, pd.DatetimeIndex):
+                unit = pd.infer_freq(self._ix)  # Automated unit inference
+        if unit is None:
+            unit = ''
 
         rows, cols = self._auto_subplot_layout(n_components)
 
@@ -312,10 +472,9 @@ class PlotSSA(metaclass=abc.ABCMeta):
                 continue
             plot_method(freq_original[1:], psd_original[1:], lw=.5,
                         color='lightgrey')
-            freq, psd = periodogram(self[i])
-            plot_method(freq[1:], psd[1:], **plt_kw)
-            dominant_freq = freq[
-                np.argmax(psd)]  # TODO: rely on proprety dominant_frequencies
+            freq, psd = periodogram(self._reconstruct_group_timeseries([i]))
+            plot_method(freq[1:], psd[1:], **plot_kwargs)
+            dominant_freq = freq[np.argmax(psd)]
             period = 1 / dominant_freq
             title = f'EV{i} (T={period:.1f}{unit})'
             ax.set_title(title, {'fontsize': 'small'})
@@ -325,25 +484,19 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, fig.get_axes()
 
-    @ignored_argument_warning('n_components', 'scale', log_level='info')
     def _plot_timeseries(
             self,
-            ax: Axes,
+            ax: Axes = None,
             include: list[str] | None = None,
             exclude: list[str] | None = None,
-            subplots: bool = False,
-            recenter: bool = False,
             rescale: bool = False,
-            **plt_kw
+            **plot_kwargs
     ) -> tuple[Figure, Axes]:
         """Plot all or selected timeseries as a single or a subplot
         """
-        data = self.to_frame(include, exclude, recenter, rescale)
+        data = self.to_frame(include, exclude, rescale)
 
-        if subplots and include is not None:
-            data = data.reindex(columns=include)
-
-        axes = data.plot(subplots=subplots, ax=ax, **plt_kw)
+        axes = data.plot(ax=ax, **plot_kwargs)
 
         if isinstance(axes, np.ndarray):
             fig = axes[0].get_figure()
@@ -357,18 +510,17 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, axes
 
-    @ignored_argument_warning('scale')
     def _plot_values(
             self,
             n_components: int,
             rank_by: Literal['values', 'freq'] = 'values',
-            conf_level: float | None = None,
-            two_tailed: bool = True,
             ax: Axes | None = None,
-            **plt_kw
+            confidence_level: float | None = None,
+            two_tailed: bool = True,
+            errorbar_kwargs: dict[str, Any] | None = None,
+            **plot_kwargs
     ) -> tuple[Figure, Axes]:
-        """Plot component norms.
-        # TODO: update tutorial and test the new freq feature (rank_by etc)
+        """Plot component norms by decreasing values or increasing frequencies.
         """
         s = self.s_
 
@@ -388,16 +540,28 @@ class PlotSSA(metaclass=abc.ABCMeta):
             fig = plt.figure()
             ax = fig.gca()
 
-        ax.semilogy(x_values, s, **plt_kw)
+        ax.semilogy(x_values, s, **plot_kwargs)
         ax.set_ylabel('Component Norm')
         ax.set_xlabel(x_label)
         if rank_by == 'values':
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-        if hasattr(self, 'n_surrogates'):
+        if not hasattr(self, 'n_surrogates'):  # Basic SingularSpectrumAnalysis
+            if confidence_level is not None:
+                raise ValueError(
+                    "Parameter 'confidence_level' is only valid for "
+                    "class 'MonteCarloSSA'."
+                )
+            if errorbar_kwargs is not None:
+                raise ValueError(
+                    "Parameter 'errorbar_kwargs' is only valid for "
+                    "class 'MonteCarloSSA'."
+                )
+
+        else:  # MonteCarloSSA
             lower, upper = self.get_confidence_interval(
                 n_components,
-                conf_level,
+                confidence_level,
                 two_tailed,
             )
 
@@ -414,19 +578,20 @@ class PlotSSA(metaclass=abc.ABCMeta):
                 capthick=.5,
                 color='k',
                 label=f'AR{len(self.autoregressive_model.arparams)} Surrogate '
-                      f'{conf_level * 100:g}% CI'
-                      f'\nn={self.n_surrogates}')
+                      f'{confidence_level * 100:g}% CI'
+                      f'\nn={self.n_surrogates}',
+                **errorbar_kwargs
+            )
             ax.legend()
 
         fig = ax.get_figure()
 
         return fig, ax
 
-    @ignored_argument_warning('ax', 'scale')
     def _plot_vectors(
             self,
             n_components: int,
-            **plt_kw
+            **plot_kwargs
     ):
         """Plot left eigenvectors.
         """
@@ -440,7 +605,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         for i in range(rows * cols):
             ax = axes.ravel()[i]
             try:
-                ax.plot(u[:, i], **plt_kw)
+                ax.plot(u[:, i], **plot_kwargs)
                 ax.set_xticks([])
                 ax.set_yticks([])
                 ax.set_aspect('auto', 'box')
@@ -455,15 +620,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return fig, fig.get_axes()
 
-    @ignored_argument_warning('scale')
     def _plot_wcorr(
             self,
             n_components: int,
             ax: Axes | None = None,
-            cmap: str | Colormap | None = 'PiYG',
-            vmin: float | None = -1.,
-            vmax: float | None = 1.,
-            **plt_kw
+            **plot_kwargs
     ):
         """Plot the weighted correlation matrix.
         """
@@ -475,7 +636,14 @@ class PlotSSA(metaclass=abc.ABCMeta):
         else:
             fig = ax.get_figure()
 
-        im = ax.pcolor(wcorr, vmin=vmin, vmax=vmax, cmap=cmap, **plt_kw)
+        if 'vmin' not in plot_kwargs:
+            plot_kwargs['vmin'] = -1
+        if 'vmax' not in plot_kwargs:
+            plot_kwargs['vmax'] = 1
+        if 'cmap' not in plot_kwargs:
+            plot_kwargs['cmap'] = 'PiYG'
+
+        im = ax.pcolor(wcorr, **plot_kwargs)
         ax.set_aspect('equal')
 
         # set ticks
@@ -490,47 +658,6 @@ class PlotSSA(metaclass=abc.ABCMeta):
         fig.colorbar(im)
 
         return fig, ax
-
-    def __validate_n_components(
-            self,
-            n_components: int,
-    ):
-        """Validate the number of components requested for plotting.
-
-        Parameters
-        ----------
-        n_components : int
-            User defined number of components
-
-        Returns
-        -------
-        n_components : int
-            Validated number of components
-
-        Raises
-        ------
-        ValueError
-            If n_components is not a strictly positive integer.
-
-        Warnings
-        --------
-        Out of range n_components is warned to the users and automatically
-        corrected to the maximum allowed.
-
-        """
-        if not isinstance(n_components, int) or n_components < 1:
-            raise ValueError("Parameter 'n_components' must be a strictly "
-                             "positive integer.")
-        if n_components > self.n_components:
-            logger = logging.getLogger(self.__module__)
-            log_func = getattr(logger, 'warning')
-            log_func(
-                f"Parameter 'n_components={n_components}' is out of range. "
-                f"Value has been set to the maximum value "
-                f"'n_components={self.n_components}'.")
-            n_components = self.n_components
-
-        return n_components
 
     @staticmethod
     def _auto_subplot_layout(n_plots: int) -> tuple[int, int]:
@@ -565,11 +692,37 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         return rows, cols
 
-    @classmethod
-    def available_plots(cls) -> list[str]:
-        """ List of available plot kinds.
+    @cached_property
+    def periodogram(self) -> tuple[NDArray[float], NDArray[float]]:
+        """Return frequency and power spectral density of the original series.
+
+        Returns
+        -------
+        tuple[NDArray[float], NDArray[float]]
+            Tuple with the array of frequencies and the associated power
+            spectral density.
+
+        Notes
+        -----
+
+        - If the standardize argument was passed the periodogram is calculated
+          on the z-standardized series.
+        - Uses the scipy periodogram function [1]_.
+
+        References
+        ----------
+        .. [1] "scipy.signal.periodogram", SciPy documentation,
+                https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lombscargle.html
         """
-        return list(cls._plot_kinds_map.keys())
+        if any(self.na_mask):
+            logging.warning(
+                f"Periodogram is estimated on a series imputed with strategy "
+                f"'{self._na_strategy}'"
+            )
+
+        freq_original, psd_original = periodogram(self._timeseries_pp)
+
+        return freq_original, psd_original
 
     def get_dominant_frequencies(
             self,
@@ -590,7 +743,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         dominant_freqs = []
         for i in range(n_components):
-            freq, psd = periodogram(self[i])
+            freq, psd = periodogram(self._reconstruct_group_timeseries([i]))
             dominant_freqs.append(freq[np.argmax(psd)])
 
         return np.array(dominant_freqs)

@@ -8,7 +8,7 @@ import pytest
 from vassal.svd import OptionalDependency, SVDHandler, SVDSolverType
 
 
-@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers())
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
 def test_svd_methods(sample_matrix: np.ndarray, n_components: int,
                      svd_solver: str, full_svd_solvers: list[str]) -> None:
     handler = SVDHandler(svd_solver=svd_solver)
@@ -22,7 +22,7 @@ def test_svd_methods(sample_matrix: np.ndarray, n_components: int,
         np.diff(s) <= 0), "Singular values are not in decreasing order"
 
 
-@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers())
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
 def test_ignored_components_warning(sample_matrix, n_components, svd_solver,
                                     full_svd_solvers, caplog) -> None:
     handler = SVDHandler(svd_solver=svd_solver)
@@ -41,7 +41,7 @@ def test_invalid_method():
         SVDHandler(svd_solver='invalid_method')
 
 
-@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers())
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
 def test_properties(sample_matrix: np.ndarray, svd_solver: str,
                     n_components: int, full_svd_solvers: list[str]):
     """Test all properties of SVDHandler across different solvers."""
