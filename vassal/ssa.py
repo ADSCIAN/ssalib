@@ -112,9 +112,6 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     n_components : int or None
         Number of components after decomposition. None if decomposition has
         not been performed.
-    groups : dict
-        Dictionary of group names and their corresponding eigentriple indices.
-        Available after reconstruction.
     s_ : ndarray or None
         Singular values from decomposition. None if decomposition has not been
         performed.
@@ -616,7 +613,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             two_tailed: bool = True,
             return_lower: bool = True,
     ) -> tuple[NDArray[float], NDArray[float]] | NDArray[
-        float]:  # TODO test signature
+        float]:
         raise NotImplementedError(
             "Method get_confidence_interval is only available for class "
             "MonteCarloSSA"
@@ -663,7 +660,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             n_components: int | None = None,
             confidence_level: float = 0.95,
             two_tailed: bool = True
-    ) -> NDArray[bool]:  # TODO test signature
+    ) -> NDArray[bool]:
         raise NotImplementedError("Method test_significance is only"
                                   "available for class MonteCarloSSA")
 
@@ -709,22 +706,22 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         """
         if include is not None and exclude is not None:
             raise ValueError(
-                "Cannot specify both 'include' and 'exclude' parameters.")
+                "Cannot specify both include and exclude parameters.")
 
         group_names = list(self.groups.keys())
 
-        if include is not None:  # TODO write test
+        if include is not None:
             if any(name not in group_names for name in include):
-                raise ValueError(f"Invalid group names in 'include'. "
-                                 f"Valid group names are "
+                raise ValueError(f"Parameter include contains unknown group "
+                                 f"names. Valid group names are "
                                  f"{', '.join(self.groups.keys())}")
             group_names = [name for name in group_names if name in include]
 
-        if exclude is not None:  # TODO write test
+        if exclude is not None:
             if any(name not in group_names for name in exclude):
-                logging.warning(f"Ignored unknown group names in 'exclude'. "
-                                f"Valid group names are "
-                                f"{', '.join(self.groups.keys())}")
+                raise ValueError(f"Parameter exclude contains unknown group "
+                                 f"names. Valid group names are "
+                                 f"{', '.join(self.groups.keys())}")
             group_names = [name for name in group_names if name not in exclude]
 
         signals = pd.DataFrame(

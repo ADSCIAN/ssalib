@@ -186,7 +186,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             n_components: int | None = None,
             confidence_level: float = 0.95,
             two_tailed: bool = True
-    ) -> NDArray[np.bool_]:
+    ) -> NDArray[bool]:
         """Test if components' singular values are significantly higher than
         surrogates' projected strength distribution
 

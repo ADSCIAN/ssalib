@@ -9,7 +9,7 @@ def parse_requirements(filename):
 
 setup(
     name='vassal',
-    version='0.0.1',
+    version='0.1.0a1',
     packages=find_packages(),
     package_data={
         'vassal': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
@@ -31,9 +31,9 @@ setup(
         'dev': [
             'pytest',
             'pytest-cov',
-            'black',  # for code formatting
-            'flake8',  # for code linting
-            'dask',  # include optional dependency for development
+            'black',
+            'flake8',
+            'dask',
         ]
     },
     python_requires='>=3.9',
