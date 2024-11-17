@@ -199,7 +199,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         if na_strategy not in ['raise_error', 'fill_mean']:
             raise ValueError(
                 f"Argument na_strategy should be either 'raise_error' or "
-                f"'fill_mean', got {na_strategy} instead."
+                f"'fill_mean', got '{na_strategy}' instead"
             )
         self._na_strategy: str = na_strategy
 
@@ -630,10 +630,10 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         Parameters
         ----------
         groups : dict[str, int | list[int]]
-            Dictionary of user-defined groups of component indices for
-            reconstruction. Keys represents user-defined group names (str)
-            and values are single (int) or multiple (list of int)
-            indices of eigen triples to use for the reconstruction.
+            User-defined groups of component indices for reconstruction. Keys
+            represents user-defined group names (str) and values are single
+            (int) or multiple (list of int) indices of eigen triples to use
+            for the reconstruction.
 
         Returns
         -------

@@ -15,8 +15,6 @@ from vassal.ssa import (
 from vassal.svd import SVDSolverType
 
 
-# TODO test na_strategy
-
 # Class test
 
 @pytest.mark.parametrize("method",
@@ -40,6 +38,8 @@ def test_correct_initialization(ssa_no_decomposition):
     assert ssa_no_decomposition._timeseries is not None
     assert ssa_no_decomposition._svd_solver == SVDSolverType.NUMPY_STANDARD
     assert ssa_no_decomposition._svd_matrix_kind == SSAMatrixType.BK_TRAJECTORY
+    assert ssa_no_decomposition._na_strategy == 'raise_error'
+    assert ssa_no_decomposition.na_mask.sum() == 0
     assert ssa_no_decomposition.groups['ssa_original'] is None
     assert ssa_no_decomposition.groups['ssa_preprocessed'] is None
 
@@ -98,6 +98,46 @@ def test_invalid_window(timeseries50, invalid_input, expected_error, error_msg):
     """Test various invalid window configurations."""
     with pytest.raises(expected_error, match=error_msg):
         SingularSpectrumAnalysis(timeseries50, window=invalid_input)
+
+
+def test_na_strategy_fill_mean(timeseries50_with_na):
+    ssa = SingularSpectrumAnalysis(
+        timeseries50_with_na,
+        na_strategy='fill_mean'
+    )
+    assert any(~np.isnan(ssa._timeseries_pp))
+    assert any(ssa.na_mask)
+
+
+def test_na_strategy_fill_mean_without_na(timeseries50):
+    ssa = SingularSpectrumAnalysis(
+        timeseries50,
+        na_strategy='fill_mean'
+    )
+    assert any(~np.isnan(ssa._timeseries_pp))
+    assert any(~ssa.na_mask)
+
+
+def test_na_strategy_raise_error(timeseries50_with_na):
+    with pytest.raises(
+            ValueError,
+            match="Argument timeseries cannot inf or NaN values with na_strategy "
+                  "set to 'raise_error'"
+    ):
+        SingularSpectrumAnalysis(timeseries50_with_na,
+                                 na_strategy='raise_error')
+
+
+def test_na_strategy_invalid(timeseries50_with_na):
+    """Test na_strategy parameter handling, both default and custom."""
+    with pytest.raises(
+            ValueError,
+            match="Argument na_strategy should be either 'raise_error' or "
+    ):
+        ssa = SingularSpectrumAnalysis(
+            timeseries50_with_na,
+            na_strategy="invalid"
+        )
 
 
 @pytest.mark.parametrize("invalid_input,expected_error,error_msg", [

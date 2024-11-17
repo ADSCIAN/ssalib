@@ -74,22 +74,12 @@ class SVDHandler:
 
     Attributes
     ----------
+    available_solvers : list[str]
+        List of available solver names.
     decomposition_results : SVDDecomposition | None
         Tuple of singular values (s) and left and right eigenvectors (u, vt)
         returned as (u, s, vt). None if svd() has not been called yet.
-    eigenvalues : NDArray[float] | None
-        Squared singular values. None if svd() has not been called yet.
-    n_components : int | None
-        Number of components defined by the number singular values. None if
-        svd() has not been called yet.
-    svd_solver : str
-        Name value of the selected SVD solver.
-    s_ : NDArray[float] | None
-        1D array of singular values. None if svd() has not been called yet.
-    u_ : NDArray[float] | None
-        2D array of left eigenvectors. None if svd() has not been called yet.
-    vt_ : NDArray[float] | None
-        2D array of right eigenvectors. None if svd() has not been called yet.
+
 
     Examples
     --------
