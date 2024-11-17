@@ -70,9 +70,6 @@ def autoregressive_model_score(
     if len(timeseries) <= order:
         raise ValueError(
             "Argument timeseries must have length greater than order")
-    if criterion not in ['aic', 'bic']:
-        raise ValueError(
-            "Argument criterion must be either 'aic' or 'bic'")
 
     arp = sm.tsa.statespace.SARIMAX(
         timeseries,
@@ -84,6 +81,9 @@ def autoregressive_model_score(
         score = arp.bic
     elif criterion == 'aic':
         score = arp.aic
+    else:
+        raise ValueError(
+            "Argument criterion must be either 'aic' or 'bic'")
 
     return score
 
