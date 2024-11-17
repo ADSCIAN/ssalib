@@ -12,7 +12,7 @@ from scipy.linalg import toeplitz
 def correlation_weights(
         timeseries_length: int,
         window: int
-) -> NDArray[np.float64]:
+) -> NDArray[float]:
     """Calculate the default weights for the weighted correlation matrix.
 
     Parameters
@@ -132,10 +132,12 @@ def weighted_correlation_matrix(
     return wcorr_matrix
 
 
-def construct_SVD_matrix(
+def construct_svd_matrix(
         timeseries: ArrayLike,
         window: int | None = None,
-        kind: Literal['BK', 'VG'] = 'BK'
+        kind: Literal[
+            'bk_trajectory', 'bk_covariance', 'vg_covariance'
+        ] = 'bk_trajectory'
 ) -> NDArray[float]:
     """Construct the matrix for Singular Value Decomposition from time series.
 
@@ -146,21 +148,31 @@ def construct_SVD_matrix(
         array-like of float values.
     window : int | None, default=None
         Window size for the SVD matrix construction.
-    kind : Literal['BK', 'VG'], default='BK'
+    kind : Literal['bk_trajectory', 'bk_covariance', 'vg_covariance'],
+    default='bk_trajectory'
         Method for matrix construction. Either 'BK' or 'VG'. Default is 'BK'.
         See Notes.
 
     Returns
     -------
-    matrix: NDArray
-        Bi-dimensional matrix of kind 'BK' or 'VG'. See Notes.
+    matrix: NDArray[float]
+        Bi-dimensional matrix of kind 'bk_trajectory', 'bk_covariance', or
+        'vg_covariance'.
 
     Notes
     -----
-    For the Broomhead & King 'BK' matrix associated with the Basic Singular
-    Spectrum Analysis, see [1]_. For the Vautard and Ghil 'VG' matrix associated
-    with the Toeplitz Singular Spectrum Analysis, see [2]_. For implementation
-    and mathematical details, refer to [3]_.
+    - The Broomhead & King 'bk_trajectory' matrix [1]_ is a unit-delay lagged
+      embedding of the time series of shape (window, k), where
+      the maximum lag k is given by len(timeseries) - window + 1.
+    - The 'bk_covariance' matrix is the covariance matrix of the bk_trajectory
+      given by 1/k * bk_trajectory @ bk_trajectory.T. Both matrices provide
+      the same singular system, but the 'bk_covariance' matrix can be
+      more efficient for large matrices.
+    - For the Vautard and Ghil 'vg_covariance' matrix is a covariance matrix
+      designed to have a Toeplitz structure [2]_.
+
+      See [3]_ for mathematical details.
+
 
     References
     ----------
@@ -182,13 +194,13 @@ def construct_SVD_matrix(
     --------
 
     >>> ts = np.array([1,3,0,-3,-2,-1])
-    >>> construct_SVD_matrix(ts, window=4, kind='BK')
+    >>> construct_svd_matrix(ts, window=4, kind='bk_trajectory')
     array([[ 1.,  3.,  0.],
            [ 3.,  0., -3.],
            [ 0., -3., -2.],
            [-3., -2., -1.]])
 
-    >>> construct_SVD_matrix(ts, window=3, kind='VG')
+    >>> construct_svd_matrix(ts, window=3, kind='vg_covariance')
     array([[ 4. ,  2.2, -1.5],
            [ 2.2,  4. ,  2.2],
            [-1.5,  2.2,  4. ]])
@@ -207,16 +219,16 @@ def construct_SVD_matrix(
         raise ValueError("Argument kind must be 'BK' or 'VG'")
 
     if kind == 'BK':
-        method = construct_BK_trajectory_matrix
+        method = construct_bk_trajectory_matrix
     elif kind == 'VG':
-        method = construct_VG_covariance_matrix
+        method = construct_vg_covariance_matrix
 
     matrix = method(timeseries, window=window)
 
     return matrix
 
 
-def construct_BK_trajectory_matrix(
+def construct_bk_trajectory_matrix(
         timeseries: ArrayLike,
         window: int
 ) -> NDArray[float]:
@@ -248,7 +260,7 @@ def construct_BK_trajectory_matrix(
     return bk_trajectory_matrix
 
 
-def construct_BK_covariance_matrix(
+def construct_bk_covariance_matrix(
         timeseries: ArrayLike,
         window: int
 ) -> NDArray[float]:
@@ -272,13 +284,13 @@ def construct_BK_covariance_matrix(
         For examples and references.
 
     """
-    bk_trajectory_matrix = construct_BK_trajectory_matrix(timeseries, window)
+    bk_trajectory_matrix = construct_bk_trajectory_matrix(timeseries, window)
     k = len(timeseries) - window + 1
     bk_covariance_matrix = 1 / k * bk_trajectory_matrix @ bk_trajectory_matrix.T
     return bk_covariance_matrix
 
 
-def construct_VG_covariance_matrix(
+def construct_vg_covariance_matrix(
         timeseries: ArrayLike,
         window: int
 ) -> NDArray[float]:
@@ -304,7 +316,7 @@ def construct_VG_covariance_matrix(
     Examples
     --------
     >>> ts = np.array([1,3,0,-3,-2,-1])
-    >>> construct_VG_covariance_matrix(ts, window=3)
+    >>> construct_vg_covariance_matrix(ts, window=3)
     array([[ 4. ,  2.2, -1.5],
            [ 2.2,  4. ,  2.2],
            [-1.5,  2.2,  4. ]])
