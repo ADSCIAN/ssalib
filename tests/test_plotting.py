@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 
 matplotlib.use('Agg')
 
-from vassal.log_and_error import DecompositionError
+from vassal.error import DecompositionError
 from vassal.plotting import PlotSSA, SSAPlotType
 from vassal.ssa import SingularSpectrumAnalysis
 

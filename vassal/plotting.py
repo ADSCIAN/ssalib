@@ -16,8 +16,7 @@ from matplotlib.ticker import MaxNLocator
 from numpy.typing import NDArray
 from scipy.signal import periodogram
 from statsmodels.tsa.statespace.sarimax import SARIMAXResults
-
-from vassal.log_and_error import DecompositionError
+from vassal.error import DecompositionError
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,6 @@ class SSAPlotType(Enum):
         """Whether this plot type supports the ax argument."""
         return self in {
             self.MATRIX,
-            self.PERIODOGRAM,
             self.TIMESERIES,
             self.VALUES,
             self.WCORR
@@ -76,11 +74,11 @@ class PlotSSA(metaclass=abc.ABCMeta):
     _ix: pd.Index | None  # time series index
     _n: int | None = None  # timeseries length
     _na_strategy: str # missing data strategy
-    _w: int | None = None  # SSA window length
+    _window: int | None = None  # SSA window length
     u_: NDArray[float] | None = None  # left eigenvectors
     s_: NDArray[float] | None = None  # array of singular values
     vt_: NDArray[float] | None = None  # right eigenvectors
-    _svd_matrix_kind: str  # SVD matrix kind, either 'BK' or 'VG'
+    _svd_matrix_kind: 'SSAMatrixType'  # SVD matrix kind
     _timeseries_pp: NDArray  # preprocessed timeseries
 
     autoregressive_model: SARIMAXResults  # Surrogate model (MonteCarloSSA)
@@ -142,7 +140,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
                     f"number of components ({self.n_components}), "
                     f"got {n_components}"
                 )
-        elif (n_components is not self._N_COMPONENTS_SENTINEL):
+        elif n_components is not self._N_COMPONENTS_SENTINEL:
             logger.warning(
                 f"Parameter 'n_components' is not supported for plot kind "
                 f"'{kind.value}' and will be ignored"
@@ -196,8 +194,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         ax : Axes, optional
             An existing matplotlib Axes object to draw the plot on. If None, a
             new figure and axes are created. This parameter is ignored for
-            subplots, i.e., kind 'paired', 'vectors', as well as 'periodogram'
-            if n_components is not None.
+            subplots, i.e., kind 'paired', 'vectors', and 'periodogram'.
 
         Other Parameters
         ----------------
@@ -371,7 +368,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         if indices is None:  # plot decomposed
             matrix = self.svd_matrix
-            subtitle = f'({self._svd_matrix_kind}, Original)'
+            subtitle = f'({self._svd_matrix_kind.value}, Original)'
         else:  # plot reconstructed
             if self.n_components is None:
                 raise DecompositionError(
@@ -431,7 +428,6 @@ class PlotSSA(metaclass=abc.ABCMeta):
     def _plot_periodogram(
             self,
             n_components: int | None,
-            ax: Axes | None = None,
             scale: Literal['loglog', 'plot', 'semilogx', 'semilogy'] = 'loglog',
             **plot_kwargs
     ) -> tuple[Figure, Axes] | tuple[Figure, list[Axes]]:
@@ -487,7 +483,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
     def _plot_timeseries(
             self,
-            ax: Axes = None,
+            ax: Axes | None = None,
             include: list[str] | None = None,
             exclude: list[str] | None = None,
             rescale: bool = False,
@@ -506,8 +502,6 @@ class PlotSSA(metaclass=abc.ABCMeta):
         else:
             fig = axes.get_figure()
             axes.legend(loc='best')
-
-        fig.tight_layout()
 
         return fig, axes
 
