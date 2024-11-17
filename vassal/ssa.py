@@ -1,55 +1,96 @@
 """Singular Spectrum Analysis"""
 from __future__ import annotations
 
-import inspect
 import logging
+from enum import Enum
 from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 
-from vassal.log_and_error import DecompositionError, ReconstructionError
+from vassal.error import DecompositionError, ReconstructionError
 from vassal.math_ext.matrix_operations import (
     average_antidiagonals,
-    construct_SVD_matrix,
-    construct_BK_trajectory_matrix,
-    construct_BK_covariance_matrix,
-    construct_VG_covariance_matrix,
+    construct_bk_trajectory_matrix,
+    construct_bk_covariance_matrix,
+    construct_vg_covariance_matrix,
     correlation_weights,
     weighted_correlation_matrix
 )
 from vassal.plotting import PlotSSA
-from vassal.svd import SVDHandler
+from vassal.svd import SVDHandler, SVDSolverType
+
+logger = logging.getLogger(__name__)
+
+_CONSTRUCT_FUNC_MAPPING = {
+    "bk_trajectory": construct_bk_trajectory_matrix,
+    "bk_covariance": construct_bk_covariance_matrix,
+    "vg_covariance": construct_vg_covariance_matrix
+}
+
+
+class SSAMatrixType(Enum):
+    """Available SVD matrix types for timeseries embedding and decomposition.
+
+    Enumeration of supported matrix types, mapping user-facing
+    names to their corresponding method identifiers.
+    """
+    BK_TRAJECTORY = "bk_trajectory"
+    BK_COVARIANCE = "bk_covariance"
+    VG_COVARIANCE = "vg_covariance"
+
+    def construct_svd_matrix(self, timeseries: ArrayLike, window: int):
+        """Constructs an SVD matrix based on the SSAMatrixType."""
+        try:
+            construct_matrix = _CONSTRUCT_FUNC_MAPPING[self.value]
+        except KeyError:
+            raise ValueError(
+                f"Unsupported matrix type: {self.value}. "
+                f"Available matrix types are: "
+                f"{', '.join(self.available_matrices())}."
+            )
+
+        return construct_matrix(timeseries, window)
+
+    @property
+    def is_covariance(self) -> bool:
+        return self in {
+            SSAMatrixType.BK_COVARIANCE,
+            SSAMatrixType.VG_COVARIANCE
+        }
+
+    @classmethod
+    def available_matrices(cls) -> list[str]:
+        return [matrix.value for matrix in cls]
 
 
 class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     """Singular Spectrum Analysis (SSA).
 
-    #TODO: document methods and attributes
-
     Singular Spectrum Analysis (SSA) provides non-parametric linear
     decomposition of a time series relying on the Singular Value Decomposition
-    (SVD) of a matrix constructed from the time series. The SVD decomposed
-    matrix is either a lagged embedding, following the Broomhead and King (BK)
-    trajectory matrix approach, or a Toeplitz lagged covariance matrix,
-    following the Vautard and Ghil (VG) approach.
+    (SVD) of a matrix constructed from the time series.
+
+    The SingularSpectrumAnalysis class provides a handful API to different
+    timeseries embedding approaches, SVD solvers, and plotting options.
 
     Parameters
     ----------
     timeseries : ArrayLike
         The timeseries data as a one-dimensional array-like sequence of
-        float, e.g, a python list,  numpy array, or pandas series.
+        float, e.g., a python list, numpy array, or pandas series.
         If timeseries is a pd.Series with a pd.DatetimeIndex, the index
         will be stored to return SSA-decomposed time series as pd.Series
         using the same index.
     window : int, optional
         The window length for the SSA algorithm. Defaults to half the series
         length if not provided.
-    svd_matrix: str, default 'BK'
-        Matrix to use for the SVD algorithm, either 'BK' or 'VG', with
-        defaults to 'BK' (see Notes).
-    svd_solver : str, default 'numpy_standard'
+    svd_matrix_kind: SSAMatrixType | str,
+        Matrix to use for the SVD algorithm, either 'bk_trajectory',
+        'bk_covariance', or 'vg_covariance', with
+        defaults to 'bk_trajectory'.
+    svd_solver : SVDSolverType | str, default SVDSolverType.NUMPY_STANDARD
         The method of singular value decomposition to use. Call the
         available_solver method for possible options.
     standardize : bool, default True
@@ -61,44 +102,94 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         replaced by the mean of the timeseries (i.e., zeros if standardize
         is True).
 
+    Attributes
+    ----------
+    mean_ : float
+        Mean of the original timeseries. Available after initialization.
+    std_ : float
+        Standard deviation of the original timeseries. Available after
+        initialization.
+    n_components : int or None
+        Number of components after decomposition. None if decomposition has
+        not been performed.
+    groups : dict
+        Dictionary of group names and their corresponding eigentriple indices.
+        Available after reconstruction.
+    s_ : ndarray or None
+        Singular values from decomposition. None if decomposition has not been
+        performed.
+    u_ : ndarray or None
+        Left singular vectors from decomposition. None if decomposition has not
+        been performed.
+    vt_ : ndarray or None
+        Right singular vectors from decomposition. None if decomposition has
+        not been performed.
+
     Notes
     -----
-    The basic SSA version relies on the SVD of a lagged trajectory matrix,
-    an approach proposed by Broomhead & King (1986), referred to as the
-    BK approach [1]_. The alternative propose by Vautard and Ghil (1989),
-    hereafter VG [2]_, relies instead on the SVD of a lagged covariance
-    matrix showing a Toeplitz structure.
+    - The Broomhead & King 'bk_trajectory' matrix [1]_ is a unit-delay lagged
+      embedding of the time series of shape (window, k), where
+      the maximum lag k is given by len(timeseries) - window + 1.
+      The bk_trajectory matrix in an Hankel matrix, i.e., having its
+      antidiagonal elements equal
+    - The 'bk_covariance' matrix is the covariance matrix of shape (window,
+      window) given by 1/k * bk_trajectory @ bk_trajectory.T. Both matrices
+      relate to the equivalent singular system, but the 'bk_covariance' matrix
+      can be more efficient for large matrices.
+    - For the Vautard and Ghil 'vg_covariance' matrix is a covariance matrix
+      of shape (window, window) with a Toeplitz structure, i.e.,
+      having its diagonal elements equal [2]_.
 
-    Both implementation are explained in [3]_.
+    See [3]_ for additional mathematical details.
 
     References
     ----------
     .. [1] Broomhead, D. S., & King, G. P. (1986). Extracting qualitative
       dynamics from experimental data. Physica D: Nonlinear Phenomena, 20(2),
       217–236. https://doi.org/10.1016/0167-2789(86)90031-X
-
     .. [2] Vautard, R., & Ghil, M. (1989). Singular spectrum analysis in
       nonlinear dynamics, with applications to paleoclimatic time series.
       Physica D: Nonlinear Phenomena, 35(3), 395–424.
       https://doi.org/10.1016/0167-2789(89)90077-8
-
     .. [3] Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis
       for Time Series. Berlin, Heidelberg: Springer.
       https://doi.org/10.1007/978-3-662-62436-4
 
+    Examples
+    --------
+
+    >>> from vassal.datasets import load_sst
+    >>> from vassal.ssa import SingularSpectrumAnalysis
+    >>> sst = load_sst() # Sea Surface Temperature Data
+    >>> ssa = SingularSpectrumAnalysis(sst, window=20) # Initialization
+    >>> _ = ssa.decompose()  # Perform SVD
+    >>> _ = ssa.reconstruct(groups={'trend': [0], 'seasonal': [1,2]})  # Group components
+    >>> ssa['trend'].head(5)  # Access reconstructed groups and show first values
+    Date
+    1982-01-15   -0.700452
+    1982-02-15   -0.714862
+    1982-03-15   -0.736786
+    1982-04-15   -0.766092
+    1982-05-15   -0.795355
+    Name: trend, dtype: float64
     """
+
+    _DEFAULT_GROUPS = {
+        'ssa_original': '_timeseries',
+        'ssa_preprocessed': '_timeseries_pp',
+        'ssa_reconstructed': '_ssa_reconstructed',
+        'ssa_residuals': '_ssa_residuals'
+    }
 
     def __init__(
             self,
             timeseries: ArrayLike,
             window: int | None = None,
-            svd_matrix: Literal['BK', 'VG'] = 'BK',
-            svd_solver: str = 'numpy_standard',
+            svd_matrix_kind: SSAMatrixType | str = SSAMatrixType.BK_TRAJECTORY,
+            svd_solver: SVDSolverType | str = SVDSolverType.NUMPY_STANDARD,
             standardize: bool = True,
             na_strategy: Literal['raise_error', 'fill_mean'] = 'raise_error',
-            # TODO test na_strategy
     ) -> None:
-
         SVDHandler.__init__(self, svd_solver)
 
         # Initialize timeseries
@@ -107,104 +198,92 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         else:
             self._ix = None
 
+        # Validate na_strategy
         if na_strategy not in ['raise_error', 'fill_mean']:
-            raise ValueError(f"Argument na_strategy should be either "
-                             f"'raise_error' or 'fill_mean', got {na_strategy} "
-                             f"instead.")
+            raise ValueError(
+                f"Argument na_strategy should be either 'raise_error' or "
+                f"'fill_mean', got {na_strategy} instead."
+            )
+        self._na_strategy: str = na_strategy
 
         if na_strategy == 'raise_error':
-            allow_na = False
             self.na_mask = np.zeros_like(timeseries, dtype=bool)
         else:
-            allow_na = True
             self.na_mask = np.isnan(timeseries)
+        self._has_na: bool = any(self.na_mask)
 
-        self._na_strategy: str = na_strategy
-        self._timeseries: NDArray = self.__validate_timeseries(timeseries,
-                                                               allow_na)
-        self._has_na: bool = np.isnan(self._timeseries).any()
-
+        # Validate timeseries
+        self._timeseries: NDArray = self.__validate_timeseries(timeseries)
         self._n: int = self._timeseries.shape[0]
         self.mean_: float = np.nanmean(self._timeseries)
         self.std_: float = np.nanstd(self._timeseries)
+        self._standardized: bool = standardize
         if self._na_strategy == 'fill_mean':
             self._timeseries[self.na_mask] = self.mean_
-
         if standardize:
             self._timeseries_pp = (self._timeseries - self.mean_) / self.std_
         else:
             self._timeseries_pp = self._timeseries
 
-        self._standardized: bool = standardize
+        # Initialize matrix construction
+        self._svd_matrix_kind: SSAMatrixType = self.__validate_svd_matrix_kind(
+            svd_matrix_kind
+        )
+        self._window: int = self.__validate_window(window)
 
-        # Initialize decomposition
-        self._svd_matrix_kind: str = self.__validate_svd_matrix_kind(svd_matrix)
-        self._w: int = self.__validate_window(window)
-
-        # Initialize groups
-        self._default_groups = {
-            'ssa_original': '_timeseries',
-            'ssa_preprocessed': '_timeseries_pp',
-            'ssa_reconstructed': '_ssa_reconstructed',
-            'ssa_residuals': '_ssa_residuals'
-        }
+        # Initialize groups for reconstruction
         self._user_groups: dict[str, int | list[int]] | None = None
 
     def __repr__(self) -> str:
-        ts_format = 'Series' if self._ix is not None else 'Array'
-        ts_str = pd.Series(self._timeseries, index=self._ix).__str__() if (
-                ts_format == 'Series') else self._timeseries.__str__()
-        repr_str = f"""
-{self.__class__.__name__}(
-    timeseries={ts_str},
-    window={self._w},
-    svd_matrix='{self._svd_matrix_kind}',
-    svd_solver='{self.svd_solver}',
-    standardize={self._standardized}
-)
-        """
-        return repr_str
+        ts_type = 'Series' if self._ix is not None else 'Array'
+        ts_shape = f"shape={self._timeseries.shape}"
+        return (f"{self.__class__.__name__}(timeseries=<{ts_type} {ts_shape}>, "
+                f"window={self._window}, svd_matrix='{self._svd_matrix_kind}', "
+                f"svd_solver='{self.svd_solver}', standardize="
+                f"{self._standardized})")
 
     def __str__(self) -> str:
         ts_format = 'Series' if self._ix is not None else 'Array'
-        ts_str = pd.Series(self._timeseries, index=self._ix).__str__() if (
-                ts_format == 'Series') else self._timeseries.__str__()
         n, mu, sigma = self._n, self.mean_, self.std_
-        status = 'None'
+
+        # Determine decomposition status
+        status = 'Initialized'
         n_components = str(self.n_components)
-        groups = 'None'
         if self.n_components is not None:
             status = 'Decomposed'
         if self._user_groups is not None:
             status = 'Reconstructed'
-            groups = self._user_groups
-        ssa_str = f"""
+
+        # Format parameters section
+        params = [
+            f"timeseries: {ts_format}, n={n}, mean={mu:.2f}, std={sigma:.2f}",
+            f"kind: {self._svd_matrix_kind.value}",
+            f"window: {self._window}",
+            f"standardize: {self._standardized}",
+            f"svd_solver: {self.svd_solver}",
+            f"status: {status}",
+            f"n_components: {n_components}",
+            f"groups: {self._user_groups or 'None'}"
+        ]
+        print_str = f"""
 Singular Spectrum Analysis
 --------------------------
 # Parameters
-kind: {self._svd_matrix_kind}
-window: {self._w}
-standardize: {self._standardized}
-svd_solver: {self.svd_solver}
-status: {status}
-n_components: {n_components}
-groups: {groups}
+{chr(10).join(params)
+        }"""
 
-# Timeseries ({ts_format}, n={n}, mean={mu:.2f}, std={sigma:.2f})
-{ts_str}
-        """
-        return ssa_str
+        return print_str
 
     def __getitem__(
             self,
-            item: int | slice | list[int] | str
+            item: int | slice | list[int] | str  # TODO expand to
     ) -> NDArray | pd.Series:
         """API to access SSA timeseries data."""
         self.__validate_item_keys(item)
 
         if isinstance(item, str):
-            if item in self._default_groups.keys():
-                default_attr = self._default_groups[item]
+            if item in self._DEFAULT_GROUPS.keys():
+                default_attr = self._DEFAULT_GROUPS[item]
                 timeseries = getattr(self, default_attr)
             else:
                 timeseries = self.__get_user_timeseries_by_group_name(item)
@@ -216,6 +295,26 @@ groups: {groups}
             timeseries = pd.Series(index=self._ix, data=timeseries, name=name)
 
         return timeseries
+
+    def __get_user_timeseries_by_group_name(
+            self,
+            group_name: str
+    ):
+        """Get time series by default- or user-group name.
+        """
+        return self._reconstruct_group_timeseries(self.groups[group_name])
+
+    def __validate_int_key(self, key: int) -> None:
+        """Validate __getitem__ key for an integer key.
+        """
+        if self.n_components is None:
+            raise DecompositionError(
+                "Cannot retrieve components by indices prior to "
+                "decomposition. Call the 'decompose' "
+                "method first"
+            )
+        elif key < 0 or key >= self.n_components:
+            raise KeyError(f"Integer key '{key}' is is out of range")
 
     def __validate_item_keys(self, key: Any) -> None:
         """Validate __getitem__ key.
@@ -229,59 +328,11 @@ groups: {groups}
         elif isinstance(key, list):
             self.__validate_list_key(key)
         else:
-            raise KeyError(f"Key '{key}' is not a valid key type. Make sure to "
-                           f"retrieve timeseries by indices or group name.")
-
-    def __validate_string_key(self, key: str) -> None:
-        """Validate __getitem__ key for a string key.
-        """
-        if key in ["ssa_reconstructed", "ssa_residuals"]:
-            if self.n_components is None:
-                raise DecompositionError(
-                    f"Cannot access '{key}' prior to decomposition. Make sure "
-                    f"to call the 'decompose' method first."
-                )
-        elif key not in self.groups.keys():
-            if self.n_components is None:
-                raise DecompositionError(
-                    f"Cannot access user-defined key '{key}' prior to "
-                    f"decomposition and reconstruction. Make sure to call the "
-                    f"'decompose' and 'reconstruct' method first."
-                )
-            elif self._user_groups is None:
-                raise ReconstructionError(
-                    "Cannot access user-defined key prior to group "
-                    "reconstruction. Make sure to define user groups using the "
-                    "'reconstruct' method first.")
-            else:
-                raise KeyError(
-                    f"Key '{key}' is not a valid group name. Valid group names "
-                    f"are {', '.join(self.groups.keys())}."
-                )
-
-    def __validate_int_key(self, key: int) -> None:
-        """Validate __getitem__ key for a integer key.
-        """
-        if self.n_components is None:
-            raise DecompositionError(
-                "Cannot retrieve components by indices prior to "
-                "decomposition. Make sure to call the 'decompose' "
-                "method first."
+            raise KeyError(
+                f"Key '{key}' is not a valid key type. Make sure to "
+                f"retrieve timeseries by using integer indices, list of integer "
+                f"indices, slices of integer indices, or group name strings"
             )
-        elif key < 0 or key >= self.n_components:
-            raise KeyError(f"Integer key '{key}' is is out of range.")
-
-    def __validate_slice_key(self, key: slice) -> None:
-        """Validate __getitem__ key for a slice key.
-        """
-        if self.n_components is None:
-            raise DecompositionError(
-                "Cannot retrieve components by slice prior to decomposition. "
-                "Make sure to call the 'decompose' method first."
-            )
-        start, stop, step = key.indices(self.n_components)
-        if stop > self.n_components:
-            raise KeyError(f"Slice '{key}' is out of range.")
 
     def __validate_list_key(self, key: list) -> None:
         """Validate __getitem__ key for a list key.
@@ -289,58 +340,95 @@ groups: {groups}
         if self.n_components is None:
             raise DecompositionError(
                 "Cannot retrieve components by list prior to decomposition. "
-                "Make sure to call the 'decompose' method first.")
+                "Call the 'decompose' method first"
+            )
         if not all(isinstance(x, int) for x in key):
-            raise KeyError("All indices in the list must be integers.")
+            raise KeyError("All indices in the list must be integers")
         if any(x < 0 or x >= self.n_components for x in key):
             raise KeyError(f"Indices in the list {key} are out of range.")
 
-    @staticmethod
-    def __validate_svd_matrix_kind(
-            svd_matrix_kind: str
-    ) -> str:
-        """Validates SVD matrix kind.
+    def __validate_slice_key(self, key: slice) -> None:
+        """Validate __getitem__ key for a slice key.
         """
-        if not isinstance(svd_matrix_kind, str):
-            raise TypeError("svd_matrix must be a string.")
-        if svd_matrix_kind not in ['BK', 'VG']:
-            raise ValueError("svd_matrix must be 'BK' or 'VG'.")
-        return svd_matrix_kind
+        if self.n_components is None:
+            raise DecompositionError(
+                "Cannot retrieve components by slice prior to decomposition. "
+                "Call the 'decompose' method first"
+            )
+        start, stop, step = key.indices(self.n_components)
+        if stop > self.n_components:
+            raise KeyError(f"Slice '{key}' is out of range")
+
+    def __validate_string_key(self, key: str) -> None:
+        """Validate __getitem__ key for a string key.
+        """
+        if key in ["ssa_reconstructed", "ssa_residuals"]:
+            if self.n_components is None:
+                raise DecompositionError(
+                    f"Cannot access '{key}' prior to decomposition. "
+                    f"Call the 'decompose' method first"
+                )
+        elif key not in self.groups.keys():
+            if self.n_components is None:
+                raise DecompositionError(
+                    f"Cannot access user-defined key '{key}' prior to "
+                    f"decomposition and reconstruction. Call the "
+                    f"decompose and reconstruct method first"
+                )
+            elif self._user_groups is None:
+                raise ReconstructionError(
+                    "Cannot access user-defined key prior to group "
+                    "reconstruction. Call the reconstruct method first")
+            else:
+                raise KeyError(
+                    f"Key '{key}' is not a valid group name. Valid group names "
+                    f"are {', '.join(self.groups.keys())}"
+                )
 
     @staticmethod
+    def __validate_svd_matrix_kind(
+            svd_matrix_kind: SSAMatrixType | str
+    ) -> SSAMatrixType:
+        """Validates SVD matrix kind.
+        """
+        if isinstance(svd_matrix_kind, str):
+            try:
+                svd_matrix_kind = SSAMatrixType(svd_matrix_kind)
+            except ValueError:
+                valid_matrices = SSAMatrixType.available_matrices()
+                raise ValueError(
+                    f"Invalid svd_matrix_kind '{svd_matrix_kind}'. "
+                    f"Valid matrices are: {', '.join(valid_matrices)}."
+                )
+        elif not isinstance(svd_matrix_kind, SSAMatrixType):
+            raise TypeError(
+                f"Argument svd_matrix_kind must be of type str or "
+                f"SSAMatrixType, got {type(svd_matrix_kind)}"
+            )
+
+        return svd_matrix_kind
+
     def __validate_timeseries(
-            timeseries: ArrayLike,
-            allow_na: bool = False
-    ) -> NDArray:
+            self,
+            timeseries: ArrayLike
+    ) -> NDArray[float]:
         """Validates the timeseries data.
         """
         timeseries = np.squeeze(np.array(timeseries))
-        if not np.issubdtype(timeseries.dtype, np.number):
-            raise ValueError("All elements must be integers or floats.")
-        if not allow_na and (
-                np.any(np.isinf(timeseries)) or np.any(np.isnan(timeseries))):
-            raise ValueError("The array contains inf or NaN values.")
-        if timeseries.ndim != 1:
-            raise ValueError("Timeseries must be one-dimensional.")
-        return timeseries
 
-    def __validate_window(
-            self,
-            window: int | None
-    ) -> int:
-        """Validates the embedding window parameter.
-        """
-        if window is None:
-            window = self._n // 2
-        elif not isinstance(window, int):
-            raise ValueError("Invalid window type. Parameter 'window' must be "
-                             "an integer.")
-        elif (window < 2) or (window > self._n - 2):
+        if not np.issubdtype(timeseries.dtype, np.number):
             raise ValueError(
-                f'Invalid window size. Current size is {window}, but it must be'
-                f' between 2 and {self._n - 2} (n-2). Recommended window size '
-                f'is between 2 and {self._n // 2} (n/2).')
-        return window
+                "All timeseries elements must be integers or floats"
+            )
+        if (self._na_strategy == 'raise_error' and
+                (any(np.isinf(timeseries)) or any(np.isnan(timeseries)))):
+            raise ValueError(
+                "Argument timeseries cannot inf or NaN values with na_strategy "
+                "set to 'raise_error'"
+            )
+        if timeseries.ndim != 1:
+            raise ValueError("Argument timeseries must be one-dimensional")
+        return timeseries
 
     def __validate_user_groups(
             self,
@@ -368,7 +456,9 @@ groups: {groups}
 
         """
         if not isinstance(groups, dict):
-            raise TypeError("user_groups must be a dictionary.")
+            raise TypeError(
+                f"Argument groups must be a dictionary, got {type(groups)}"
+            )
 
         all_values = []
         seen_keys = set()
@@ -376,13 +466,19 @@ groups: {groups}
         for key, value in groups.items():
             # Validate key
             if not isinstance(key, str):
-                raise ValueError(f"Key '{key}' is not a string.")
+                raise TypeError(
+                    f"Key types in groups dictionary should be string, "
+                    f"got {type(key)}"
+                )
             if key in seen_keys:
-                raise ValueError(f"Duplicate key '{key}' found.")
-            if key in self._default_groups:
-                raise ValueError(f"Unauthorized group name '{key}', name is "
-                                 f"reserved for use in the default groups. "
-                                 f"Please use a different group name.")
+                raise ValueError(
+                    f"Duplicate key '{key}' found in groups dictionary."
+                )
+            if key in self._DEFAULT_GROUPS:
+                raise ValueError(
+                    f"Group name '{key}' is reserved for default group names. "
+                    f"Use a different group name"
+                )
             seen_keys.add(key)
 
             # Validates value and collect all integers
@@ -391,74 +487,121 @@ groups: {groups}
             elif not (isinstance(value, list) and all(
                     isinstance(i, int) for i in value)):
                 raise ValueError(
-                    f"Value for key '{key}' must be an int or list of int.")
+                    f"Value for key '{key}' must be an int or list of int, "
+                    f"got {type(value)}"
+                )
 
             if any(i < 0 or i >= self.n_components for i in value):
                 raise ValueError(
-                    f"Values for key '{key}' must be in the range 0 <= value <"
-                    f" {self.n_components}.")
-
+                    f"Values for key '{key}' must be in the range 0 <= value < "
+                    f"{self.n_components}."
+                )
             all_values.extend(value)
 
         # Check for duplicate integer indices
         unique_values, counts = np.unique(all_values, return_counts=True)
         duplicates = unique_values[counts > 1]
         if duplicates.size > 0:
-            logger = logging.getLogger(self.__module__)
-            log_func = getattr(logger, 'warning')
-            log_func(
+            logger.warning(
                 f"Reconstructed groups contain duplicate indices: "
-                f"{duplicates.tolist()}")
+                f"{duplicates.tolist()}"
+            )
 
-    def __get_user_timeseries_by_group_name(
+    def __validate_window(
             self,
-            group_name: str
-    ):
-        """Get time series by default- or user-group name.
+            window: int | None
+    ) -> int:
+        """Validates the embedding window parameter.
         """
-        return self._reconstruct_group_timeseries(self.groups[group_name])
+        if window is None:
+            window = self._n // 2
+        elif not isinstance(window, int):
+            raise TypeError(
+                f"Argument window must be integer, got {type(window)}"
+            )
+        elif (window < 2) or (window > self._n - 2):
+            raise ValueError(
+                f'Invalid window size {window}. Valid size must be '
+                f'between 2 and {self._n - 2} (n-2). Recommended window size '
+                f'is between 2 and {self._n // 2} (n/2)')
+        return window
 
     def decompose(
             self,
             n_components: int | None = None,
-            **kwargs
+            **kwargs: Any
     ) -> "SingularSpectrumAnalysis":
-        """Perform Singular Value Decomposition (SVD) of the constructed matrix.
+        """Perform Singular Value Decomposition (SVD) of the SVD matrix.
 
-        SVD is applied on the ´SingularSpectrumAnalysis.svd_matrix´ using the
-        solver selected at initialization. Decomposition enable plotting
-        features for exploration prior to reconstruction. It also enables access
-        to eigenvalues and eigenvectors attributes.
+        SVD is applied on the SingularSpectrumAnalysis.svd_matrix using the
+        svd_solver selected at initialization.
+
+        Decomposition enables plotting features for exploration prior to
+        reconstruction. It also enables access to singular values and
+        eigenvectors attributes.
 
         Parameters
         ----------
         n_components: int | None, default=None
+            Number of components, i.e., dimensionality, of the resulting SVD
+            decomposition. The argument n_components is required for
+            truncated SVD solvers and ignored for full SVD.
 
         Other Parameters
         ----------------
-        kwargs: dict
-            Any additional keyword arguments taken by the SVD decomposition
-            method.
+        **kwargs: Any
+            Additional arguments passed to the SVD solver. Available
+            arguments depend on the chosen solver type.
 
         Returns
         -------
-        self: SingularSpectrumAnalysis
-            The Singular Spectrum Analysis object with decomposition method
-            achieved.
+        self : SingularSpectrumAnalysis
+            The instance itself for method chaining.
 
         See Also
         --------
         SVDHandler
             For details about available solvers and SVD algorithms.
 
+        Examples
+        --------
+
+        >>> from vassal.datasets import load_sst
+        >>> from vassal import SingularSpectrumAnalysis
+        >>> sst = load_sst() # Sea Surface Temperature data
+        >>> ssa = SingularSpectrumAnalysis(sst).decompose()
+
+        After decomposition, the following attributes become available:
+        - n_components : Number of components (dimensionality)
+        - s_ : Singular values
+        - u_ : Left singular vectors
+        - vt_ : Right singular vectors
+
+        >>> print(ssa.n_components)
+        252
+
+        The reconstruct method becomes available, and the reconstructed
+        components can also be reconstructed on the fly using the getitem API,
+        e.g., by indices or slices (or group name after reconstrion).
+
+        The reconstructed timeseries are returned as the same type than the
+        input timeseries.
+
+        >>> ssa[0].head() # using component integer indices and show first values
+        Date
+        1982-01-15   -1.183962
+        1982-02-15   -1.196059
+        1982-03-15   -1.208318
+        1982-04-15   -1.220207
+        1982-05-15   -1.229758
+        dtype: float64
         """
         # Input check is done by self.svd
         self.svd(self.svd_matrix, n_components, **kwargs)
         p, _, _ = self.decomposition_results
 
-        # Extra-processing for the 'VG' algorithm
-        # TODO: Explain in docstring
-        if self._svd_matrix_kind == 'VG':
+        # Extra-processing for covariance matrices
+        if self._svd_matrix_kind.is_covariance:
             S = self._trajectory_matrix.T @ p
             s = np.linalg.norm(S, axis=0)
             ix_sorted = np.argsort(s)[::-1]
@@ -473,24 +616,27 @@ groups: {groups}
             confidence_level: float = 0.95,
             two_tailed: bool = True,
             return_lower: bool = True,
-    ) -> tuple[NDArray[float], NDArray[float]] | NDArray[float]:
-        raise NotImplementedError("Method get_confidence_interval is only"
-                                  "available for class MonteCarloSSA")
+    ) -> tuple[NDArray[float], NDArray[float]] | NDArray[
+        float]:  # TODO test signature
+        raise NotImplementedError(
+            "Method get_confidence_interval is only available for class "
+            "MonteCarloSSA"
+        )
 
     def reconstruct(
             self,
             groups: dict[str, int | list[int]]
     ) -> "SingularSpectrumAnalysis":
-        """Reconstruct components based on eigen-triples indices.
+        """Reconstruct components based on eigentriple indices.
 
         Define user groups for the signal reconstruction.
 
         Parameters
         ----------
         groups : dict[str, int | list[int]]
-            Dictionary of user defined groups of eigen triples for
-            reconstruction. Keys represents user defined group names as text
-            strings and values are single (int) or multiple (list of int)
+            Dictionary of user-defined groups of component indices for
+            reconstruction. Keys represents user-defined group names (str)
+            and values are single (int) or multiple (list of int)
             indices of eigen triples to use for the reconstruction.
 
         Returns
@@ -498,15 +644,14 @@ groups: {groups}
         self: SingularSpectrumAnalysis
             The Singular Spectrum Analysis object with decomposition method
             achieved.
-
         """
 
         n_components = self.n_components
         if n_components is None:
-            raise DecompositionError("Decomposition must be performed before "
-                                     "reconstruction. Make sure to call the "
-                                     "'decompose' method before the "
-                                     "'reconstruct' method.")
+            raise DecompositionError(
+                "Decomposition must be performed before reconstruction. "
+                "Call the decompose method prior to the reconstruct method"
+            )
 
         # Validate and set or update user groups
         self.__validate_user_groups(groups)
@@ -519,7 +664,7 @@ groups: {groups}
             n_components: int | None = None,
             confidence_level: float = 0.95,
             two_tailed: bool = True
-    ) -> NDArray[np.bool_]:
+    ) -> NDArray[bool]:  # TODO test signature
         raise NotImplementedError("Method test_significance is only"
                                   "available for class MonteCarloSSA")
 
@@ -625,24 +770,28 @@ groups: {groups}
 
         >>> from vassal.datasets import load_sst
         >>> timeseries = load_sst()
-        >>> ssa = SingularSpectrumAnalysis(timeseries)
-        >>> u, s, v = ssa.decompose()
-        >>> ssa.reconstruct(groups={'main': [0,1]})
+        >>> ssa = SingularSpectrumAnalysis(timeseries).decompose()
+        >>> _ = ssa.reconstruct(groups={'main': [0,1]})
         >>> ssa.groups['main']
         [0, 1]
-        >>> ssa['main'][:5]
-        array([-0.99356886, -1.00619557, -1.02415474, -1.04545692, -1.06560407])
+
+        >>> ssa['main'].head(5)
+        Date
+        1982-01-15   -0.993569
+        1982-02-15   -1.006196
+        1982-03-15   -1.024155
+        1982-04-15   -1.045457
+        1982-05-15   -1.065604
+        Name: main, dtype: float64
 
         See Also
         --------
-
-        SingularSpectrumAnalysis.reconstruct
+        :meth: SingularSpectrumAnalysis.reconstruct
             Method used for reconstructing components based on eigentriple
             indices.
-
         """
 
-        all_names = list(self._default_groups.keys())
+        all_names = list(self._DEFAULT_GROUPS.keys())
         all_indices = [None, None]
 
         if self.n_components is not None:
@@ -683,44 +832,33 @@ groups: {groups}
         return np.linalg.norm(self._trajectory_matrix, 'fro') ** 2
 
     @property
-    def svd_matrix(self) -> np.ndarray:
-        """Matrix to be decomposed with SVD
+    def svd_matrix(self) -> NDArray[float]:
+        """Matrix decomposed with SVD
+
+        Returns
+         -------
+        svd_matrix : NDArray[float]
+            The matrix constructed for SVD decomposition, either trajectory or
+            covariance matrix depending on parameter svd_matrix_kind.
+
         """
-        svd_matrix = construct_SVD_matrix(
+        svd_matrix = self._svd_matrix_kind.construct_svd_matrix(
             self._timeseries_pp,
-            window=self._w,
-            kind=self._svd_matrix_kind
+            window=self._window
         )
         return svd_matrix
 
     @property
-    def _covariance_matrix(self):
-        """Return Broomhead & King or Vautard & Ghil covariance matrix.
-        """
-        if self._svd_matrix_kind == 'BK':
-            covariance_matrix = construct_BK_covariance_matrix(
-                timeseries=self._timeseries_pp,
-                window=self._w
-            )
-        elif self._svd_matrix_kind == 'VG':
-            covariance_matrix = construct_VG_covariance_matrix(
-                timeseries=self._timeseries_pp,
-                window=self._w
-            )
-        return covariance_matrix
-
-    @property
-    def _trajectory_matrix(self):
-        """Return Broomhead & King trajectory matrix.
-        """
-        trajectory_matrix = construct_BK_trajectory_matrix(
-            timeseries=self._timeseries_pp,
-            window=self._w
+    def _trajectory_matrix(self) -> NDArray[float]:
+        """Return bk_trajectory matrix"""
+        trajectory_matrix = SSAMatrixType('bk_trajectory').construct_svd_matrix(
+            self._timeseries_pp,
+            window=self._window
         )
         return trajectory_matrix
 
     @property
-    def _ssa_reconstructed(self) -> np.ndarray:
+    def _ssa_reconstructed(self) -> NDArray[float]:
         """Return the reconstructed timeseries signal.
         """
         if self.s_ is None:
@@ -731,7 +869,7 @@ groups: {groups}
         return ssa_reconstructed
 
     @property
-    def _ssa_residuals(self) -> np.ndarray:
+    def _ssa_residuals(self) -> NDArray[float]:
         """Return the residual timeseries signal.
         """
         if self.s_ is None:
@@ -770,7 +908,7 @@ groups: {groups}
     def wcorr(
             self,
             n_components: int
-    ) -> NDArray:
+    ) -> NDArray[float]:
         """Calculate the weighted correlation matrix for a number of components.
 
         Parameters
@@ -784,6 +922,14 @@ groups: {groups}
         wcorr : np.ndarray
             The weighted correlation matrix.
 
+        Raises
+        ------
+        DecompositionError
+            If called before decomposition is performed.
+        ValueError
+            If n_components is not a positive integer or exceeds available
+            components.
+
         See Also
         --------
         vassal.math_ext.weighted_correlation_matrix
@@ -793,7 +939,7 @@ groups: {groups}
         timeseries = np.array(
             [self._reconstruct_group_timeseries([i]) for i in
              range(n_components)])
-        weights = correlation_weights(self._n, self._w)
+        weights = correlation_weights(self._n, self._window)
         wcorr = weighted_correlation_matrix(timeseries, weights=weights)
         return wcorr
 
@@ -840,12 +986,19 @@ groups: {groups}
         s_selected = np.diag(s[group_indices])
         v_selected = v[group_indices, :]
 
-        if self._svd_matrix_kind == 'BK':
+        if self._svd_matrix_kind == SSAMatrixType.BK_TRAJECTORY:
             reconstructed_group_matrix = u_selected @ s_selected @ v_selected
-        elif self._svd_matrix_kind == 'VG':
-            X = self._trajectory_matrix
+        elif self._svd_matrix_kind.is_covariance:
+            X = SSAMatrixType('bk_trajectory').construct_svd_matrix(
+                self._timeseries_pp,
+                window=self._window
+            )
             S = X.T @ u_selected
             reconstructed_group_matrix = u_selected @ S.T
+        else:
+            raise TypeError(
+                f"Cannot reconstruct matrix type '{self._svd_matrix_kind.value}'"
+            )
 
         return reconstructed_group_matrix
 

@@ -6,52 +6,50 @@ import pandas as pd
 import pytest
 
 from vassal.ssa import SingularSpectrumAnalysis, DecompositionError, \
-    ReconstructionError
+    ReconstructionError, SSAMatrixType
 from vassal.svd import SVDSolverType
 
+
+# TODO test na_strategy
 
 def test_correct_initialization(ssa_no_decomposition):
     """Test that the SSA initializes correctly with valid inputs."""
     assert ssa_no_decomposition._n == 50
-    assert ssa_no_decomposition._w == 25  # Default window size is half of n
+    assert ssa_no_decomposition._window == 25  # Default window size is half of n
     assert ssa_no_decomposition._standardized is True  # Default should be True
     assert ssa_no_decomposition._timeseries is not None
-    assert ssa_no_decomposition._svd_solver == SVDSolverType.NUMPY_STANDARD  # Default
-    assert ssa_no_decomposition._svd_matrix_kind == 'BK'
+    assert ssa_no_decomposition._svd_solver == SVDSolverType.NUMPY_STANDARD
+    assert ssa_no_decomposition._svd_matrix_kind == SSAMatrixType.BK_TRAJECTORY
 
 
 def test_window_wrong_type(timeseries50):
-    with pytest.raises(ValueError, match='Invalid window type.'):
+    with pytest.raises(TypeError, match='Argument window must be integer'):
         SingularSpectrumAnalysis(timeseries50, window='wrong_type')
-    with pytest.raises(ValueError, match='Invalid window type.'):
+    with pytest.raises(TypeError, match='Argument window must be integer'):
         SingularSpectrumAnalysis(timeseries50, window=np.random.rand(5))
 
 
 def test_wrong_matrix_type(timeseries50):
-    with pytest.raises(ValueError, match="svd_matrix must be 'BK' or 'VG'"):
-        SingularSpectrumAnalysis(timeseries50, svd_matrix='wrong_type')
-    with pytest.raises(TypeError, match="svd_matrix must be a string"):
-        SingularSpectrumAnalysis(timeseries50, svd_matrix=np.random.rand(5))
+    with pytest.raises(ValueError, match="Invalid svd_matrix_kind"):
+        SingularSpectrumAnalysis(timeseries50, svd_matrix_kind='wrong_type')
+    with pytest.raises(
+            TypeError,
+            match="Argument svd_matrix_kind must be of type str or "
+                  "SSAMatrixType"
+    ):
+        SingularSpectrumAnalysis(timeseries50, svd_matrix_kind=np.random.rand(5))
 
 
-@pytest.mark.parametrize("svd_matrix", ['BK', 'VG'])
-def test_simple_svd_matrix(svd_matrix):
+@pytest.mark.parametrize("svd_matrix_kind", SSAMatrixType.available_matrices())
+def test_simple_svd_matrix(svd_matrix_kind):
     timeseries = np.array([1, 3, 0, -3, -2, -1])
-    if svd_matrix == 'BK':
-        ssa = SingularSpectrumAnalysis(timeseries, svd_matrix=svd_matrix,
-                                       standardize=False)
-        matrix = np.array([
-            [1., 3., 0., -3],
-            [3., 0., -3., -2],
-            [0., -3., -2, -1.]
-        ])
-    else:
-        ssa = SingularSpectrumAnalysis(timeseries, svd_matrix=svd_matrix,
-                                       standardize=False)
-        matrix = np.array([
-            [4., 2.2, -1.5],
-            [2.2, 4., 2.2],
-            [-1.5, 2.2, 4.]])
+    ssa = SingularSpectrumAnalysis(timeseries, svd_matrix_kind=svd_matrix_kind,
+                                   standardize=False)
+
+    matrix = SSAMatrixType(svd_matrix_kind).construct_svd_matrix(
+        ssa._timeseries_pp,
+        ssa._window
+    )
     np.testing.assert_equal(ssa.svd_matrix, matrix)
 
 
@@ -79,11 +77,13 @@ def test_handle_nans_and_infinities():
     """Test initialization failure with NaNs or Infs."""
     timeseries_nan = pd.Series([np.nan, np.nan, 1, 2])
     timeseries_inf = pd.Series([np.inf, np.inf, 1, 2])
+    message = ("Argument timeseries cannot inf or NaN values with na_strategy "
+               "set to 'raise_error'")
     with pytest.raises(ValueError,
-                       match='The array contains inf or NaN values.'):
+                       match=message):
         SingularSpectrumAnalysis(timeseries_nan)
     with pytest.raises(ValueError,
-                       match='The array contains inf or NaN values.'):
+                       match=message):
         SingularSpectrumAnalysis(timeseries_inf)
 
 
@@ -110,8 +110,8 @@ def test_window_parameter():
     timeseries = pd.Series(np.random.rand(100))
     ssa_default = SingularSpectrumAnalysis(timeseries)
     ssa_custom = SingularSpectrumAnalysis(timeseries, window=20)
-    assert ssa_default._w == 50
-    assert ssa_custom._w == 20
+    assert ssa_default._window == 50
+    assert ssa_custom._window == 20
 
 
 @pytest.mark.parametrize("svd_solver",
@@ -152,7 +152,7 @@ def test_scipy_sparse_svd(ssa_scipy_sparse):
 
 def test_scipy_sparse_svd_no_comp(ssa_scipy_sparse):
     with pytest.raises(ValueError, match=f"Solver 'scipy_sparse' requires "
-                                         f"'n_components'"):
+                                         f"n_components"):
         ssa_scipy_sparse.decompose()
 
 
@@ -162,7 +162,7 @@ def test_sklearn_randomized_svd(ssa_sklearn_randomized):
 
 def test_sklearn_randomized_svd_no_comp(ssa_sklearn_randomized):
     with pytest.raises(ValueError, match=f"Solver 'sklearn_randomized' requires "
-                                         f"'n_components'"):
+                                         f"n_components"):
         ssa_sklearn_randomized.decompose()
 
 
@@ -176,7 +176,7 @@ def test_da_csvd(ssa_da_csvd):
 
 def test_dask_compressed_svd_no_comp(ssa_da_csvd):
     with pytest.raises(ValueError, match=f"Solver 'dask_compressed' requires "
-                                         f"'n_components'"):
+                                         f"n_components"):
         ssa_da_csvd.decompose()
 
 
@@ -290,15 +290,27 @@ def test_reconstruct_ValueError_key_int(ssa_with_decomposition):
     invalid_user_groups_key = {
         123: [1, 2, 3]
     }
-    with pytest.raises(ValueError, match="Key '123' is not a string."):
+    with pytest.raises(
+            TypeError,
+            match="Key types in groups dictionary should be string"
+    ):
         ssa_with_decomposition.reconstruct(invalid_user_groups_key)
 
 
-def test_reconstruct_ValueError_key_in_default(ssa_with_decomposition):
+@pytest.mark.parametrize("default_group",
+                         SingularSpectrumAnalysis._DEFAULT_GROUPS.keys())
+def test_reconstruct_ValueError_key_in_default(
+        ssa_with_decomposition,
+        default_group
+):
     default_user_groups_key = {
-        'ssa_original': [1, 2, 3]
+        default_group: [1, 2, 3]
     }
-    with pytest.raises(ValueError, match="Unauthorized group name"):
+    with pytest.raises(
+            ValueError,
+            match=f"Group name '{default_group}' is reserved for default group "
+                  "names"
+    ):
         ssa_with_decomposition.reconstruct(default_user_groups_key)
 
 

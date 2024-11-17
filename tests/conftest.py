@@ -28,7 +28,7 @@ def timeseries50():
     return np.random.rand(50)
 
 @pytest.fixture
-def timeseries50_withna():
+def timeseries50_with_na():
     ts = np.random.rand(50)
     na_indices = np.random.choice(50, size=5, replace=False)
     ts[na_indices] = np.nan
@@ -101,8 +101,8 @@ def ssa_with_decomposition(timeseries50):
     return ssa
 
 @pytest.fixture
-def ssa_with_decomposition_fill_mean(timeseries50_withna):
-    ssa = SingularSpectrumAnalysis(timeseries50_withna,
+def ssa_with_decomposition_fill_mean(timeseries50_with_na):
+    ssa = SingularSpectrumAnalysis(timeseries50_with_na,
                                    na_strategy='fill_mean',
                                    svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
     ssa.decompose(n_components=10)
