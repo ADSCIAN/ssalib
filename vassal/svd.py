@@ -76,20 +76,20 @@ class SVDHandler:
     ----------
     decomposition_results : SVDDecomposition | None
         Tuple of singular values (s) and left and right eigenvectors (u, vt)
-        returned as (u, s, vt). None if svd() hasn't been called yet.
+        returned as (u, s, vt). None if svd() has not been called yet.
     eigenvalues : NDArray[float] | None
-        Squared singular values. None if svd() hasn't been called yet.
+        Squared singular values. None if svd() has not been called yet.
     n_components : int | None
         Number of components defined by the number singular values. None if
-        svd() hasn't been called yet.
+        svd() has not been called yet.
     svd_solver : str
         Name value of the selected SVD solver.
     s_ : NDArray[float] | None
-        1D array of singular values. None if svd() hasn't been called yet.
+        1D array of singular values. None if svd() has not been called yet.
     u_ : NDArray[float] | None
-        2D array of left eigenvectors. None if svd() hasn't been called yet.
+        2D array of left eigenvectors. None if svd() has not been called yet.
     vt_ : NDArray[float] | None
-        2D array of right eigenvectors. None if svd() hasn't been called yet.
+        2D array of right eigenvectors. None if svd() has not been called yet.
 
     Examples
     --------
@@ -139,7 +139,7 @@ class SVDHandler:
             try:
                 self._svd_solver = SVDSolverType(svd_solver)
             except ValueError:
-                valid_solvers = [solver.value for solver in SVDSolverType]
+                valid_solvers = SVDSolverType.available_solvers()
                 raise ValueError(
                     f"Invalid svd_solver '{svd_solver}'. "
                     f"Valid solvers are: {', '.join(valid_solvers)}"
@@ -179,7 +179,7 @@ class SVDHandler:
             if n_components is None:
                 raise ValueError(
                     f"Solver '{self._svd_solver.value}' requires "
-                    f"'n_components' to be specified"
+                    f"n_components to be specified"
                 )
         elif n_components is not None:
             logger.warning(
@@ -206,7 +206,7 @@ class SVDHandler:
             self,
             matrix: NDArray[float],
             n_components: int | None = None,
-            **solver_kwargs
+            **solver_kwargs: Any
     ) -> SVDDecomposition:
         """Perform Singular Value Decomposition (SVD)
 
@@ -221,7 +221,7 @@ class SVDHandler:
 
         Other Parameters
         ----------------
-        **solver_kwargs : dict
+        **solver_kwargs : Any
             Extra parameters to pass to the svd solver. See the specific
             solver documentation for details.
 
@@ -245,10 +245,13 @@ class SVDHandler:
             matrix: NDArray[float],
             full_matrices: bool = True,
             compute_uv: bool = True,
-            hermitian: bool = False,
+            hermitian: bool | None = None,
             **kwargs: Any
     ) -> SVDDecomposition:
         """numpy svd wrapper."""
+        if hermitian is None and matrix.shape[0] == matrix.shape[1]:
+            # should be True for bk_covariance and vg_covariance
+            hermitian = scipy.linalg.ishermitian(matrix)
         u, s, vt = np.linalg.svd(
             matrix,
             full_matrices=full_matrices,
@@ -262,7 +265,7 @@ class SVDHandler:
     @staticmethod
     def _svd_scipy_standard(
             matrix: NDArray[float],
-            check_finite: bool = False,
+            check_finite: bool = False,  # disabled, already checked
             compute_uv: bool = True,
             lapack_driver: str = 'gesdd',
             **kwargs: Any
