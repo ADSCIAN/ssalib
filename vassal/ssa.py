@@ -257,7 +257,8 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         # Format parameters section
         params = [
             f"timeseries: {ts_format}, n={n}, mean={mu:.2f}, std={sigma:.2f}",
-            f"kind: {self._svd_matrix_kind.value}",
+            f"svd_matrix_kind: {self._svd_matrix_kind.value} "
+            f"{self.svd_matrix.shape}",
             f"window: {self._window}",
             f"standardize: {self._standardized}",
             f"svd_solver: {self.svd_solver}",
@@ -266,9 +267,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             f"groups: {self._user_groups or 'None'}"
         ]
         print_str = f"""
-Singular Spectrum Analysis
---------------------------
-# Parameters
+# {self.__class__.__name__}
 {chr(10).join(params)
         }"""
 
