@@ -4,9 +4,9 @@ import pytest
 from vassal.math_ext.matrix_operations import (
     correlation_weights,
     weighted_correlation_matrix,
-    construct_SVD_matrix,
-    construct_BK_trajectory_matrix,
-    construct_VG_covariance_matrix,
+    construct_svd_matrix,
+    construct_bk_trajectory_matrix,
+    construct_vg_covariance_matrix,
     average_antidiagonals
 )
 
@@ -68,16 +68,16 @@ def test_construct_SVD_matrix_BK():
         [0., -3., -2.],
         [-3., -2., -1.]
     ])
-    result = construct_SVD_matrix(ts, window=4, kind='BK')
+    result = construct_svd_matrix(ts, window=4, kind='BK')
     np.testing.assert_array_almost_equal(result, expected_matrix)
 
 
 def test_construct_SVD_matrix_window_validation():
     ts = np.array([1, 2, 3, 4])
     with pytest.raises(ValueError):
-        construct_SVD_matrix(ts, window=5)  # window > len(ts)
+        construct_svd_matrix(ts, window=5)  # window > len(ts)
     with pytest.raises(ValueError):
-        construct_SVD_matrix(ts, window=0)  # window = 0
+        construct_svd_matrix(ts, window=0)  # window = 0
 
 
 def test_construct_SVD_matrix_VG():
@@ -87,7 +87,7 @@ def test_construct_SVD_matrix_VG():
         [2.2, 4., 2.2],
         [-1.5, 2.2, 4.]
     ])
-    result = construct_SVD_matrix(ts, window=3, kind='VG')
+    result = construct_svd_matrix(ts, window=3, kind='VG')
     np.testing.assert_array_almost_equal(result, expected_matrix)
 
 
@@ -99,7 +99,7 @@ def test_construct_BK_trajectory_matrix():
         [0., -3., -2.],
         [-3., -2., -1.]
     ])
-    result = construct_BK_trajectory_matrix(ts, window=4)
+    result = construct_bk_trajectory_matrix(ts, window=4)
     np.testing.assert_array_almost_equal(result, expected_matrix)
 
 
@@ -110,7 +110,7 @@ def test_construct_VG_covariance_matrix():
         [2.2, 4., 2.2],
         [-1.5, 2.2, 4.]
     ])
-    result = construct_VG_covariance_matrix(ts, window=3)
+    result = construct_vg_covariance_matrix(ts, window=3)
     np.testing.assert_array_almost_equal(result, expected_matrix)
 
 
@@ -119,7 +119,7 @@ def test_construct_SVD_matrix_invalid_kind():
     with pytest.raises(
             ValueError,
             match="Argument kind must be 'BK' or 'VG'"):
-        construct_SVD_matrix(ts, window=3, kind='invalid')
+        construct_svd_matrix(ts, window=3, kind='invalid')
 
 
 def test_construct_SVD_matrix_default_window():
@@ -129,7 +129,7 @@ def test_construct_SVD_matrix_default_window():
         [2., 3., 4., 5.],
         [3., 4., 5., 6.]
     ])
-    result = construct_SVD_matrix(ts, kind='BK')
+    result = construct_svd_matrix(ts, kind='BK')
     np.testing.assert_array_almost_equal(result, expected_matrix)
 
 
