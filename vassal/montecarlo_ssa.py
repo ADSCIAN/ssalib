@@ -7,14 +7,14 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from vassal.log_and_error import DecompositionError
+from vassal.error import DecompositionError
 from vassal.math_ext.ar_modeling import (
     fit_autoregressive_model,
     generate_autoregressive_surrogate
 )
 from vassal.math_ext.matrix_operations import (
-    construct_BK_trajectory_matrix,
-    construct_VG_covariance_matrix
+    construct_bk_trajectory_matrix,
+    construct_vg_covariance_matrix
 )
 from vassal.ssa import SingularSpectrumAnalysis
 
@@ -341,14 +341,14 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
         NDArray[float]
 
         """
-        k = self._n - self._w + 1
+        k = self._n - self._window + 1
 
         # Process surrogates in parallel
         diagonals = Parallel(n_jobs=self.n_jobs)(
             delayed(self._process_surrogate)(
                 surrogate,
                 self._svd_matrix_kind,
-                self._w,
+                self._window,
                 k,
                 self.u_,
                 n_components
@@ -413,14 +413,14 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
         #TODO: consider construct_SVD_matrix instead
         if svd_matrix_kind == 'BK':
-            trajectory_matrix_surr = construct_BK_trajectory_matrix(
+            trajectory_matrix_surr = construct_bk_trajectory_matrix(
                 surrogate,
                 window=window
             )
             covariance_matrix_surr = (trajectory_matrix_surr @
                                       trajectory_matrix_surr.T / k)
         else:  # VG
-            covariance_matrix_surr = construct_VG_covariance_matrix(
+            covariance_matrix_surr = construct_vg_covariance_matrix(
                 surrogate,
                 window=window
             )
