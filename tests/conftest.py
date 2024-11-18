@@ -2,6 +2,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from vassal import MonteCarloSSA
 from vassal.ssa import SingularSpectrumAnalysis
 from vassal.svd import SVDSolverType
 

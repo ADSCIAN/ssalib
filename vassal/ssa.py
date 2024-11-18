@@ -272,7 +272,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
 
     def __getitem__(
             self,
-            item: int | slice | list[int] | str  # TODO expand to
+            item: int | slice | list[int] | str
     ) -> NDArray | pd.Series:
         """API to access SSA timeseries data."""
         self.__validate_item_keys(item)

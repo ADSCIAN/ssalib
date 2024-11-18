@@ -12,19 +12,13 @@ from vassal.math_ext.ar_modeling import (
     fit_autoregressive_model,
     generate_autoregressive_surrogate
 )
-from vassal.math_ext.matrix_operations import (
-    construct_bk_trajectory_matrix,
-    construct_vg_covariance_matrix
-)
-from vassal.ssa import SingularSpectrumAnalysis
+from vassal.ssa import SingularSpectrumAnalysis, SSAMatrixType
 
 
 class MonteCarloSSA(SingularSpectrumAnalysis):
     """Monte Carlo Singular Spectrum Analysis
 
-    # TODO: document methods and attributes
     # TODO: Test
-    # TODO: Custimize repr & str
 
     Proposed by [1]_, Monte Carlo Singular Spectrum Analysis relies on
     autoregressive surrogate of the original time series [2]_ to test the
@@ -33,42 +27,61 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
     Parameters
     ----------
     timeseries : ArrayLike
-        The timeseries data as a one-dimensional array-like sequence of
+        Timeseries data as a one-dimensional array-like sequence of
         float, e.g, a python list,  numpy array, or pandas series.
         If timeseries is a pd.Series with a pd.DatetimeIndex, the index
         will be stored to return SSA-decomposed time series as pd.Series
         using the same index.
     window : int, optional
-        The window length for the SSA algorithm. Defaults to half the series
+        Window length for the SSA algorithm. Defaults to half the series
         length if not provided.
     svd_matrix: str, default 'BK'
         Matrix to use for the SVD algorithm, either 'BK' or 'VG', with
         defaults to 'BK' (see Notes).
     svd_solver : str, default 'np_svd'
-        The method of singular value decomposition to use. Call the
+        Method of singular value decomposition to use. Call the
         available_solver method for possible options.
     standardize : bool, default True
         Whether to standardize the timeseries by removing the mean and
         scaling to unit variance.
     n_surrogates : int, default=100
-        The number of surrogates to generate.
+        Number of surrogates to generate.
     n_jobs : int, default=-1
-        The number of jobs to run in parallel. -1 means using all processors
+        Number of jobs to run in parallel. -1 means using all processors
         (default).
     ar_order_max : int, default=1
-        The maximum autoregressive order to consider. Default is 1 corresponding
+        Maximum autoregressive order to consider. Default is 1 corresponding
         to AR1 surrogates (proposed in [1]_).
-    criterion : str, default='bic'
-        The criterion to use for the autoregressive model selection. Either
+    criterion : Literal['aic', 'bic'], default='bic'
+        Citerion to use for the autoregressive model selection. Either
         'aic' or 'bic'. Default is 'bic'.
     random_seed : int | None, default=None
         Random seed to use for the surrogates generation. If None, no seed is
         used (default), and surrogates will be different each time the class is
         instantiated.
 
+    Attributes
+    ----------
+    ar_order_max : int
+        Maximum order considered for the autoregressive model selection.
+    autoregressive_model : SARIMAXResults
+        Fitted SARIMAX model results from statsmodels.
+    criterion : Literal['aic', 'bic']
+        Citerion used for the autoregressive model selection.
+    n_jobs : int
+        Number of jobs to run in parallel for surrogate computations. -1 means
+        using all processors (default).
+    n_surrogates: int
+        Number of surrogates.
+    random_seed: int | None
+        Random seed to use for the surrogates generation.
+    surrogates : NDArray[float]
+        Array of shape (n_surrogates, n) containing the n_surrogate generated
+        time series of length n.
+
+
     Notes
     -----
-
     For surrogate generation, MonteCarloSSA fit an autoregressive model,
     selecting automatically the optimal order in a sequence of orders from zero
     (white noise) to ar_max_order. The model is fitted using state space
@@ -192,12 +205,12 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
         Parameters
         ----------
-        n_components : int | None
+        n_components : int | None, default=None
             Number of the first components to test. If None, all components
             are tested. Default is None.
-        confidence_level : float
+        confidence_level : float, default=0.95
             Confidence level to determine the significance. Default is 0.95.
-        two_tailed : bool
+        two_tailed : bool, default=True
             If true (default), significance level is achieved for singular
             values above percentile 100 - 100 * (1 - confidence_level) / 2.
             If false, significance level is achieved above percentile
@@ -205,7 +218,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
         """
         if self.n_components is None:
             raise DecompositionError("Method test_significance cannot be called"
-                                     "before the decompose method.")
+                                     "before the decompose method")
         if n_components is None:
             n_components = self.n_components
 
@@ -222,7 +235,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             two_tailed: bool = True,
             return_lower: bool = True,
     ) -> tuple[NDArray[float], NDArray[float]] | NDArray[float]:
-        """Return the confidence interval for the surrogates projected
+        """Return the confidence interval for the surrogates' projected
         strengths.
 
         Parameters
@@ -246,6 +259,9 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
         Returns
         -------
         tuple[NDArray[float], NDArray[float]] | NDArray[float]
+            Depending on the value of return_lower, either a tuple of array
+            with the upper and lower interval limits, or only the upper limit.
+
         """
         if not isinstance(n_components, int) and n_components is not None:
             raise TypeError(f"Argument n_components must be either integer or "
@@ -297,7 +313,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             )
             return lower, upper
 
-    def _generate_surrogates(self):
+    def _generate_surrogates(self) -> None:
         """Generate surrogates
         """
         random_seed = self.random_seed
@@ -309,7 +325,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             np.random.seed(random_seed)
         random_seeds = np.random.randint(0, 1e8, m)
 
-        # ar coefficient includes zero-lag and are in the polynomial form.
+        # AR coefficient includes zero-lag and are in the polynomial form.
         # See generate_autoregressive_surrogate docstrings, itself based on
         # statsmodels 'arma_generate_sample' method.
         ar_coefficients = [1] + list(-self.autoregressive_model.params[:-1])
@@ -328,7 +344,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
     def _get_surrogate_values(
             self,
             n_components: int | None = None
-    ) -> NDArray:
+    ) -> NDArray[float]:
         """Project surrogates on eigenvectors and retrieve strength distribution
 
         Parameters
@@ -349,7 +365,6 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
                 surrogate,
                 self._svd_matrix_kind,
                 self._window,
-                k,
                 self.u_,
                 n_components
             ) for surrogate in self.surrogates
@@ -359,32 +374,42 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
         lambda_surrogates = np.stack(diagonals, axis=0)
 
         # Convert to singular values based on method
-        if self._svd_matrix_kind == 'BK':
+        if self._svd_matrix_kind in {
+            SSAMatrixType.BK_TRAJECTORY,
+            SSAMatrixType.BK_COVARIANCE
+        }:
             surrogate_value_strengths = np.sqrt(
                 np.abs(lambda_surrogates) * k)
-        else:  # VG
+        elif self._svd_matrix_kind == SSAMatrixType.VG_COVARIANCE:
             # Pre-compute normalization factors for VG approach
-            # Only use the first n_components normalization factors
-            vg_norms = self._n - np.arange(self.n_components)
-            vg_norms = vg_norms[np.newaxis, :]  # Shape (1, n_components)
+            if n_components is not None:
+                # Use only the requested number of components
+                vg_norms = self._n - np.arange(n_components)
+            else:
+                # Use all components
+                vg_norms = self._n - np.arange(lambda_surrogates.shape[1]) # TODO edited 241118, check VG projection results visually
+            vg_norms = vg_norms[np.newaxis, :]
             surrogate_value_strengths = np.sqrt(
                 np.abs(lambda_surrogates) * vg_norms
             )
+        else:
+            raise ValueError(
+                f"Invalid svd_matrix_kind: {self._svd_matrix_kind}")
         return surrogate_value_strengths
 
     @staticmethod
     def _process_surrogate(
             surrogate: NDArray,
-            svd_matrix_kind: Literal['BK', 'VG'],
+            svd_matrix_kind: Literal[
+                'bk_trajectory', 'bk_covariance', 'vg_covariance'],
             window: int,
-            k: int,
             u: NDArray,
             n_components: int | None = None
-    ) -> NDArray:
+    ) -> NDArray[float]:
         """Process a single surrogate time series
 
         Compute the surrogate covariance matrix and project it on the
-        eigenvectors and returns the diagonal elements.
+        eigenvectors and return the diagonal elements.
 
         Parameters
         ----------
@@ -404,26 +429,32 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
         Returns
         -------
-        NDArray
+        NDArray[float]
             Diagonal elements after projection
         """
         if n_components is not None:
-            # Slice the eigenvectors matrix to use only first n_components
+            # Slice the eigenvector matrix to use only first n_components
             u = u[:, :n_components]
 
-        #TODO: consider construct_SVD_matrix instead
-        if svd_matrix_kind == 'BK':
-            trajectory_matrix_surr = construct_bk_trajectory_matrix(
-                surrogate,
+        svd_matrix_kind = SSAMatrixType(svd_matrix_kind)
+
+        if svd_matrix_kind == SSAMatrixType.BK_TRAJECTORY:
+            covariance_matrix_surr = SSAMatrixType(
+                'bk_covariance').construct_svd_matrix(
+                timeseries=surrogate,
                 window=window
             )
-            covariance_matrix_surr = (trajectory_matrix_surr @
-                                      trajectory_matrix_surr.T / k)
-        else:  # VG
-            covariance_matrix_surr = construct_vg_covariance_matrix(
-                surrogate,
+        elif svd_matrix_kind in {
+            SSAMatrixType.BK_COVARIANCE,
+            SSAMatrixType.VG_COVARIANCE
+        }:
+            covariance_matrix_surr = svd_matrix_kind.construct_svd_matrix(
+                timeseries=surrogate,
                 window=window
             )
+        else:
+            raise ValueError(
+                f"Invalid svd_matrix_kind: {svd_matrix_kind}")
 
         return np.diag(u.T @ covariance_matrix_surr @ u)
 
