@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=64.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -43,8 +43,9 @@ dependencies = [
 test = ["pytest", "pytest-cov"]
 dev = ["pytest", "pytest-cov", "black", "flake8"]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["ssalib"]
 
 [tool.setuptools.package-data]
 "ssalib" = ["datasets/*.txt", "datasets/*.csv", "datasets/*.json"]
