@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import pytest
 
-from vassal.svd import SVDHandler
+from ssalib.svd import SVDHandler
 
 
 @pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)

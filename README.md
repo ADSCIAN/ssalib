@@ -8,14 +8,13 @@
 
 
 > [!NOTE]
-> This repository contains an early alpha development version of VASSAL,
-> designed for educational purposes. VASSAL has undergone extensive testing
-> with the pytest framework; however, users may report any experienced issues
+> This repository contains an early alpha development version of SSALib,
+> designed for educational purposes. Users may report any experienced issues
 > using [GitHub Issues](https://github.com/ADSCIAN/vassal/issues).
 
 ## Overview
 
-VASSAL (Visually Assisted Singular Spectrum AnaLysis) is a Python package
+The Singular Spectrum Analysis Library (SSALib) is a Python package
 implementing the basic Singular Spectrum Analysis (SSA) univariate timeseries
 decomposition technique. It relies on different Singular Value Decomposition
 (SVD) methods from existing Python scientific packages and provides a convenient
@@ -23,7 +22,8 @@ API along with plotting capabilities.
 
 ## Key Features
 
-- Basic SSA implementation with both BK and VG approaches
+- Basic SSA implementation with both Broemhead & King and Vautard and Ghil
+  approaches
 - Multiple SVD solver options (NumPy, SciPy, scikit-learn)
 - Built-in visualization tools for analysis
 - Include example datasets
@@ -34,12 +34,12 @@ API along with plotting capabilities.
 
 ### Requirements
 
-- Python ≥ 3.10
+- Python ≥ 3.9
 - NumPy
 - SciPy
-- pandas
-- matplotlib
-- scikit-learn
+- Pandas
+- Matplotlib
+- Scikit-learn
 
 ### Installation
 
@@ -50,8 +50,8 @@ pip install git+https://github.com/ADSCIAN/vassal.git
 ### Basic Usage
 
 ```python
-from vassal import SingularSpectrumAnalysis
-from vassal.datasets import load_sst
+from ssalib import SingularSpectrumAnalysis
+from ssalib.datasets import load_sst
 
 # Load example data
 ts = load_sst()
@@ -80,20 +80,20 @@ df_ssa = ssa.to_frame()
 
 ### Available SVD Methods
 
-VASSAL supports multiple SVD solvers:
+SSALib supports multiple SVD solvers:
 
-| Solver Name          | Underlying Method                          | Status      |
-|----------------------|--------------------------------------------|-------------|
-| `numpy_standard`     | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)      | Default     |
-| `scipy_standard`     | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)      | Available   |
-| `scipy_sparse`       | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html) | Available   |
-| `sklearn_randomized` | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available   |
+| Solver Name          | Underlying Method                                                                                                                     | Status    |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| `numpy_standard`     | [`numpy.linalg.svd`](https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html)                                          | Default   |
+| `scipy_standard`     | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)                                      | Available |
+| `scipy_sparse`       | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html)                      | Available |
+| `sklearn_randomized` | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available |
 
 Select the solver with the `svd_solver` argument.
 
 ```python
-from vassal import SingularSpectrumAnalysis
-from vassal.datasets import load_sst
+from ssalib import SingularSpectrumAnalysis
+from ssalib.datasets import load_sst
 
 # Load example data
 ts = load_sst()

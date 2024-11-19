@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from vassal.error import DecompositionError, ReconstructionError
-from vassal.montecarlo_ssa import MonteCarloSSA
-from vassal.ssa import (
+from ssalib.error import DecompositionError, ReconstructionError
+from ssalib.montecarlo_ssa import MonteCarloSSA
+from ssalib.ssa import (
     SingularSpectrumAnalysis,
     SSAMatrixType)
-from vassal.svd import SVDSolverType
+from ssalib.svd import SVDSolverType
 
 
 # Class test
@@ -402,8 +402,8 @@ def test_to_frame_index(index):
 
 def test_signatures():
     import inspect
-    from vassal.ssa import SingularSpectrumAnalysis
-    from vassal.montecarlo_ssa import MonteCarloSSA
+    from ssalib.ssa import SingularSpectrumAnalysis
+    from ssalib.montecarlo_ssa import MonteCarloSSA
 
     ssa_methods = inspect.getmembers(SingularSpectrumAnalysis,
                                      predicate=inspect.isfunction)

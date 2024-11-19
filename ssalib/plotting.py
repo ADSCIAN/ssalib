@@ -16,7 +16,7 @@ from matplotlib.ticker import MaxNLocator
 from numpy.typing import NDArray
 from scipy.signal import periodogram
 from statsmodels.tsa.statespace.sarimax import SARIMAXResults
-from vassal.error import DecompositionError
+from ssalib.error import DecompositionError
 
 logger = logging.getLogger(__name__)
 
@@ -271,8 +271,8 @@ class PlotSSA(metaclass=abc.ABCMeta):
         .. plot::
             :include-source: True
 
-            >>> from vassal.ssa import SingularSpectrumAnalysis
-            >>> from vassal.datasets import load_sst
+            >>> from ssalib.ssa import SingularSpectrumAnalysis
+            >>> from ssalib.datasets import load_sst
             >>> sst = load_sst()
             >>> ssa = SingularSpectrumAnalysis(sst)
             >>> _ = ssa.decompose()

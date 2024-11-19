@@ -6,4 +6,4 @@ doc/
 build/
 vassal.egg-info/
 __pycache__/
-vassal/__pycache/
+ssalib/__pycache/

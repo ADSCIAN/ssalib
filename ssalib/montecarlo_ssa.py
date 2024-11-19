@@ -7,12 +7,12 @@ import numpy as np
 from joblib import Parallel, delayed
 from numpy.typing import NDArray
 
-from vassal.error import DecompositionError
-from vassal.math_ext.ar_modeling import (
+from ssalib.error import DecompositionError
+from ssalib.math_ext.ar_modeling import (
     fit_autoregressive_model,
     generate_autoregressive_surrogate
 )
-from vassal.ssa import SingularSpectrumAnalysis, SSAMatrixType
+from ssalib.ssa import SingularSpectrumAnalysis, SSAMatrixType
 
 
 class MonteCarloSSA(SingularSpectrumAnalysis):
@@ -116,8 +116,8 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
     Example
     -------
 
-    >>> from vassal.datasets import load_sst
-    >>> from vassal.montecarlo_ssa import MonteCarloSSA
+    >>> from ssalib.datasets import load_sst
+    >>> from ssalib.montecarlo_ssa import MonteCarloSSA
     >>> sst = load_sst()
     >>> mcssa = MonteCarloSSA(sst, n_surrogates=10, random_seed=42)
     >>> _ = mcssa.decompose()

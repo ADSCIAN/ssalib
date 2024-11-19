@@ -1,12 +1,12 @@
 import pandas as pd
 import pytest
 
-from vassal.datasets import (
+from ssalib.datasets import (
     load_mortality,
     load_sst,
     load_sunspots
 )
-from vassal.datasets.data_loader import validate_series
+from ssalib.datasets.data_loader import validate_series
 
 load_funcs = [load_mortality, load_sst, load_sunspots]
 

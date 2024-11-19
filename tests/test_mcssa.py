@@ -5,10 +5,10 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
 
-from vassal.montecarlo_ssa import MonteCarloSSA
-from vassal.ssa import SSAMatrixType
-from vassal.svd import SVDSolverType
-from vassal.error import DecompositionError
+from ssalib.montecarlo_ssa import MonteCarloSSA
+from ssalib.ssa import SSAMatrixType
+from ssalib.svd import SVDSolverType
+from ssalib.error import DecompositionError
 
 
 # Basic fixtures

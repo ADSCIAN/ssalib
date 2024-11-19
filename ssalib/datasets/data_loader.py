@@ -43,7 +43,7 @@ def load_mortality() -> pd.Series:
     Examples
     --------
 
-    >>> from vassal.datasets import load_mortality
+    >>> from ssalib.datasets import load_mortality
     >>> mortality = load_mortality()
     >>> mortality.head()
     DATE_DEATH
@@ -97,7 +97,7 @@ def load_sst() -> pd.Series:
     Examples
     --------
 
-    >>> from vassal.datasets import load_sst
+    >>> from ssalib.datasets import load_sst
     >>> sst = load_sst()
     >>> sst.head()
     Date
@@ -154,7 +154,7 @@ def load_sunspots() -> pd.Series:
     Examples
     --------
 
-    >>> from vassal.datasets import load_sunspots
+    >>> from ssalib.datasets import load_sunspots
     >>> sunspots = load_sunspots()
     >>> sunspots.head()
     date

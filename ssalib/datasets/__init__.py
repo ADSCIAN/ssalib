@@ -1,4 +1,4 @@
-"""Functions to load vassal datasets."""
+"""Functions to load ssalib datasets."""
 
 from .data_loader import (
     load_mortality,

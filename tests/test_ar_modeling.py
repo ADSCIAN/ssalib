@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from vassal.math_ext.ar_modeling import (
+from ssalib.math_ext.ar_modeling import (
     autoregressive_model_score,
     fit_autoregressive_model,
     generate_autoregressive_surrogate

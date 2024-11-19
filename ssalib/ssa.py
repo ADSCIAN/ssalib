@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 
-from vassal.error import DecompositionError, ReconstructionError
-from vassal.math_ext.matrix_operations import (
+from ssalib.error import DecompositionError, ReconstructionError
+from ssalib.math_ext.matrix_operations import (
     average_antidiagonals,
     construct_bk_trajectory_matrix,
     construct_bk_covariance_matrix,
@@ -18,8 +18,8 @@ from vassal.math_ext.matrix_operations import (
     correlation_weights,
     weighted_correlation_matrix
 )
-from vassal.plotting import PlotSSA
-from vassal.svd import SVDHandler, SVDSolverType
+from ssalib.plotting import PlotSSA
+from ssalib.svd import SVDHandler, SVDSolverType
 
 logger = logging.getLogger(__name__)
 
@@ -155,8 +155,8 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
     Examples
     --------
 
-    >>> from vassal.datasets import load_sst
-    >>> from vassal.ssa import SingularSpectrumAnalysis
+    >>> from ssalib.datasets import load_sst
+    >>> from ssalib.ssa import SingularSpectrumAnalysis
     >>> sst = load_sst() # Sea Surface Temperature Data
     >>> ssa = SingularSpectrumAnalysis(sst, window=20) # Initialization
     >>> _ = ssa.decompose()  # Perform SVD
@@ -562,8 +562,8 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         Examples
         --------
 
-        >>> from vassal.datasets import load_sst
-        >>> from vassal import SingularSpectrumAnalysis
+        >>> from ssalib.datasets import load_sst
+        >>> from ssalib import SingularSpectrumAnalysis
         >>> sst = load_sst() # Sea Surface Temperature data
         >>> ssa = SingularSpectrumAnalysis(sst).decompose()
 
@@ -764,7 +764,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         Examples
         --------
 
-        >>> from vassal.datasets import load_sst
+        >>> from ssalib.datasets import load_sst
         >>> timeseries = load_sst()
         >>> ssa = SingularSpectrumAnalysis(timeseries).decompose()
         >>> _ = ssa.reconstruct(groups={'main': [0,1]})
@@ -928,7 +928,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
 
         See Also
         --------
-        vassal.math_ext.weighted_correlation_matrix
+        ssalib.math_ext.weighted_correlation_matrix
             For examples and references.
 
         """

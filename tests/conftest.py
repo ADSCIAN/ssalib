@@ -2,9 +2,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from vassal import MonteCarloSSA
-from vassal.ssa import SingularSpectrumAnalysis
-from vassal.svd import SVDSolverType
+from ssalib import MonteCarloSSA
+from ssalib.ssa import SingularSpectrumAnalysis
+from ssalib.svd import SVDSolverType
 
 
 @pytest.fixture

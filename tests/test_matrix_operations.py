@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from vassal.math_ext.matrix_operations import (
+from ssalib.math_ext.matrix_operations import (
     correlation_weights,
     weighted_correlation_matrix,
     construct_svd_matrix,
