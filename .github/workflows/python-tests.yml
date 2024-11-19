@@ -49,7 +49,19 @@ jobs:
         # Create a directory for test results
         mkdir -p test-results
         # Run tests and generate coverage
-        pytest tests/ -v --cov=vassal --cov-report=term-missing:skip-covered --cov-report=xml:test-results/coverage.xml
+        pytest tests/ -v \
+        --cov=ssalib \
+        --cov-report=term-missing:skip-covered \
+        --cov-report=xml:test-results/coverage.xml \
+        --junitxml=test-results/junit.xml
+
+    - name: Upload coverage reports to Codecov
+      if: always()
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./test-results/coverage.xml
+        fail_ci_if_error: true
 
     - name: Upload test results
       if: always()

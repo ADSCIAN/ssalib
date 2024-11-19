@@ -48,3 +48,7 @@ include = ["ssalib*"]
 
 [tool.setuptools.package-data]
 "ssalib" = ["datasets/*.txt", "datasets/*.csv", "datasets/*.json"]
+
+[tool.pytest.ini_options]
+addopts = "-v --junitxml=test-results/junit.xml --cov=ssalib --cov-report=xml:test-results/coverage.xml --cov-report=html:test-results/coverage"
+testpaths = ["tests"]
