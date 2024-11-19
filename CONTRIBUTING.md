@@ -1,6 +1,6 @@
 # Contributing to [Project Name]
 
-Thank you for your interest in contributing to [SSALib]! This document provides
+Thank you for your interest in contributing to **SSALib** This document provides
 guidelines and instructions for contributing to this project.
 
 ## Code of Conduct
@@ -111,6 +111,6 @@ flake8
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-same license as the main project (see LICENSE file).
+same license as the main project (see [LICENSE.md](LICENSE.md)).
 
-Thank you for contributing to [SSALib]!
+Thank you for contributing to **SSALib**!
