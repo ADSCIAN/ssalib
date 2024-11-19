@@ -20,8 +20,7 @@ def n_components() -> int:
 @pytest.fixture
 def full_svd_solvers() -> list[str]:
     return [SVDSolverType.NUMPY_STANDARD.value,
-            SVDSolverType.SCIPY_STANDARD.value,
-            SVDSolverType.DASK_STANDARD.value]
+            SVDSolverType.SCIPY_STANDARD.value]
 
 
 @pytest.fixture
@@ -77,20 +76,6 @@ def ssa_scipy_sparse(timeseries50):
 def ssa_sklearn_randomized(timeseries50):
     ssa = SingularSpectrumAnalysis(timeseries50,
                                    svd_solver=SVDSolverType.SKLEARN_RANDOMIZED)
-    return ssa
-
-
-@pytest.fixture
-def ssa_dask_standard(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50,
-                                   svd_solver=SVDSolverType.DASK_STANDARD)
-    return ssa
-
-
-@pytest.fixture
-def ssa_da_csvd(timeseries50):
-    ssa = SingularSpectrumAnalysis(timeseries50,
-                                   svd_solver=SVDSolverType.DASK_COMPRESSED)
     return ssa
 
 

@@ -24,7 +24,7 @@ API along with plotting capabilities.
 ## Key Features
 
 - Basic SSA implementation with both BK and VG approaches
-- Multiple SVD solver options (NumPy, SciPy, scikit-learn, Dask)
+- Multiple SVD solver options (NumPy, SciPy, scikit-learn)
 - Built-in visualization tools for analysis
 - Include example datasets
 - Comprehensive test coverage
@@ -40,7 +40,6 @@ API along with plotting capabilities.
 - pandas
 - matplotlib
 - scikit-learn
-- dask (optional)
 
 ### Installation
 
@@ -89,8 +88,6 @@ VASSAL supports multiple SVD solvers:
 | `scipy_standard`     | [`scipy.linalg.svd`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html)      | Available   |
 | `scipy_sparse`       | [`scipy.sparse.linalg.svds`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.svds.html) | Available   |
 | `sklearn_randomized` | [`sklearn.utils.extmath.randomized_svd`](https://scikit-learn.org/stable/modules/generated/sklearn.utils.extmath.randomized_svd.html) | Available   |
-| `dask_standard`      | [`dask.array.linalg.svd`](https://docs.dask.org/en/stable/generated/dask.array.linalg.svd.html) | Optional    |
-| `dask_compressed`    | [`dask.array.linalg.svd_compressed`](https://docs.dask.org/en/latest/generated/dask.array.linalg.svd_compressed.html)  | Optional    |
 
 Select the solver with the `svd_solver` argument.
 

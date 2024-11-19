@@ -563,6 +563,9 @@ class PlotSSA(metaclass=abc.ABCMeta):
             center = (lower + upper) / 2
             errorbar_length = (upper - lower) / 2
 
+            if errorbar_kwargs is None:
+                errorbar_kwargs = {}
+
             ax.errorbar(
                 x_values,
                 center[order],

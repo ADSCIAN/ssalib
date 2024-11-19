@@ -387,7 +387,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
                 vg_norms = self._n - np.arange(n_components)
             else:
                 # Use all components
-                vg_norms = self._n - np.arange(lambda_surrogates.shape[1]) # TODO edited 241118, check VG projection results visually
+                vg_norms = self._n - np.arange(lambda_surrogates.shape[1])
             vg_norms = vg_norms[np.newaxis, :]
             surrogate_value_strengths = np.sqrt(
                 np.abs(lambda_surrogates) * vg_norms
