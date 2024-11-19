@@ -4,6 +4,6 @@ notebooks/.ipynb_checkpoints/
 notebooks_tmp/
 doc/
 build/
-vassal.egg-info/
+ssalib.egg-info/
 __pycache__/
 ssalib/__pycache/
