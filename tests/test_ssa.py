@@ -185,9 +185,7 @@ def test_svd_solvers(timeseries50, solver):
 @pytest.mark.parametrize("solver,n_components,rtol", [
     (SVDSolverType.SCIPY_STANDARD, None, 1e-7),
     (SVDSolverType.SCIPY_SPARSE, 10, 1e-4),
-    (SVDSolverType.SKLEARN_RANDOMIZED, 10, 1e-4),
-    (SVDSolverType.DASK_STANDARD, None, 1e-7),
-    (SVDSolverType.DASK_COMPRESSED, 10, 1e-4),
+    (SVDSolverType.SKLEARN_RANDOMIZED, 10, 1e-4)
 ])
 def test_svd_solver_results(ssa_numpy_standard, solver, n_components, rtol):
     """Test that different SVD solvers produce similar results."""
@@ -196,8 +194,6 @@ def test_svd_solver_results(ssa_numpy_standard, solver, n_components, rtol):
                                    svd_solver=solver)
 
     kwargs = {'n_components': n_components} if n_components else {}
-    if solver == SVDSolverType.DASK_COMPRESSED:
-        kwargs['n_power_iter'] = 4
 
     _, s2, _ = ssa.decompose(**kwargs).decomposition_results
 

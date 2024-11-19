@@ -23,7 +23,6 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=parse_requirements('requirements.txt'),
     extras_require={
-        'full': ['dask'],
         'test': [
             'pytest',
             'pytest-cov',
@@ -32,8 +31,7 @@ setup(
             'pytest',
             'pytest-cov',
             'black',
-            'flake8',
-            'dask',
+            'flake8'
         ]
     },
     python_requires='>=3.9',

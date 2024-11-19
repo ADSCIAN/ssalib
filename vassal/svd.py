@@ -5,6 +5,7 @@ import logging
 from enum import Enum
 from inspect import signature
 from typing import Any
+from functools import lru_cache
 
 import numpy as np
 import scipy
@@ -12,22 +13,6 @@ from numpy.typing import NDArray
 from sklearn.utils.extmath import randomized_svd
 
 logger = logging.getLogger(__name__)
-
-
-class OptionalDependency:
-    """Handler for optional package dependencies."""
-
-    @staticmethod
-    def get_dask_array():
-        try:
-            import dask.array as da
-            return da
-        except ImportError:
-            raise ImportError(
-                "Cannot use dask-based solvers: dask is not installed. "
-                "Please install it with 'pip install dask'."
-            )
-
 
 class SVDSolverType(Enum):
     """Available SVD solver types.
@@ -39,16 +24,13 @@ class SVDSolverType(Enum):
     SCIPY_STANDARD = "scipy_standard"
     SCIPY_SPARSE = "scipy_sparse"
     SKLEARN_RANDOMIZED = "sklearn_randomized"
-    DASK_STANDARD = "dask_standard"
-    DASK_COMPRESSED = "dask_compressed"
 
     @property
     def supports_n_components(self) -> bool:
         """Whether this solver type supports the n_components parameter."""
         return self in {
             self.SCIPY_SPARSE,
-            self.SKLEARN_RANDOMIZED,
-            self.DASK_COMPRESSED
+            self.SKLEARN_RANDOMIZED
         }
 
     @classmethod
@@ -116,9 +98,7 @@ class SVDHandler:
         SVDSolverType.NUMPY_STANDARD: "_svd_numpy_standard",
         SVDSolverType.SCIPY_STANDARD: "_svd_scipy_standard",
         SVDSolverType.SCIPY_SPARSE: "_svd_scipy_sparse",
-        SVDSolverType.SKLEARN_RANDOMIZED: "_svd_sklearn_randomized",
-        SVDSolverType.DASK_STANDARD: "_svd_dask_standard",
-        SVDSolverType.DASK_COMPRESSED: "_svd_dask_compressed"
+        SVDSolverType.SKLEARN_RANDOMIZED: "_svd_sklearn_randomized"
     }
 
     def __init__(
@@ -206,8 +186,8 @@ class SVDHandler:
             Two-dimensional matrix to be decomposed.
         n_components : int | None, default None
             Number of singular values and vectors to extract. Only used for
-            truncated svd computation, e.g., scipy sparse svd, sklearn
-            randomized svd, or dask compressed svd. Default is None.
+            truncated svd computation, e.g., scipy sparse svd, or sklearn
+            randomized svd. Default is None.
 
         Other Parameters
         ----------------
@@ -307,38 +287,6 @@ class SVDHandler:
         )
 
         return u, s, vt
-
-    @staticmethod
-    def _svd_dask_standard(
-            matrix: NDArray[float],
-            **kwargs: Any
-    ) -> SVDDecomposition:
-        """dask svd wrapper."""
-        da = OptionalDependency.get_dask_array()
-
-        u, s, vt = da.linalg.svd(
-            da.array(matrix),
-            **kwargs
-        )
-
-        return np.array(u), np.array(s), np.array(vt)
-
-    @staticmethod
-    def _svd_dask_compressed(
-            matrix: NDArray[float],
-            n_components: int,
-            **kwargs: Any
-    ) -> SVDDecomposition:
-        """dask compressed svd wrapper."""
-        da = OptionalDependency.get_dask_array()
-
-        u, s, vt = da.linalg.svd_compressed(
-            da.array(matrix),
-            n_components,
-            **kwargs
-        )
-
-        return np.array(u), np.array(s), np.array(vt)
 
     @property
     def svd_solver(self) -> 'str':

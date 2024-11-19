@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 import logging
-from unittest import mock
 
 import numpy as np
 import pytest
 
-from vassal.svd import OptionalDependency, SVDHandler, SVDSolverType
+from vassal.svd import SVDHandler
 
 
 @pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
@@ -99,37 +99,3 @@ def test_properties(sample_matrix: np.ndarray, svd_solver: str,
         errors = [reconstruction_error(k) for k in range(1, len(s) + 1)]
         assert np.all(np.diff(errors) <= 1e-10), \
             "Reconstruction error should decrease with more components"
-
-
-@pytest.mark.parametrize("solver", [
-    SVDSolverType.DASK_STANDARD.value,
-    SVDSolverType.DASK_COMPRESSED.value
-])
-def test_dask_import_error(solver: str, sample_matrix: np.ndarray,
-                           n_components: int):
-    """Test that proper error is raised when dask is not available."""
-    with mock.patch.dict('sys.modules', {'dask.array': None}):
-        handler = SVDHandler(svd_solver=solver)
-        with pytest.raises(
-                ImportError,
-                match="Cannot use dask-based solvers: dask is not installed"
-        ):
-            # Determine whether n_components should be passed
-            if solver == SVDSolverType.DASK_COMPRESSED.value:
-                nc = n_components
-            else:
-                nc = None
-
-            handler.svd(sample_matrix, n_components=nc)
-
-
-def test_optional_dependency_get_dask_array():
-    """Test OptionalDependency.get_dask_array directly."""
-    with mock.patch.dict('sys.modules', {'dask.array': None}):
-        with pytest.raises(
-                ImportError,
-                match="Cannot use dask-based solvers: dask is not installed"
-        ):
-            OptionalDependency.get_dask_array()
-
-
