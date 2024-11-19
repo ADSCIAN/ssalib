@@ -1,4 +1,4 @@
-# Visually Assisted Singular Spectrum AnaLysis (VASSAL)
+# Singular Spectrum Analysis Library (SSALib)
 
 [![Tests](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml/badge.svg)](https://github.com/ADSCIAN/vassal/actions/workflows/python-tests.yml)
 [![Python Version](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)](https://www.python.org)

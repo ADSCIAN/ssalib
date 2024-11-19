@@ -6,8 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ssalib"
 version = "0.1.0a1"
 description = "Singular Spectrum Analysis Library (SSALib)"
-readme = "README.md"
-readme-content-type = "text/markdown"
+readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.9"
 license = {text = "BSD-3-Clause"}
 authors = [
