@@ -14,7 +14,7 @@ setup(
     package_data={
         'ssalib': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
     },
-    url='https://github.com/ADSCIAN/ssalib',
+    url='https://github.com/ADSCIAN/vassal',
     license='BSD-3-Clause',
     author='Damien Delforge, Alice Alonso',
     author_email='damien.delforge@adscian.be',
