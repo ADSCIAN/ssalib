@@ -18,6 +18,8 @@ decomposition technique. It relies on different Singular Value Decomposition
 (SVD) methods from existing Python scientific packages and provides a convenient
 API along with plotting capabilities.
 
+![decomposed_signal.png](images/decomposed_signal.png)
+
 ## Key Features
 
 - Basic SSA implementation with both Broemhead & King and Vautard and Ghil
