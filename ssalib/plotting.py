@@ -402,7 +402,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
 
         rows, cols = self._auto_subplot_layout(len(pairs))
 
-        fig, axes = plt.subplots(rows, cols, figsize=(1.5 * cols, 1.5 * rows))
+        fig, axes = plt.subplots(rows, cols, figsize=(1.7 * cols, 1.6 * rows))
 
         for i in range(rows * cols):
             ax = axes.ravel()[i] if isinstance(axes, np.ndarray) else axes
@@ -473,7 +473,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             plot_method(freq[1:], psd[1:], **plot_kwargs)
             dominant_freq = freq[np.argmax(psd)]
             period = 1 / dominant_freq
-            title = f'EV{i} (T={period:.1f}{unit})'
+            title = f'EV{i} (T={period:.3g}{unit})'
             ax.set_title(title, {'fontsize': 'small'})
             ax.set_xticks([])
             ax.set_yticks([])
@@ -661,7 +661,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
     def _auto_subplot_layout(n_plots: int) -> tuple[int, int]:
         """Calculate the optimal layout for a given number of subplots
 
-        The method favors a 3-column layout until 9 plots, and then favors a
+        The method favors a 3-column layout until nine plots and then favors a
         squared layout with possibly more columns than rows.
 
         Parameters
