@@ -22,7 +22,7 @@ API along with plotting capabilities.
 
 ## Key Features
 
-- Basic SSA implementation with both Broemhead & King and Vautard and Ghil
+- Univariate SSA implementation with both Broemhead & King and Vautard and Ghil
   approaches
 - Multiple SVD solver options (NumPy, SciPy, scikit-learn)
 - Built-in visualization tools for analysis
@@ -122,6 +122,7 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 `notebooks` folder:
 
 - [Tutorial 1: Introduction to SSA](/notebooks/01_basic_ssa_introduction.ipynb)
+- [Tutorial 2: Plotting Guide](/notebooks/02_ssa_plotting_guide.ipynb)
 
 ## References
 
