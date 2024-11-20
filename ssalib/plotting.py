@@ -376,7 +376,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
                     "Make sure to call the 'decompose' method first."
                 )
             matrix = self._reconstruct_group_matrix(group_indices=indices)
-            subtitle = f'({self._svd_matrix_kind}, Group:{indices})'
+            subtitle = f'({self._svd_matrix_kind.value}, Group:{indices})'
 
         im = ax.imshow(matrix, **plot_kwargs)
         ax.set_aspect('equal')
