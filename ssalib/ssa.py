@@ -800,7 +800,7 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
 
             # Get user defined grouped indexes of singular values
             user_groups_indices = list(self._user_groups.values())
-            residuals_indices = list(self._residuals_indices)
+            residuals_indices = None
             all_indices += [residuals_indices]
             all_indices += user_groups_indices
 
@@ -871,9 +871,9 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         if self.s_ is None:
             ssa_residuals = None
         else:
-            residuals_indices = list(self._residuals_indices)
-            ssa_residuals = self._reconstruct_group_timeseries(
-                residuals_indices)
+            user_indices = list(self._user_indices)
+            ssa_residuals = (self._timeseries_pp -
+                             self._reconstruct_group_timeseries(user_indices))
         return ssa_residuals
 
     @property
@@ -891,15 +891,6 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
                     user_indices_values = [user_indices_values]
                 user_indices.update(set(user_indices_values))
         return user_indices
-
-    @property
-    def _residuals_indices(self) -> set:
-        """Return the set of residuals indices.
-        """
-        user_indices: set = self._user_indices
-        residuals_indices = {i for i in range(self.n_components)
-                             if i not in user_indices}
-        return residuals_indices
 
     def wcorr(
             self,

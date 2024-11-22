@@ -331,7 +331,7 @@ def test_groups_unique(ssa_with_decomposition):
 
 def test_groups_residuals(ssa_with_reconstruction):
     res_ix = [3, 4, 5, 6, 7, 8, 9]
-    assert ssa_with_reconstruction.groups['ssa_residuals'] == res_ix
+    assert ssa_with_reconstruction.groups['ssa_residuals'] is None
 
 
 def test_groups_rv_orignal(ssa_with_reconstruction):
