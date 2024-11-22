@@ -95,7 +95,7 @@ def test_n_components_none(ssa_with_decomposition, plot_kind):
 
 
 @pytest.mark.parametrize("plot_kind", SSAPlotType.available_plots())
-def test_n_components_out_of_range(ssa_with_decomposition, plot_kind, caplog):
+def test_n_components_out_of_range(ssa_sklearn_randomized_with_decomposition, plot_kind, caplog):
     if SSAPlotType(plot_kind).requires_decomposition:
         expected_match = (
             "Argument 'n_components' must be less than or equal to "
@@ -104,7 +104,9 @@ def test_n_components_out_of_range(ssa_with_decomposition, plot_kind, caplog):
                 ValueError,
                 match=re.escape(expected_match)
         ):
-            ssa_with_decomposition.plot(kind=plot_kind, n_components=11)
+            ssa_sklearn_randomized_with_decomposition.plot(
+                kind=plot_kind, n_components=11
+            )
 
 
 @pytest.mark.parametrize("plot_kind", SSAPlotType.available_plots())

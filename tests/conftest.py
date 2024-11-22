@@ -80,6 +80,16 @@ def ssa_sklearn_randomized(timeseries50):
 
 
 @pytest.fixture
+def ssa_sklearn_randomized_with_decomposition(timeseries50):
+    ssa = SingularSpectrumAnalysis(
+        timeseries50,
+        svd_solver=SVDSolverType.SKLEARN_RANDOMIZED
+    ).decompose(
+        n_components=10
+    )
+    return ssa
+
+@pytest.fixture
 def ssa_with_decomposition(timeseries50):
     ssa = SingularSpectrumAnalysis(timeseries50,
                                    svd_solver=SVDSolverType.NUMPY_STANDARD)
