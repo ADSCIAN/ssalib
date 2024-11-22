@@ -465,7 +465,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
             ax.axis('off')
             plot_method = getattr(ax, scale)
 
-            if i >= self.n_components:
+            if i >= n_components:
                 continue
             plot_method(freq_original[1:], psd_original[1:], lw=.5,
                         color='lightgrey')
