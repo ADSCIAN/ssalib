@@ -8,7 +8,8 @@
 
 
 > [!NOTE]
-> This repository contains a beta version of SSALib.
+> This repository contains a beta version of SSALib. User may use the issue
+> tracker to provide feedback. 
 
 ## Overview
 
