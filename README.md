@@ -41,6 +41,7 @@ API along with plotting capabilities.
 - Pandas
 - Matplotlib
 - Scikit-learn
+- Statsmodels
 
 ### Installation
 
