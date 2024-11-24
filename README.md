@@ -155,7 +155,7 @@ The main references used to develop SSALib were:
   year      = {2024},
   version   = {0.1.0b1},
   url       = {https://github.com/ADSCIAN/ssalib},
-  publisher = {GitHub},
+  publisher = {{ADSCIAN}},
   license   = {BSD 3-Clause}
 }
 ```
