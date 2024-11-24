@@ -124,6 +124,7 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 
 - [Tutorial 1: Introduction to SSA](/notebooks/01_basic_ssa_introduction.ipynb)
 - [Tutorial 2: Plotting Guide](/notebooks/02_ssa_plotting_guide.ipynb)
+- [Tutorial 3: SVD matrices and window sizes](/notebooks/03_ssa_svd_matrices.ipynb)
 
 ## References
 
