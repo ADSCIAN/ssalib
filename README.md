@@ -8,12 +8,12 @@
 
 
 > [!NOTE]
-> This repository contains a beta development version of SSALib.
+> This repository contains a beta version of SSALib.
 
 ## Overview
 
 The Singular Spectrum Analysis Library (SSALib) is a Python package
-implementing the basic Singular Spectrum Analysis (SSA) univariate timeseries
+implementing the Singular Spectrum Analysis (SSA) univariate timeseries
 decomposition technique. It relies on different Singular Value Decomposition
 (SVD) methods from existing Python scientific packages and provides a convenient
 API along with plotting capabilities.
@@ -126,6 +126,8 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 
 ## References
 
+The main references used to develop SSALib were:
+
 1. Golyandina, N., & Zhigljavsky, A. (2020). Singular Spectrum Analysis for Time
    Series. Berlin, Heidelberg:
    Springer. https://doi.org/10.1007/978-3-662-62436-4
@@ -137,9 +139,24 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
    217–236. https://doi.org/10.1016/0167-2789(86)90031-X
 4. Vautard, R., & Ghil, M. (1989). Singular spectrum analysis in nonlinear
    dynamics, with applications to paleoclimatic time series. Physica D:
-   Nonlinear Phenomena, 35(3)
+   Nonlinear Phenomena, 35(3). https://doi.org/10.1016/0167-2789(89)90077-8
+5. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular 
+   oscillations in the Presence of Colored Noise. Journal of Climate, 9(12), 
+   3373–3404. 
+   [https://doi.org/10.1175/1520-0442(1996)009<3373:MCSDIO>2.0.CO;2](https://doi.org/10.1175/1520-0442(1996)009<3373:MCSDIO>2.0.CO;2)
+
 
 ## How to Cite
 
-TODO
+```bibtex
+@software{ssalib2024,
+  author    = {Delforge, Damien and Alonso, Alice},
+  title     = {{SSALib}: A {Python} Package for {Singular Spectrum Analysis}},
+  year      = {2024},
+  version   = {0.1.0b1},
+  url       = {https://github.com/ADSCIAN/ssalib},
+  publisher = {GitHub},
+  license   = {BSD 3-Clause}
+}
+```
 
