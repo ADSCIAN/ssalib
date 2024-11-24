@@ -12,7 +12,7 @@ from scipy.linalg import toeplitz
 def correlation_weights(
         timeseries_length: int,
         window: int
-) -> NDArray[float]:
+) -> NDArray[float]: #TODO check wcorr if Toeplitz SSA
     """Calculate the default weights for the weighted correlation matrix.
 
     Parameters
