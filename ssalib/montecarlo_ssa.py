@@ -18,8 +18,6 @@ from ssalib.ssa import SingularSpectrumAnalysis, SSAMatrixType
 class MonteCarloSSA(SingularSpectrumAnalysis):
     """Monte Carlo Singular Spectrum Analysis
 
-    # TODO: Test
-
     Proposed by [1]_, Monte Carlo Singular Spectrum Analysis relies on
     autoregressive surrogate of the original time series [2]_ to test the
     significance of the components' singular (or eigen) values.
