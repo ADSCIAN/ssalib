@@ -8,6 +8,40 @@ guidelines and instructions for contributing to this project.
 By participating in this project, you agree to abide by our Code of Conduct.
 Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
 
+## Development Priorities and Philosophy
+
+### Core Priorities
+
+SSALib's primary focus is consolidating the codebase to optimize performance, 
+maintainability, and scalability. This foundation ensures new features can be 
+integrated conveniently and reliably.
+
+### Project Scope
+
+SSALib was developed for teaching and research purposes, focusing on classical
+Singular Spectrum Analysis theory for univariate time series decomposition. 
+Future development should maintain this focus by integrating mature, essential 
+features within the scope of core SSA theory.
+
+### Future Development Areas
+
+Potential areas for expansion include:
+
+- Alternative embedding and SVD matrix approaches (including multichannel SSA)
+- New decomposition algorithms and techniques beyond SVD
+- Alternative significance testing approaches
+
+Automated grouping methodologies should rather be documented than implemented
+since interfacing SSALib with clustering algorithm is relatively 
+straightforward.
+
+### Development Philosophy
+
+Given the numerous possible extensions, SSALib emphasizes composition over
+inheritance. Expanding the API design should allow both developers and users
+to register custom methods easily while maintaining a simple, object-oriented
+core codebase.
+
 ## Getting Started
 
 1. Fork the repository on GitHub
@@ -50,7 +84,7 @@ Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
 ## Pull Request Process
 
 1. Update the README.md with details of changes if needed
-2. Update the documentation if you're adding or modifying features
+2. Update the documentation if you are adding or modifying features
 3. Run the full test suite and make sure all tests pass
 4. Push to your fork and submit a pull request:
    ```bash
@@ -65,6 +99,9 @@ Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
 * Include tests for new features
 * Update documentation as needed
 * Follow the project's coding style
+
+SSALib aligns with the 
+[Python Enhancement Proposals](https://peps.python.org/pep-0000/).
 
 ## Running Tests
 
@@ -97,10 +134,10 @@ flake8
 
 ## Documentation
 
-* Update docstrings for any modified functions (we follow numpydoc
-  docstrings)
-* Update the README.md if you're adding or modifying features
-* If necessary, add a tutorial in the notebooks folder,
+* Update docstrings for any modified functions (follow numpydoc
+  docstrings),
+* Update the README.md if you are adding or modifying features,
+* If necessary, add a tutorial in the notebook folder,
 * Add notes to the CHANGELOG.md under the "Unreleased" section
 
 ## Questions or Need Help?
