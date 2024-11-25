@@ -7,3 +7,4 @@ build/
 ssalib.egg-info/
 __pycache__/
 ssalib/__pycache/
+tmp/
