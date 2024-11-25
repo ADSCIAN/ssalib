@@ -128,7 +128,7 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 - [Tutorial 4: Comparison of SVD Solvers and Speed Performances](/notebooks/04_svd_solvers.ipynb)
 
 In more advanced tutorials, we cover:
-- [A1: Testing Significance with `MonteCarloSSA`](#)
+- [A1: Testing Significance with `MonteCarloSSA`](/notebooks/A1_montecarlo_ssa.ipynb)
 
 ## References
 
