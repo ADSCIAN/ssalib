@@ -124,6 +124,11 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 
 - [Tutorial 1: Introduction to SSA](/notebooks/01_basic_ssa_introduction.ipynb)
 - [Tutorial 2: Plotting Guide](/notebooks/02_ssa_plotting_guide.ipynb)
+- [Tutorial 3: SVD Matrix Construction and Window Sizes](/notebooks/03_ssa_svd_matrices.ipynb)
+- [Tutorial 4: Comparison of SVD Solvers and Speed Performances](/notebooks/04_svd_solvers.ipynb)
+
+In more advanced tutorials, we cover:
+- [A1: Testing Significance with `MonteCarloSSA`](#)
 
 ## References
 
