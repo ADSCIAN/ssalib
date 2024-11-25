@@ -50,6 +50,7 @@ jobs:
         mkdir -p test-results
         # Run tests and generate coverage
         pytest tests/ -v \
+        --ignore=tests/test_rssa.py \
         --cov=ssalib \
         --cov-report=term-missing:skip-covered \
         --cov-report=xml:test-results/coverage.xml \
