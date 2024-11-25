@@ -26,6 +26,7 @@ API along with plotting capabilities.
 - Univariate SSA implementation with both Broemhead & King and Vautard and Ghil
   approaches
 - Multiple SVD solver options (NumPy, SciPy, scikit-learn)
+- Implementation of Monte Carlo SSA
 - Built-in visualization tools for analysis
 - Include example datasets
 - Comprehensive test coverage
@@ -41,6 +42,7 @@ API along with plotting capabilities.
 - Pandas
 - Matplotlib
 - Scikit-learn
+- Statsmodels
 
 ### Installation
 
