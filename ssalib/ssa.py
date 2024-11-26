@@ -203,14 +203,17 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             )
         self._na_strategy: str = na_strategy
 
+        # Validate timeseries
+        self._timeseries: NDArray = self.__validate_timeseries(timeseries)
+
+        # Create na_mask
         if na_strategy == 'raise_error':
             self.na_mask = np.zeros_like(timeseries, dtype=bool)
         else:
             self.na_mask = np.isnan(timeseries)
         self._has_na: bool = any(self.na_mask)
 
-        # Validate timeseries
-        self._timeseries: NDArray = self.__validate_timeseries(timeseries)
+        # Other attributes
         self._n: int = self._timeseries.shape[0]
         self.mean_: float = np.nanmean(self._timeseries)
         self.std_: float = np.nanstd(self._timeseries)
@@ -411,6 +414,8 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
         """Validates the timeseries data.
         """
         timeseries = np.squeeze(np.array(timeseries))
+        if timeseries.ndim != 1:
+            raise ValueError("Argument timeseries must be one-dimensional")
 
         if not np.issubdtype(timeseries.dtype, np.number):
             raise ValueError(
@@ -422,8 +427,6 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
                 "Argument timeseries cannot inf or NaN values with na_strategy "
                 "set to 'raise_error'"
             )
-        if timeseries.ndim != 1:
-            raise ValueError("Argument timeseries must be one-dimensional")
         return timeseries
 
     def __validate_user_groups(

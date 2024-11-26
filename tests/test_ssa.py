@@ -53,6 +53,7 @@ def test_correct_initialization(ssa_no_decomposition):
     (pd.Series([np.inf, np.inf, 1, 2]),
      "Argument timeseries cannot inf or NaN values with na_strategy set to "
      "'raise_error'"),
+    (np.zeros(shape=(10, 2)), "Argument timeseries must be one-dimensional")
 ])
 def test_invalid_timeseries_data(invalid_data, error_msg):
     """Test initialization with invalid timeseries data."""
@@ -202,6 +203,17 @@ def test_svd_solver_results(ssa_numpy_standard, solver, n_components, rtol):
                                    rtol=rtol)
     else:
         np.testing.assert_allclose(s1, s2, rtol=rtol)
+
+def test_key_error_invalid_type(ssa_no_decomposition):
+    with pytest.raises(KeyError,
+                       match="Key 'nan' is not a valid key type"):
+        ssa_no_decomposition[np.nan]
+
+
+@pytest.mark.parametrize("key", [0, [0,1], slice(0,4), 'key'])
+def test_decomposition_error(ssa_no_decomposition, key):
+    with pytest.raises(DecompositionError):
+        ssa_no_decomposition[key]
 
 
 def test_groups_after_decompose(ssa_with_decomposition):

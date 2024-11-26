@@ -116,6 +116,13 @@ pytest tests/test_specific.py
 pytest --cov=project_name
 ```
 
+If you do not have R configured and installed R package Rssa, you can ignore
+test_rssa.py.
+
+```bash
+pytest --ignore=tests\test_rssa.py
+```
+
 ## Style Guidelines
 
 This project uses:
