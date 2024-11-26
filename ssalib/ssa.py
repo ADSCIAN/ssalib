@@ -354,9 +354,22 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
                 "Cannot retrieve components by slice prior to decomposition. "
                 "Call the 'decompose' method first"
             )
-        start, stop, step = key.indices(self.n_components)
-        if stop > self.n_components:
-            raise KeyError(f"Slice '{key}' is out of range")
+        # Check the original start and stop values for out-of-range indices
+        if key.start is not None and (
+                key.start >= self.n_components or
+                key.start < -self.n_components
+        ):
+            raise KeyError(
+                f"Slice start index '{key.start}' is out of range. It must be "
+                f"within -{self.n_components} to {self.n_components - 1}.")
+
+        if key.stop is not None and (
+                key.stop > self.n_components or
+                key.stop < -self.n_components
+        ):
+            raise KeyError(
+                f"Slice stop index '{key.stop}' is out of range. It must be "
+                f"within -{self.n_components} to {self.n_components}.")
 
     def __validate_string_key(self, key: str) -> None:
         """Validate __getitem__ key for a string key.

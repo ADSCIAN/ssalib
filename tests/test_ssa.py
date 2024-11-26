@@ -204,13 +204,22 @@ def test_svd_solver_results(ssa_numpy_standard, solver, n_components, rtol):
     else:
         np.testing.assert_allclose(s1, s2, rtol=rtol)
 
-def test_key_error_invalid_type(ssa_no_decomposition):
+
+def test_getitem_key_error_invalid_type(ssa_no_decomposition):
     with pytest.raises(KeyError,
                        match="Key 'nan' is not a valid key type"):
         ssa_no_decomposition[np.nan]
 
 
-@pytest.mark.parametrize("key", [0, [0,1], slice(0,4), 'key'])
+@pytest.mark.parametrize("key",
+                         [-1, 51, [-1, 1], [1, "a"], slice(49, 52), np.nan])
+def test_getitem_key_error(ssa_with_decomposition, key):
+    with pytest.raises(KeyError):
+        ssa_with_decomposition[key]
+
+
+
+@pytest.mark.parametrize("key", [0, [0, 1], slice(0, 4), 'key'])
 def test_decomposition_error(ssa_no_decomposition, key):
     with pytest.raises(DecompositionError):
         ssa_no_decomposition[key]
@@ -235,6 +244,7 @@ def test_repr_str(
     ssa_no_decomposition.__str__()
     ssa_with_decomposition.__str__()
     ssa_with_reconstruction.__str__()
+
 
 # Test reconstruction
 
