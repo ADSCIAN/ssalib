@@ -63,10 +63,10 @@ ts = load_sst()
 ssa = SingularSpectrumAnalysis(ts)
 ssa.decompose()
 
-# Visualize components
+# Visualize results
 fig, ax = ssa.plot(kind='values')
 
-# Reconstruct Groups
+# Reconstruct groups
 ssa.reconstruct(groups={'trend': [0, 1], 'seasonality': [2, 3]})
 
 # Export
@@ -156,15 +156,16 @@ The main references used to develop SSALib were:
 
 ## How to Cite
 
+Awaiting the release of the first non-beta version, you can refer to SSALib 
+using:
+
 ```bibtex
 @software{ssalib2024,
   author    = {Delforge, Damien and Alonso, Alice},
   title     = {{SSALib}: A {Python} Package for {Singular Spectrum Analysis}},
   year      = {2024},
   version   = {0.1.0b1},
-  url       = {https://github.com/ADSCIAN/ssalib},
-  publisher = {{ADSCIAN}},
-  license   = {BSD 3-Clause}
+  url       = {https://github.com/ADSCIAN/ssalib}
 }
 ```
 
