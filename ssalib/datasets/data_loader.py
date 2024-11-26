@@ -157,7 +157,7 @@ def load_sunspots() -> pd.Series:
     >>> from ssalib.datasets import load_sunspots
     >>> sunspots = load_sunspots()
     >>> sunspots.head()
-    date
+    Date
     1749-01-01     96.7
     1749-02-01    104.3
     1749-03-01    116.7
