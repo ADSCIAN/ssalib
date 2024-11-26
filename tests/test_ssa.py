@@ -205,33 +205,11 @@ def test_svd_solver_results(ssa_numpy_standard, solver, n_components, rtol):
         np.testing.assert_allclose(s1, s2, rtol=rtol)
 
 
-def test_getitem_key_error_invalid_type(ssa_no_decomposition):
-    with pytest.raises(KeyError,
-                       match="Key 'nan' is not a valid key type"):
-        ssa_no_decomposition[np.nan]
-
-
-@pytest.mark.parametrize("key",
-                         [-1, 51, [-1, 1], [1, "a"], slice(49, 52), np.nan])
-def test_getitem_key_error(ssa_with_decomposition, key):
-    with pytest.raises(KeyError):
-        ssa_with_decomposition[key]
-
-
-
-@pytest.mark.parametrize("key", [0, [0, 1], slice(0, 4), 'key'])
-def test_decomposition_error(ssa_no_decomposition, key):
-    with pytest.raises(DecompositionError):
-        ssa_no_decomposition[key]
-
-
 def test_groups_after_decompose(ssa_with_decomposition):
     assert ssa_with_decomposition.groups['ssa_original'] is None
     assert ssa_with_decomposition.groups['ssa_preprocessed'] is None
     assert ssa_with_decomposition.groups['ssa_reconstructed'] is None
 
-
-# Test __repr__ and __str__
 
 def test_repr_str(
         ssa_no_decomposition,
@@ -245,8 +223,6 @@ def test_repr_str(
     ssa_with_decomposition.__str__()
     ssa_with_reconstruction.__str__()
 
-
-# Test reconstruction
 
 @pytest.mark.parametrize("group_type", ['int', 'list'])
 def test_valid_reconstruction_groups(ssa_with_decomposition, group_type):
@@ -276,11 +252,15 @@ def test_invalid_reconstruction_groups(ssa_with_decomposition, invalid_group,
         ssa_with_decomposition.reconstruct(invalid_group)
 
 
+# Test __repr__ and __str__
+
 def test_reconstruct_before_decompose(ssa_no_decomposition):
     with pytest.raises(DecompositionError,
                        match="Decomposition must be performed"):
         ssa_no_decomposition.reconstruct(groups={'group1': [1, 2, 3]})
 
+
+# Test reconstruction
 
 def test_user_ix_before_reconstruct(ssa_with_decomposition):
     with pytest.raises(ReconstructionError,
@@ -337,6 +317,26 @@ def test_getitem_by_groupname_reconstruction_error(ssa_with_decomposition):
             match="Cannot access user-defined key prior to group reconstruction"
     ):
         ssa_with_decomposition['group1']
+
+
+def test_getitem_key_error_invalid_type(ssa_no_decomposition):
+    with pytest.raises(KeyError,
+                       match="Key 'nan' is not a valid key type"):
+        ssa_no_decomposition[np.nan]
+
+
+@pytest.mark.parametrize("key",
+                         [-1, 51, [-1, 1], [1, "a"], slice(-1, 3),
+                          slice(49, 52), slice(3, 2), np.nan])
+def test_getitem_key_error(ssa_with_decomposition, key):
+    with pytest.raises(KeyError):
+        ssa_with_decomposition[key]
+
+
+@pytest.mark.parametrize("key", [0, [0, 1], slice(0, 4), 'key'])
+def test_getitem_decomposition_error(ssa_no_decomposition, key):
+    with pytest.raises(DecompositionError):
+        ssa_no_decomposition[key]
 
 
 # test group retrieval
