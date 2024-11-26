@@ -212,15 +212,17 @@ def test_groups_after_decompose(ssa_with_decomposition):
 
 # Test __repr__ and __str__
 
-@pytest.mark.parametrize("ssa_instance", [
-    'ssa_no_decomposition',
-    'ssa_with_decomposition',
-    'ssa_with_reconstruction',
-])
-def test_repr_str(ssa_instance):
-    ssa_instance.__repr__()
-    ssa_instance.__str__()
-
+def test_repr_str(
+        ssa_no_decomposition,
+        ssa_with_decomposition,
+        ssa_with_reconstruction
+):
+    ssa_no_decomposition.__repr__()
+    ssa_with_decomposition.__repr__()
+    ssa_with_reconstruction.__repr__()
+    ssa_no_decomposition.__str__()
+    ssa_with_decomposition.__str__()
+    ssa_with_reconstruction.__str__()
 
 # Test reconstruction
 
