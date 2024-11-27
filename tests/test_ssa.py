@@ -42,6 +42,8 @@ def test_correct_initialization(ssa_no_decomposition):
     assert ssa_no_decomposition.na_mask.sum() == 0
     assert ssa_no_decomposition.groups['ssa_original'] is None
     assert ssa_no_decomposition.groups['ssa_preprocessed'] is None
+    assert ssa_no_decomposition._ssa_reconstructed is None
+    assert ssa_no_decomposition._ssa_residuals is None
 
 
 @pytest.mark.parametrize("invalid_data,error_msg", [
@@ -401,6 +403,12 @@ def test_to_frame_operations(ssa_with_reconstruction):
     ):
         ssa_with_reconstruction.to_frame(include=['group1'], exclude=['group2'])
 
+def test_to_frame_include_exclude_invalid(ssa_with_reconstruction):
+    with pytest.raises(ValueError):
+        ssa_with_reconstruction.to_frame(include=['unknown_group'])
+    with pytest.raises(ValueError):
+        ssa_with_reconstruction.to_frame(exclude=['unknown_group'])
+
 
 def test_to_frame_rescale(ssa_with_reconstruction):
     """Test DataFrame index name."""
@@ -443,3 +451,12 @@ def test_signatures():
         'test_significance']
     assert ssa_signatures['get_confidence_interval'] == mc_signatures[
         'get_confidence_interval']
+
+
+# Not Implemented in SingularSpectrumAnalysis
+
+def test_not_implemented_methods(ssa_no_decomposition):
+    with pytest.raises(NotImplementedError):
+        ssa_no_decomposition.get_confidence_interval()
+    with pytest.raises(NotImplementedError):
+        ssa_no_decomposition.test_significance()
