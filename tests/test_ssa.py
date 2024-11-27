@@ -270,6 +270,7 @@ def test_user_ix_before_reconstruct(ssa_with_decomposition):
                        match="Cannot retrieve user indices"):
         ssa_with_decomposition._user_indices
 
+
 def test_duplicate_reconstruction_warning(ssa_with_decomposition, caplog):
     """Test warning for duplicate indices in reconstruction groups."""
     with caplog.at_level(logging.WARNING):
@@ -329,14 +330,14 @@ def test_getitem_key_error_invalid_type(ssa_no_decomposition):
 
 @pytest.mark.parametrize("key",
                          [-1, 51, [-1, 1], [1, "a"], slice(-1, 3),
-                          slice(23, 26), slice(3, 2), np.nan,
-                          "ssa_reconstructed", "invalid"])
-def test_getitem_key_error(ssa_with_decomposition, key):
+                          slice(23, 26), slice(3, 2), np.nan])
+def test_getitem_key_error_with_decomposition(ssa_with_decomposition, key):
     with pytest.raises(KeyError):
         ssa_with_decomposition[key]
 
 
-@pytest.mark.parametrize("key", [0, [0, 1], slice(0, 4), 'key'])
+@pytest.mark.parametrize("key", [0, [0, 1], slice(0, 4), 'key',
+                                 "ssa_residuals", "ssa_reconstructed"])
 def test_getitem_decomposition_error(ssa_no_decomposition, key):
     with pytest.raises(DecompositionError):
         ssa_no_decomposition[key]
@@ -402,6 +403,7 @@ def test_to_frame_operations(ssa_with_reconstruction):
             match="Cannot specify both include and exclude parameters"
     ):
         ssa_with_reconstruction.to_frame(include=['group1'], exclude=['group2'])
+
 
 def test_to_frame_include_exclude_invalid(ssa_with_reconstruction):
     with pytest.raises(ValueError):
