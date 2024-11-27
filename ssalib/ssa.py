@@ -477,7 +477,6 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
             )
 
         all_values = []
-        seen_keys = set()
 
         for key, value in groups.items():
             # Validate key
@@ -486,16 +485,11 @@ class SingularSpectrumAnalysis(SVDHandler, PlotSSA):
                     f"Key types in groups dictionary should be string, "
                     f"got {type(key)}"
                 )
-            if key in seen_keys:
-                raise ValueError(
-                    f"Duplicate key '{key}' found in groups dictionary."
-                )
             if key in self._DEFAULT_GROUPS:
                 raise ValueError(
                     f"Group name '{key}' is reserved for default group names. "
                     f"Use a different group name"
                 )
-            seen_keys.add(key)
 
             # Validates value and collect all integers
             if isinstance(value, int):

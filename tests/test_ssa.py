@@ -232,6 +232,7 @@ def test_valid_reconstruction_groups(ssa_with_decomposition, group_type):
 
 
 @pytest.mark.parametrize("invalid_group,expected_error,error_msg", [
+    ("invalid_type", TypeError, "Argument groups must be a dictionary"),
     ({'group1': 1.}, ValueError,
      "Value for key 'group1' must be an int or list of int"),
     ({'group1': -1}, ValueError,
@@ -266,7 +267,6 @@ def test_user_ix_before_reconstruct(ssa_with_decomposition):
     with pytest.raises(ReconstructionError,
                        match="Cannot retrieve user indices"):
         ssa_with_decomposition._user_indices
-
 
 def test_duplicate_reconstruction_warning(ssa_with_decomposition, caplog):
     """Test warning for duplicate indices in reconstruction groups."""
@@ -327,7 +327,8 @@ def test_getitem_key_error_invalid_type(ssa_no_decomposition):
 
 @pytest.mark.parametrize("key",
                          [-1, 51, [-1, 1], [1, "a"], slice(-1, 3),
-                          slice(49, 52), slice(3, 2), np.nan])
+                          slice(23, 26), slice(3, 2), np.nan,
+                          "ssa_reconstructed", "invalid"])
 def test_getitem_key_error(ssa_with_decomposition, key):
     with pytest.raises(KeyError):
         ssa_with_decomposition[key]
