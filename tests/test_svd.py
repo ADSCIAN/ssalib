@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import pytest
 
-from ssalib.svd import SVDHandler
+from ssalib.svd import SVDHandler, SVDSolverType
 
 
 @pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
@@ -21,6 +21,53 @@ def test_svd_methods(sample_matrix: np.ndarray, n_components: int,
     assert np.all(
         np.diff(s) <= 0), "Singular values are not in decreasing order"
 
+
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
+def test_repr_str(svd_solver):
+    handler = SVDHandler(svd_solver=svd_solver)
+    handler.__repr__()
+    handler.__str__()
+
+
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
+def test_solver_svd_matrix_type_error(svd_solver):
+    handler = SVDHandler(svd_solver=svd_solver)
+    with pytest.raises(TypeError):
+        handler.svd(matrix="not a matrix")
+
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
+def test_solver_svd_matrix_value_error(svd_solver):
+    handler = SVDHandler(svd_solver=svd_solver)
+    with pytest.raises(ValueError):
+        handler.svd(matrix=np.random.random((5,5,2)))
+    with pytest.raises(ValueError):
+        a = np.random.random((5,5))
+        a[0,0] = np.nan
+        handler.svd(matrix=a)
+
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
+def test_solver_n_components(svd_solver, sample_matrix):
+    handler = SVDHandler(svd_solver=svd_solver)
+    solver = SVDSolverType(svd_solver)
+    if solver.supports_n_components:
+        with pytest.raises(TypeError):
+            handler.svd(
+                matrix=sample_matrix,
+                n_components="not an integer"
+            )
+        with pytest.raises(ValueError):
+            handler.svd(
+                matrix=sample_matrix,
+                n_components=min(sample_matrix.shape) + 1
+            )
+        with pytest.raises(ValueError):
+            handler.svd(sample_matrix, n_components=-1)
+
+@pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
+def test_solver_kwargs(svd_solver, sample_matrix):
+    handler = SVDHandler(svd_solver=svd_solver)
+    with pytest.raises(TypeError):
+        handler.svd(sample_matrix=sample_matrix, not_a_kwarg=1)
 
 @pytest.mark.parametrize("svd_solver", SVDHandler.available_solvers)
 def test_ignored_components_warning(sample_matrix, n_components, svd_solver,

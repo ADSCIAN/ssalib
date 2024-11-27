@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/ADSCIAN/ssalib/actions/workflows/python-tests.yml/badge.svg)](https://github.com/ADSCIAN/ssalib/actions/workflows/python-tests.yml)
 [![Python Version](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12|%203.13-blue)](https://www.python.org)
-[![Coverage](https://img.shields.io/badge/coverage-89%25-green)](https://github.com/ADSCIAN/ssalib/actions)
+[![Coverage](https://img.shields.io/badge/coverage-92%25-green)](https://github.com/ADSCIAN/ssalib/actions)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Development Status](https://img.shields.io/badge/Development%20Status-beta-blue)](https://pypi.org/project/ssalib/)
 
