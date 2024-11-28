@@ -8,8 +8,9 @@
 
 
 > [!NOTE]
-> This repository contains a beta version of SSALib. User may use the issue
-> tracker to provide feedback. 
+> This repository contains a beta version of SSALib. User may use: 
+> - Pull Request reviews on the `release/beta-v1` branch
+> - Issue tracker for general feedback
 
 ## Overview
 
