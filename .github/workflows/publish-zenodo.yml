@@ -1,0 +1,27 @@
+name: Publish to Zenodo
+
+on:
+  release:
+    types: [published]
+
+    # Filter out prereleases
+    if: "!github.event.release.prerelease"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Publish to Zenodo
+        uses: zenodraft/actions@v1
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        with:
+          collection: ${{ secrets.ZENODO_COLLECTION_ID }} # Optional
+          draft: false
+          publish: true
+          sandbox: false # Set to true for testing
