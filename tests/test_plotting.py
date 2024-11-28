@@ -198,10 +198,11 @@ def test_imputation_warning(ssa_with_decomposition_fill_mean, plot_kind,
             f"Periodogram is estimated on a series imputed with strategy 'fill_mean'" in message
             for message in log_messages
         ), "Warning for imputation strategy not logged as expected"
-
+        plt.close()
 
 def test_plot_matrix_reconstructed(ssa_with_reconstruction):
     ssa_with_reconstruction.plot(kind='matrix', indices=[0, 1])
+    plt.close()
 
 
 def test_plot_matrix_decomposition_error(ssa_no_decomposition):
@@ -252,6 +253,7 @@ def test_plot_values_value_error(ssa_with_decomposition):
 def test_plot_values_mcssa(mcssa_decomposed):
     fig, ax = mcssa_decomposed.plot()
     fig, ax = mcssa_decomposed.plot(rank_by='freq')
+    plt.close()
 
 
 def test_auto_subplot_layout():
