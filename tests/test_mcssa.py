@@ -1,55 +1,14 @@
 """Tests for class MonteCarloSSA."""
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
 
+from ssalib.error import DecompositionError
 from ssalib.montecarlo_ssa import MonteCarloSSA
 from ssalib.ssa import SSAMatrixType
 from ssalib.svd import SVDSolverType
-from ssalib.error import DecompositionError
-
-
-# Basic fixtures
-
-@pytest.fixture
-def mcssa_no_decomposition(timeseries50):
-    mcssa = MonteCarloSSA(
-        timeseries50,
-        n_surrogates=10,
-        ar_order_max=1,
-        random_seed=42
-    )
-    return mcssa
-
-@pytest.fixture
-def mcssa_decomposed(mcssa_no_decomposition):
-    return mcssa_no_decomposition.decompose()
-
-# Matrix type fixtures
-@pytest.fixture(params=['bk_trajectory', 'bk_covariance', 'vg_covariance'])
-def matrix_kind(request):
-    """Parameterized fixture for all matrix types."""
-    return request.param
-
-@pytest.fixture
-def mcssa_matrix(timeseries50, matrix_kind):
-    """Create MCSSA instance with a specific matrix type."""
-    return MonteCarloSSA(
-        timeseries50,
-        svd_matrix_kind=matrix_kind,
-        n_surrogates=10,
-        random_seed=42
-    )
-
-@pytest.fixture
-def mcssa_matrix_decomposed(mcssa_matrix):
-    """Decomposed MCSSA instance with a specific matrix type."""
-    return mcssa_matrix.decompose()
-
-
-# Tests
 
 
 def test_test_significance(mcssa_no_decomposition):
@@ -116,7 +75,7 @@ def test_correct_initialization(mcssa_no_decomposition):
 def test_surrogate_generation(mcssa_no_decomposition):
     """Test that surrogates are generated correctly."""
     assert mcssa_no_decomposition.surrogates.shape == (
-    10, 50)  # (n_surrogates, n)
+        10, 50)  # (n_surrogates, n)
     # Test reproducibility with the same seed
     mcssa2 = MonteCarloSSA(
         mcssa_no_decomposition._timeseries,
@@ -258,11 +217,11 @@ def test_decomposition_matrix_types(mcssa_matrix_decomposed, matrix_kind):
     assert mcssa_matrix_decomposed.n_components == 25
     assert mcssa_matrix_decomposed.s_.shape == (25,)
     assert mcssa_matrix_decomposed.u_.shape == (
-    25, 25)  # window size × n_components
+        25, 25)  # window size × n_components
 
     if matrix_kind == 'bk_trajectory':
         assert mcssa_matrix_decomposed.vt_.shape == (
-        26, 26)  # n_components × (n-window+1)
+            26, 26)  # n_components × (n-window+1)
     elif matrix_kind in ['bk_covariance', 'vg_covariance']:
         # For covariance matrices, eigenvectors might need different checks
         assert mcssa_matrix_decomposed.s_.shape == (25,)

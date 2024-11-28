@@ -5,6 +5,7 @@ from inspect import signature
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pytest
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -95,7 +96,8 @@ def test_n_components_none(ssa_with_decomposition, plot_kind):
 
 
 @pytest.mark.parametrize("plot_kind", SSAPlotType.available_plots())
-def test_n_components_out_of_range(ssa_sklearn_randomized_with_decomposition, plot_kind, caplog):
+def test_n_components_out_of_range(ssa_sklearn_randomized_with_decomposition,
+                                   plot_kind, caplog):
     if SSAPlotType(plot_kind).requires_decomposition:
         expected_match = (
             "Argument 'n_components' must be less than or equal to "
@@ -147,6 +149,13 @@ def test_n_components_ignored_warning(ssa_with_decomposition, plot_kind,
 
 
 @pytest.mark.parametrize("plot_kind", SSAPlotType.available_plots())
+def test_ax_type_error(ssa_with_decomposition, plot_kind):
+    if SSAPlotType(plot_kind).supports_ax:
+        with pytest.raises(TypeError):
+            ssa_with_decomposition.plot(kind=plot_kind, ax='wrong_type')
+
+
+@pytest.mark.parametrize("plot_kind", SSAPlotType.available_plots())
 def test_ax_ignored_warning(ssa_with_decomposition, plot_kind, caplog):
     # Create a matplotlib axis object.
     fig, ax = plt.subplots()
@@ -172,6 +181,7 @@ def test_ax_ignored_warning(ssa_with_decomposition, plot_kind, caplog):
     # Close the figure to free memory
     plt.close(fig)
 
+
 @pytest.mark.parametrize("plot_kind", [
     "periodogram"])  # Parameterize to only focus on periodogram
 def test_imputation_warning(ssa_with_decomposition_fill_mean, plot_kind,
@@ -188,6 +198,60 @@ def test_imputation_warning(ssa_with_decomposition_fill_mean, plot_kind,
             f"Periodogram is estimated on a series imputed with strategy 'fill_mean'" in message
             for message in log_messages
         ), "Warning for imputation strategy not logged as expected"
+
+
+def test_plot_matrix_reconstructed(ssa_with_reconstruction):
+    ssa_with_reconstruction.plot(kind='matrix', indices=[0, 1])
+
+
+def test_plot_matrix_decomposition_error(ssa_no_decomposition):
+    with pytest.raises(DecompositionError):
+        ssa_no_decomposition.plot(kind='matrix', indices=[0, 1])
+
+
+def test_plot_periodogram_scale_type_error(ssa_with_decomposition):
+    with pytest.raises(TypeError):
+        # scale should be string
+        ssa_with_decomposition.plot(kind='periodogram', scale=1)
+
+def test_get_dominant_freq(ssa_with_decomposition):
+    ssa_with_decomposition.get_dominant_frequencies()
+
+def test_get_dominant_freq_decomposition_error(ssa_no_decomposition):
+    with pytest.raises(DecompositionError):
+        ssa_no_decomposition.get_dominant_frequencies()
+
+def test_plot_periodogram_scale_value_error(ssa_with_decomposition):
+    with pytest.raises(ValueError):
+        ssa_with_decomposition.plot(kind='periodogram', scale='wrong_scale')
+
+def test_plot_periodogram_with_datetime_index():
+    dt_rng = pd.date_range('2020-01-01', freq='D', periods=50)
+    ssa = SingularSpectrumAnalysis(pd.Series(np.random.randn(50), index=dt_rng))
+    ssa.decompose()
+    ssa.plot(kind='periodogram')
+    plt.close()
+
+def test_plot_timeseries_with_subplots(ssa_with_decomposition):
+    fig, ax = ssa_with_decomposition.plot(kind='timeseries', subplots=True)
+    plt.close()
+
+def test_plot_values_by_freq(ssa_with_decomposition):
+    fig, ax = ssa_with_decomposition.plot(rank_by='freq')
+    plt.close()
+
+def test_plot_values_value_error(ssa_with_decomposition):
+    with pytest.raises(ValueError):
+        # Only valid for MCSSA
+        ssa_with_decomposition.plot(confidence_level=0.95)
+    with pytest.raises(ValueError):
+        # Only valid for MCSSA
+        ssa_with_decomposition.plot(errorbar_kwargs={'color': 'red'})
+
+
+def test_plot_values_mcssa(mcssa_decomposed):
+    fig, ax = mcssa_decomposed.plot()
+    fig, ax = mcssa_decomposed.plot(rank_by='freq')
 
 
 def test_auto_subplot_layout():

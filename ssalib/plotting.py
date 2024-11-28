@@ -16,6 +16,7 @@ from matplotlib.ticker import MaxNLocator
 from numpy.typing import NDArray
 from scipy.signal import periodogram
 from statsmodels.tsa.statespace.sarimax import SARIMAXResults
+
 from ssalib.error import DecompositionError
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class SSAPlotType(Enum):
     VALUES = 'values'
     VECTORS = 'vectors'
     WCORR = 'wcorr'
-    
+
     @property
     def requires_decomposition(self):
         """Whether this plot type requires decomposition"""
@@ -73,7 +74,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
     svd_matrix: NDArray[float]  # SVD matrix
     _ix: pd.Index | None  # time series index
     _n: int | None = None  # timeseries length
-    _na_strategy: str # missing data strategy
+    _na_strategy: str  # missing data strategy
     _window: int | None = None  # SSA window length
     u_: NDArray[float] | None = None  # left eigenvectors
     s_: NDArray[float] | None = None  # array of singular values
@@ -84,8 +85,8 @@ class PlotSSA(metaclass=abc.ABCMeta):
     autoregressive_model: SARIMAXResults  # Surrogate model (MonteCarloSSA)
     n_surrogates: int  # Number of surrogates (MontecarloSSA)
 
-    _N_COMPONENTS_SENTINEL = object() # track if n_components was user-defined
-    _N_COMPONENTS_DEFAULT: int = 10 # default number of components to plot
+    _N_COMPONENTS_SENTINEL = object()  # track if n_components was user-defined
+    _N_COMPONENTS_DEFAULT: int = 10  # default number of components to plot
 
     available_plots: list[str] = SSAPlotType.available_plots
     _PLOT_METHOD_MAPPING = {
@@ -154,7 +155,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
                     f"'{kind.value}' and will be ignored"
                 )
         elif ax is not None and not isinstance(ax, Axes):
-            raise ValueError(
+            raise TypeError(
                 f"Parameter 'ax' must be an instance of matplotlib.axes.Axes, "
                 f"got {type(ax)}"
             )
@@ -222,7 +223,7 @@ class PlotSSA(metaclass=abc.ABCMeta):
         'rank_by' : Literal['values', 'freq'], optional, default 'values'.
             For kind 'values' only. Whether to sort the singular values
             by decreasing values or by increasing frequencies.
-        'confidence_level' : float | None, optional, default None
+        'confidence_level' : float | None, optional, default 0.95
             For kind 'values' only and class 'MonteCarloSSA'. Defines the
             confidence level for defining the percentile interval of the
             surrogate value distribution.
@@ -435,19 +436,16 @@ class PlotSSA(metaclass=abc.ABCMeta):
         eigenvectors.
         """
         if not isinstance(scale, str):
-            raise ValueError(
+            raise TypeError(
                 f"Parameter scale must be a string, got {type(scale)}"
             )
         if scale not in ['loglog', 'plot', 'semilogx', 'semilogy']:
             raise ValueError(
                 f"Parameter scale must be one of 'loglog', 'plot', "
-                f"'semilogx', or 'semilogy', got {scale}"
+                f"'semilogx', or 'semilogy', got '{scale}'"
             )
 
         freq_original, psd_original = self.periodogram
-
-        if scale is None:
-            scale = 'loglog'
 
         unit = None
         if self._ix is not None:
@@ -554,6 +552,8 @@ class PlotSSA(metaclass=abc.ABCMeta):
                 )
 
         else:  # MonteCarloSSA
+            if confidence_level is None:
+                confidence_level: float = 0.95
             lower, upper = self.get_confidence_interval(
                 n_components,
                 confidence_level,
@@ -681,12 +681,6 @@ class PlotSSA(metaclass=abc.ABCMeta):
         else:
             cols = np.ceil(np.sqrt(n_plots)).astype(int)
             rows = np.ceil(n_plots / cols).astype(int)
-
-            # Adjust to favor more columns than rows if not a perfect square
-            if rows * cols < n_plots:
-                rows = cols
-            elif rows > cols:
-                cols = rows
 
         return rows, cols
 
