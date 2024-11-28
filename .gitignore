@@ -1,10 +1,44 @@
+# IDE configuration files
 .idea/
-R_comparison/
+
+# Temporary and Python cache directories
 notebooks/.ipynb_checkpoints/
 notebooks_tmp/
+tmp/
+__pycache__/
+ssalib/__pycache__/
+
+# Documentation and build artifacts
 doc/
 build/
 ssalib.egg-info/
-__pycache__/
-ssalib/__pycache/
-tmp/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.installed.cfg
+*.egg-info/
+*.egg
+wheels/
+
+# Python-specific exclusions
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Other cache and coverage files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Pytest-cov coverage files
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+*.cov
+
+# System temporary files
+R_comparison/
