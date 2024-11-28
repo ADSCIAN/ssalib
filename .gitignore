@@ -20,6 +20,7 @@ eggs/
 .installed.cfg
 *.egg-info/
 *.egg
+venv-min/
 wheels/
 
 # Python-specific exclusions
