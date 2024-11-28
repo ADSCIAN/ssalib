@@ -9,12 +9,12 @@ def parse_requirements(filename):
 
 setup(
     name='ssalib',
-    version='0.1.0a1',
+    version='0.1.0b1',
     packages=find_packages(),
     package_data={
         'ssalib': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
     },
-    url='https://github.com/ADSCIAN/vassal',
+    url='https://github.com/ADSCIAN/ssalib',
     license='BSD-3-Clause',
     author='Damien Delforge, Alice Alonso',
     author_email='damien.delforge@adscian.be',
@@ -36,7 +36,7 @@ setup(
     },
     python_requires='>=3.9',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python :: 3',
@@ -44,6 +44,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Scientific/Engineering',
     ],
     keywords='singular spectrum analysis, time series, decomposition',

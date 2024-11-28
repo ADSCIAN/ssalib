@@ -46,8 +46,13 @@ API along with plotting capabilities.
 
 ### Installation
 
+Use
 ```bash
-pip install git+https://github.com/ADSCIAN/vassal.git
+pip install git+https://github.com/ADSCIAN/ssalib.git
+```
+or
+```bach
+pip install vassal==0.1.0b1
 ```
 
 ### Basic Usage
