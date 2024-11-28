@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
-from statsmodels.tsa.statespace.sarimax import SARIMAXResultsWrapper
+from statsmodels.tsa.statespace.sarimax import SARIMAX, SARIMAXResultsWrapper
 
 from ssalib.error import DecompositionError
 from ssalib.montecarlo_ssa import MonteCarloSSA
@@ -25,6 +25,11 @@ def test_invalid_n_surrogates():
 
     with pytest.raises(ValueError, match="must be positive"):
         MonteCarloSSA([1, 2, 3], n_surrogates=0)
+
+
+def test_invalid_njobs():
+    with pytest.raises(TypeError, match="must be an integer"):
+        MonteCarloSSA([1, 2, 3], n_jobs='invalid')
 
 
 def test_invalid_ar_order_max():
@@ -72,6 +77,26 @@ def test_correct_initialization(mcssa_no_decomposition):
                       SARIMAXResultsWrapper)
 
 
+def test_model_fitting_with_na(timeseries50_with_na):
+    """Test model fitting with na"""
+    mcssa = MonteCarloSSA(
+        timeseries50_with_na,
+        na_strategy='fill_mean',
+        n_surrogates=1,
+        random_seed=42
+    )
+    model1 = mcssa.autoregressive_model
+    n_ar = len(model1.arparams)
+    ts_zstd = timeseries50_with_na - np.nanmean(
+        timeseries50_with_na) / np.nanstd(timeseries50_with_na)
+    model2 = SARIMAX(
+        ts_zstd,
+        order=(n_ar, 0, 0),
+        trend=None
+    ).fit(disp=False)
+    assert_array_almost_equal(model1.arparams, model2.arparams)
+
+
 def test_surrogate_generation(mcssa_no_decomposition):
     """Test that surrogates are generated correctly."""
     assert mcssa_no_decomposition.surrogates.shape == (
@@ -89,7 +114,7 @@ def test_surrogate_generation(mcssa_no_decomposition):
 # Test get_confidence_interval
 
 def test_get_confidence_interval_invalid_inputs(mcssa_decomposed):
-    """Test that get_confidence_interval raises appropriate errors for invalid inputs."""
+    """Test that get_confidence_interval raises appropriate errors"""
     with pytest.raises(TypeError, match="must be either integer or None"):
         mcssa_decomposed.get_confidence_interval(n_components=1.5)
 
@@ -99,14 +124,30 @@ def test_get_confidence_interval_invalid_inputs(mcssa_decomposed):
     with pytest.raises(TypeError, match="must be a boolean"):
         mcssa_decomposed.get_confidence_interval(two_tailed="True")
 
+    with pytest.raises(TypeError, match="must be a boolean"):
+        mcssa_decomposed.get_confidence_interval(return_lower="True")
+
     with pytest.raises(ValueError, match="must be between 0 and 1"):
         mcssa_decomposed.get_confidence_interval(confidence_level=1.5)
+
+    with pytest.raises(ValueError,
+                       match="must be between 1 and the number of components"):
+        mcssa_decomposed.get_confidence_interval(n_components=0)
+    with pytest.raises(ValueError,
+                       match="must be between 1 and the number of components"):
+        n_out_of_range = mcssa_decomposed.n_components + 1
+        mcssa_decomposed.get_confidence_interval(n_components=n_out_of_range)
 
 
 def test_get_confidence_interval_shape(mcssa_decomposed):
     """Test that get_confidence_interval returns correct shapes."""
     # Test with return_lower=True
     lower, upper = mcssa_decomposed.get_confidence_interval(n_components=5)
+    assert lower.shape == (5,)
+    assert upper.shape == (5,)
+
+    lower, upper = mcssa_decomposed.get_confidence_interval(n_components=5,
+                                                            two_tailed=False)
     assert lower.shape == (5,)
     assert upper.shape == (5,)
 

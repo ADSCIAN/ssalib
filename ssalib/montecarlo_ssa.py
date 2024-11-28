@@ -26,7 +26,7 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
     ----------
     timeseries : ArrayLike
         Timeseries data as a one-dimensional array-like sequence of
-        float, e.g, a python list,  numpy array, or pandas series.
+        float, e.g., a python list, numpy array, or pandas series.
         If timeseries is a pd.Series with a pd.DatetimeIndex, the index
         will be stored to return SSA-decomposed time series as pd.Series
         using the same index.
@@ -45,8 +45,8 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
     n_surrogates : int, default=100
         Number of surrogates to generate.
     n_jobs : int, default=-1
-        Number of jobs to run in parallel. -1 means using all processors
-        (default).
+        Number of jobs to run in parallel using joblib.Parallel. -1 means using
+        all processors (default). See joblib documentation for further details.
     ar_order_max : int, default=1
         Maximum autoregressive order to consider. Default is 1 corresponding
         to AR1 surrogates (proposed in [1]_).
@@ -80,10 +80,10 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
     Notes
     -----
-    For surrogate generation, MonteCarloSSA fit an autoregressive model,
+    For surrogate generation, MonteCarloSSA fits an autoregressive model,
     selecting automatically the optimal order in a sequence of orders from zero
     (white noise) to ar_max_order. The model is fitted using state space
-    modelling [3]_, due to its tolerance to missing data, using the statsmodels
+    modeling [3]_, due to its tolerance to missing data, using the statsmodels
     package and the SARIMAX model [4]_. The model with the lowest AIC or BIC
     is automatically selected. The fitted coefficients are passed to
     the statsmodels arma_generate_sample function to generate the surrogates.
@@ -274,21 +274,16 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
         if n_components is None:
             n_components = self.n_components
 
-        if n_components > self.n_components:
-            raise ValueError(f"Argument n_components must be smaller than "
-                             f"the number of components, got {n_components}")
-        if n_components is not None and n_components < 0:
-            raise ValueError(f"Argument n_components must be non-negative, "
-                             f"got {n_components}")
+        if n_components > self.n_components or n_components < 1:
+            raise ValueError(f"Argument n_components must be between 1 and "
+                             f"the number of components '{self.n_components}', "
+                             f"got '{n_components}'")
         if not isinstance(return_lower, bool):
             raise TypeError(f"Argument return_lower must be a boolean, "
                             f"got {type(return_lower)}")
         if confidence_level <= 0 or confidence_level >= 1:
             raise ValueError(f"Argument confidence_level must be between 0 "
                              f"and 1, got {confidence_level}")
-
-        if n_components is None:
-            n_components = self.n_components
 
         lower_percentile, upper_percentile = self._get_percentile_interval(
             confidence_level, two_tailed
@@ -370,6 +365,8 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
 
         # Stack all results at once
         lambda_surrogates = np.stack(diagonals, axis=0)
+        if n_components is None:
+            n_components = lambda_surrogates.shape[1]
 
         # Convert to singular values based on method
         if self._svd_matrix_kind in {
@@ -379,13 +376,8 @@ class MonteCarloSSA(SingularSpectrumAnalysis):
             surrogate_value_strengths = np.sqrt(
                 np.abs(lambda_surrogates) * k)
         elif self._svd_matrix_kind == SSAMatrixType.VG_COVARIANCE:
-            # Pre-compute normalization factors for VG approach
-            if n_components is not None:
-                # Use only the requested number of components
-                vg_norms = self._n - np.arange(n_components)
-            else:
-                # Use all components
-                vg_norms = self._n - np.arange(lambda_surrogates.shape[1])
+            # normalization factors for VG approach
+            vg_norms = self._n - np.arange(n_components)
             vg_norms = vg_norms[np.newaxis, :]
             surrogate_value_strengths = np.sqrt(
                 np.abs(lambda_surrogates) * vg_norms
