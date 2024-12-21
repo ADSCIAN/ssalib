@@ -34,10 +34,10 @@ bibliography: paper.bib
 
 Singular Spectrum Analysis (SSA) is a method developed in the 1980s for
 analyzing and decomposing time-series data 
-[@broomhead_extracting_1986, @vautard_singular_1989]. Using time-delayed 
+[@broomhead_extracting_1986; @vautard_singular_1989]. Using time-delayed 
 trajectories or covariance matrices, SSA takes advantage of temporal 
 dependencies to identify structured components such as trends and cycles 
-[@elsner_singular_1996, golyandina_singular_2020]. Time-series decomposition 
+[@elsner_singular_1996; @golyandina_singular_2020]. Time-series decomposition 
 has various applications, including denoising, filtering, signal modeling, 
 interpolation (or gap filling), and extrapolation (or forecasting).
 
@@ -47,13 +47,13 @@ advantage of SSA is the ability to extract nonlinear trends and phase- or
 amplitude-modulated cycles. The Singular Spectrum Analysis Library (`ssalib`) 
 is a Python package that simplifies SSA implementation and visualization 
 through an easy-to-use API, operating time series as `numpy.Array` 
-[@harris_array_2020] or `pandas.Series` [mckinney_data_2010] objects, and 
+[@harris_array_2020] or `pandas.Series` [@mckinney_data_2010] objects, and 
 requiring minimal knowledge of linear algebra. It uses decomposition algorithms 
 from robust Python scientific packages like `numpy` [@harris_array_2020], 
 `scipy` [@virtanen_scipy_2020], and `sklearn` [@pedregosa_scikit-learn_2011]. 
 SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for 
 identifying significant components by comparison to randomly generated data 
-(i.e., surogate data), relying on `statsmodels` [@seabold_statsmodels_2010] for 
+(i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010] for 
 fitting autoregressive processes and generate the surrogate data.
 
 The basic Singular Spectrum Analysis (SSA) algorithm for univariate time series,
@@ -67,9 +67,9 @@ evolved beyond being a single method and has transformed into a modular
 analytical framework, consisting of interchangeable steps that can be combined
 into multiple variants. Consequently, both experts and newcomers would benefit
 from SSA software that allows for configurable analyses, saving time in the
-process. Moreover, SSA empirical nature relies heavily on data visualization.
-This makes the implementation of software essential for providing users with
-established visualization features.
+process. Moreover, SSA empirical nature relies heavily on data and SSA outcomes 
+visualization. This makes the implementation of software essential for 
+providing users with established visualization features.
 
 @golyandina_singular_2020 mention some existing software dedicated to
 SSA, such as the GUI-based SSA-MTM toolkit, Caterpillar-SSA software, and the 
@@ -98,11 +98,11 @@ Toeplitz structure, meaning that its diagonal values are identical.
 Regarding Step 2, `ssalib` relies on Singular Value Decomposition (SVD) with
 methods implemented in the NumPy, SciPy, and Scikit-learn libraries. In
 particular, scikit-learn features a randomized SVD algorithm for efficient
-decomposition [halko_finding_2010]. Step 3 involves visualizations created with
+decomposition [@halko_finding_2010]. Step 3 involves visualizations created with
 Matplotlib, drawing inspiration from the R rSSA package 
 [@golyandina_singular_2018].
 
-Significance testing is based on the work of Allen and Smith (1996). In 
+Significance testing is based on the work of @allen_monte_1996. In 
 `ssalib`, an autoregressive (AR) process of a specified maximum order is fitted 
 relying on a state space modeling framework [@durbin_time_2012] and utilizing 
 the `statsmodels` library [@seabold_statsmodels_2010]. The AR random surrogates 
