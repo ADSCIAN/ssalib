@@ -16,6 +16,7 @@ authors:
     affiliation: "1, 3"
   - name: Olivier de Viron
     orcid: 0000-0003-3112-9686
+    affiliation: "4"
   - name: Niko Speybroeck
     orcid: 0000-0003-3322-3502
     affiliation: "2"
@@ -29,6 +30,10 @@ affiliations:
   - name: University of Louvain (UCLouvain), Earth & Life Institute, Louvain-la-Neuve, Belgium.
     index: 3
     ror: 02495e989
+  - name: Littoral, Environnement et Sociétés, La Rochelle Université and CNRS (UMR7266), La Rochelle, France
+    index: 4
+    ror: 00r8amq78
+      
 date: 21 December 2024
 bibliography: paper.bib
 ---
