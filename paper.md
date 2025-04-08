@@ -113,3 +113,4 @@ available primarily as unmaintained and untested projects. To address this gap,
 `ssalib` was developed as a fully dedicated SSA Python package
 that is both tested and suitable for teaching and research purposes.
 
+# References
