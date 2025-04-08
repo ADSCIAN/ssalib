@@ -8,18 +8,22 @@
 
 
 > [!NOTE]
-> This repository contains a beta version of SSALib. User may use the issue
-> tracker to provide feedback. 
+> This repository contains a beta version of SSALib. User may use: 
+> - Pull Request reviews on the `release/beta-v1` branch
+> - Issue tracker for general feedback
 
 ## Overview
 
-The Singular Spectrum Analysis Library (SSALib) is a Python package
-implementing the Singular Spectrum Analysis (SSA) univariate timeseries
-decomposition technique. It relies on different Singular Value Decomposition
-(SVD) methods from existing Python scientific packages and provides a convenient
-API along with plotting capabilities.
+The Singular Spectrum Analysis Library (SSALib) is a Python package for 
+univariate (i.e., single) time series decomposition, designed for 
+multidisciplinary applications like natural sciences, economics, epidemiology, 
+and more. SSALib can be used to explore and extract trends, periodic patterns, 
+and noise from time series.
+
 
 ![decomposed_signal.png](images/decomposed_signal.png)
+_Figure: Example of Decomposition and Pattern Extraction (standardized) using 
+the Sea Surface Temperature Time Series_
 
 ## Key Features
 
@@ -61,14 +65,14 @@ pip install vassal==0.1.0b1
 from ssalib import SingularSpectrumAnalysis
 from ssalib.datasets import load_sst
 
-# Load example data
+# Load example data: Mean Sea Surface Temperature
 ts = load_sst()
 
 # Create SSA instance and decompose
 ssa = SingularSpectrumAnalysis(ts)
 ssa.decompose()
 
-# Visualize results
+# Visualize results, in this case, singular values
 fig, ax = ssa.plot(kind='values')
 
 # Reconstruct groups
@@ -167,7 +171,7 @@ using:
 
 ```bibtex
 @software{ssalib2024,
-  author    = {Delforge, Damien and Alonso, Alice},
+  author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Speybroek, Niko},
   title     = {{SSALib}: A {Python} Package for {Singular Spectrum Analysis}},
   year      = {2024},
   version   = {0.1.0b1},

@@ -1,5 +1,9 @@
+"""Comparison with the Rssa package
+
+This test is run locally with a configured R environment.
+"""
 import os
-os.environ['R_HOME'] = 'C:/Program Files/R/R-4.4.0'
+os.environ['R_HOME'] = 'C:/Program Files/R/R-4.4.0' # Edit if necessary
 import pytest
 import rpy2.robjects as ro
 import rpy2.robjects.packages as rpackages
