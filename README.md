@@ -170,10 +170,10 @@ Awaiting the release of the first non-beta version, you can refer to SSALib
 using:
 
 ```bibtex
-@software{ssalib2024,
-  author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Speybroek, Niko},
-  title     = {{SSALib}: A {Python} Package for {Singular Spectrum Analysis}},
-  year      = {2024},
+@software{ssalib2025,
+  author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Vanclooster, Marnik AND Speybroek, Niko},
+  title     = {{SSALib}: A {Python} Library for {Singular Spectrum Analysis}},
+  year      = {2025},
   version   = {0.1.0b1},
   url       = {https://github.com/ADSCIAN/ssalib}
 }
