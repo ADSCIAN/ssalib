@@ -1,5 +1,5 @@
 ---
-title: 'SSALib: a Python Library for Timeseries Decomposition using Singular Spectrum Analysis'
+title: 'SSALib: a Python Library for Time Series Decomposition using Singular Spectrum Analysis'
 tags:
   - Python
   - time series
@@ -44,10 +44,10 @@ bibliography: paper.bib
 # Summary
 
 Singular Spectrum Analysis (SSA) is a method developed in the 1980s for
-analyzing and decomposing time-series data. Using time-delayed
+analyzing and decomposing time series. Using time-delayed
 trajectories or covariance matrices, SSA takes advantage of temporal
 dependencies to identify structured components such as trends and cycles. 
-Time-series decomposition has various applications, including denoising, 
+Time series decomposition has various applications, including denoising, 
 filtering, signal modeling, interpolation (or gap filling), and extrapolation 
 (or forecasting). The Singular Spectrum Analysis Library (SSALib) is a Python 
 package that simplifies SSA implementation and visualization for the 
@@ -64,14 +64,14 @@ Analysis (SSA) algorithm for univariate time series, as described by
 @broomhead_extracting_1986 and @vautard_singular_1989, applies to univariate 
 time series. It consists of three major steps [@golyandina_singular_2020].The 
 first step is the Time-Delayed Matrix Construction. The second step consists in 
-a Singular Value Decomposition of the trajectory matrix.The BK-SSA approach is 
+a Singular Value Decomposition of the trajectory matrix. The BK-SSA approach is 
 based on a time-delayed trajectory matrix with dimensions depending on the 
 window parameter and the number of unit lags. This matrix consists of lagged 
-copies of time series segments of a specified length, forming a Hankel matrix 
-where the anti-diagonal values are equal. In contrast, the VG-SSA approach 
+copies of time series segments of a specified length, forming a Hankel matrix,
+i.e., with equal anti-diagonal values. In contrast, the VG-SSA approach 
 captures time dependencies by constructing a special type of covariance matrix 
 that has a Toeplitz structure, meaning that its diagonal values are identical. 
-The eigenvalues of the SVD depends on the variance captured by each mode, 
+The eigenvalues of the SVD depend on the variance captured by each mode, 
 either composed of one (trend) or two (trend or pseudo-periodic cycles) 
 eigenvectors (or components). In the third step, the eigenvectors are 
 then grouped, for pseudo-periodic components, and their contributions to the 
@@ -85,7 +85,7 @@ the methods, paving the way for future developments, such as multi-time
 series method (M-SSA), SSA-based interpolation and extrapolation, or causality 
 tests.
 
-# Technical Details
+# Implementation Details
 
 The Singular Spectrum Analysis Library (SSALib) Python package interfaces 
 time series as `numpy.Array` [@harris_array_2020] or `pandas.Series` 
@@ -93,17 +93,17 @@ time series as `numpy.Array` [@harris_array_2020] or `pandas.Series`
 acknowledged Python scientific packages like `numpy` [@harris_array_2020], 
 `scipy` [@virtanen_scipy_2020], and `sklearn` [@pedregosa_scikit-learn_2011]. 
 In particular, scikit-learn features a randomized SVD algorithm for efficient 
-decomposition [@halko_finding_2010]. Visualization features relies on 
+decomposition [@halko_finding_2010]. Visualization features rely on 
 Matplotlib, drawing inspiration from the R rSSA package 
 [@golyandina_singular_2018].
 
 SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for 
 identifying significant components by comparison to randomly generated data 
 (i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010] 
-for fitting autoregressive (AR) processes and generate the surrogate data. In
+for fitting autoregressive (AR) processes and generate the surrogate data. In 
 SSALib, an autoregressive (AR) process of a specified maximum order is fitted
-relying on a state space modeling framework [@durbin_time_2012], which enable 
-fitting AR processes from time series that contains missing values.
+relying on a state space modeling framework [@durbin_time_2012], which enables  
+fitting AR processes from time series that contains masked or missing values.
 
 # Related Works
 
