@@ -19,7 +19,7 @@ setup(
         'numpy',
         'matplotlib',
         'pandas',
-        'scipy',
+        'scipy<1.16.0',
         'scikit-learn',
         'statsmodels'
     ],

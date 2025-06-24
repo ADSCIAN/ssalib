@@ -14,7 +14,7 @@ multidisciplinary applications like natural sciences, economics, epidemiology,
 and more. SSALib can be used to explore and extract trends, periodic patterns,
 and noise from time series.
 
-![decomposed_signal.png](images/decomposed_signal.png)
+![decomposed_signal.png](https://raw.githubusercontent.com/ADSCIAN/ssalib/main/images/decomposed_signal.png)
 _Figure: Example of Decomposition and Pattern Extraction (standardized) using
 the Sea Surface Temperature Time Series_
 
@@ -35,7 +35,7 @@ the Sea Surface Temperature Time Series_
 
 - Python ≥ 3.9
 - NumPy
-- SciPy
+- SciPy < 1.16.0
 - Pandas
 - Matplotlib
 - Scikit-learn
