@@ -8,21 +8,20 @@
 
 
 > [!NOTE]
-> This repository contains a beta version of SSALib. User may use: 
+> This repository contains a beta version of SSALib. User may use:
 > - Pull Request reviews on the `release/beta-v1` branch
 > - Issue tracker for general feedback
 
 ## Overview
 
-The Singular Spectrum Analysis Library (SSALib) is a Python package for 
-univariate (i.e., single) time series decomposition, designed for 
-multidisciplinary applications like natural sciences, economics, epidemiology, 
-and more. SSALib can be used to explore and extract trends, periodic patterns, 
+The Singular Spectrum Analysis Library (SSALib) is a Python package for
+univariate (i.e., single) time series decomposition, designed for
+multidisciplinary applications like natural sciences, economics, epidemiology,
+and more. SSALib can be used to explore and extract trends, periodic patterns,
 and noise from time series.
 
-
 ![decomposed_signal.png](images/decomposed_signal.png)
-_Figure: Example of Decomposition and Pattern Extraction (standardized) using 
+_Figure: Example of Decomposition and Pattern Extraction (standardized) using
 the Sea Surface Temperature Time Series_
 
 ## Key Features
@@ -51,10 +50,13 @@ the Sea Surface Temperature Time Series_
 ### Installation
 
 Use
+
 ```bash
 pip install git+https://github.com/ADSCIAN/ssalib.git
 ```
+
 or
+
 ```bach
 pip install vassal==0.1.0b1
 ```
@@ -88,7 +90,6 @@ df_ssa = ssa.to_frame()
 |-----------|--------------------|----------------------------------------------------------------------------|--------------------------|-------------------------------------------------------------------|-----------|
 | Mortality | `load_mortality()` | Daily counts of deaths in Belgium.                                         | 1992-01-01 to 2023-12-31 | [STATBEL](https://statbel.fgov.be/en/open-data/number-deaths-day) | Open Data |  
 | SST       | `load_sst()`       | Monthly mean sea surface temperature globally between 60° North and South. | 1982-01-01 to 2023-12-31 | [Climate Reanalyzer](https://climatereanalyzer.org/)              | CC-BY     |
-| Sunspots  | `load_sunspots()`  | Monthly mean total sunspot number.                                         | 1749-01 to 2023-12       | [Royal Observatory of Belgium](https://www.sidc.be/SILSO/)        | CC-BY-NC  |
 
 ### Available SVD Methods
 
@@ -140,7 +141,9 @@ For more in-depth examples and tutorials, check the Jupyter notebooks in the
 - [Tutorial 5: Comparison of SSALib and Rssa](/notebooks/05_Rssa_comparison.ipynb)
 
 In more advanced tutorials, we cover:
-- [A1: Testing Significance with `MonteCarloSSA`](/notebooks/A1_montecarlo_ssa.ipynb)
+
+- [A1: Testing Significance with
+  `MonteCarloSSA`](/notebooks/A1_montecarlo_ssa.ipynb)
 
 ## References
 
@@ -158,15 +161,14 @@ The main references used to develop SSALib were:
 4. Vautard, R., & Ghil, M. (1989). Singular spectrum analysis in nonlinear
    dynamics, with applications to paleoclimatic time series. Physica D:
    Nonlinear Phenomena, 35(3). https://doi.org/10.1016/0167-2789(89)90077-8
-5. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular 
-   oscillations in the Presence of Colored Noise. Journal of Climate, 9(12), 
-   3373–3404. 
+5. Allen, M. R., & Smith, L. A. (1996). Monte Carlo SSA: Detecting irregular
+   oscillations in the Presence of Colored Noise. Journal of Climate, 9(12),
+   3373–3404.
    [https://doi.org/10.1175/1520-0442(1996)009<3373:MCSDIO>2.0.CO;2](https://doi.org/10.1175/1520-0442(1996)009<3373:MCSDIO>2.0.CO;2)
-
 
 ## How to Cite
 
-Awaiting the release of the first non-beta version, you can refer to SSALib 
+Awaiting the release of the first non-beta version, you can refer to SSALib
 using:
 
 ```bibtex

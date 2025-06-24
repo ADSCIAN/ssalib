@@ -3,12 +3,11 @@ import pytest
 
 from ssalib.datasets import (
     load_mortality,
-    load_sst,
-    load_sunspots
+    load_sst
 )
 from ssalib.datasets.data_loader import validate_series
 
-load_funcs = [load_mortality, load_sst, load_sunspots]
+load_funcs = [load_mortality, load_sst]
 
 def test_validate_series_empty():
     """Test conversion of an empty DataFrame."""

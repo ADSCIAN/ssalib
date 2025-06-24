@@ -132,68 +132,6 @@ def load_sst() -> pd.Series:
     return validate_series(sst)
 
 
-def load_sunspots() -> pd.Series:
-    """
-    Load sunspots datasets return it as a pandas Series.
-
-    The sunspots datasets contains monthly mean total sunspot number from
-    1749-01 to 2023-12. The dataset is provided by the Royal Observatory of
-    Belgium under a CC-BY-NC license.
-
-    Returns
-    -------
-    sunspots : pd.Series
-        A pandas Series containing monthly mean total sunspot number from
-        1749-01 to 2023-12, indexed using a pandas.DatetimeIndex.
-
-    References
-    ----------
-    WDC-SILSO (2024), Royal Observatory of Belgium, Brussels. Available at:
-    https://www.sidc.be/SILSO/ (Accessed: May 2024).
-
-    Examples
-    --------
-
-    >>> from ssalib.datasets import load_sunspots
-    >>> sunspots = load_sunspots()
-    >>> sunspots.head()
-    Date
-    1749-01-01     96.7
-    1749-02-01    104.3
-    1749-03-01    116.7
-    1749-04-01     92.8
-    1749-05-01    141.7
-    Name: Value, dtype: float64
-
-    >>> sunspots.describe()
-    count    3300.000000
-    mean       81.773788
-    std        67.666430
-    min         0.000000
-    25%        24.100000
-    50%        67.550000
-    75%       122.400000
-    max       398.200000
-    Name: Value, dtype: float64
-
-    """
-    file_path = Path(__file__).parent / 'SN_m_tot_V2.0.csv'
-    sunspots_data = pd.read_csv(
-        file_path,
-        header=None,
-        usecols=[0, 1, 3],
-        names=['Year', 'Month', 'DecimalYear', 'Value', 'Flag1', 'Flag2',
-               'Flag3'],
-        sep=';'
-    )
-    sunspots_data['Date'] = pd.to_datetime(
-        sunspots_data['Year'].astype(str) + '-' + sunspots_data['Month'].astype(
-            str))
-    sunspots_data.set_index('Date', inplace=True)
-    sunspots_data.drop(['Year', 'Month'], axis=1, inplace=True)
-    return validate_series(sunspots_data)
-
-
 if __name__ == '__main__':
     from doctest import testmod
 
