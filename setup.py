@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='ssalib',
-    version='0.1.0b1',
+    version='0.1.1b1',
     packages=find_packages(),
     package_data={
         'ssalib': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
     },
     url='https://github.com/ADSCIAN/ssalib',
     license='BSD-3-Clause',
-    author='Damien Delforge, Alice Alonso',
+    author='Damien Delforge, Alice Alonso, Oliver de Viron, Marnik Vanclooster, Niko Speybroeck',
     author_email='damien.delforge@adscian.be',
     description='Singular Spectrum Analysis Library (SSALib)',
     long_description=open('README.md').read(),

@@ -6,12 +6,6 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Development Status](https://img.shields.io/badge/Development%20Status-beta-blue)](https://pypi.org/project/ssalib/)
 
-
-> [!NOTE]
-> This repository contains a beta version of SSALib. User may use:
-> - Pull Request reviews on the `release/beta-v1` branch
-> - Issue tracker for general feedback
-
 ## Overview
 
 The Singular Spectrum Analysis Library (SSALib) is a Python package for
@@ -58,7 +52,7 @@ pip install git+https://github.com/ADSCIAN/ssalib.git
 or
 
 ```bach
-pip install vassal==0.1.0b1
+pip install vassal==0.1.1b1
 ```
 
 ### Basic Usage
@@ -176,7 +170,7 @@ using:
   author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Vanclooster, Marnik AND Speybroeck, Niko},
   title     = {{SSALib}: A {Python} Library for {Singular Spectrum Analysis}},
   year      = {2025},
-  version   = {0.1.0b1},
+  version   = {0.1.1b1},
   url       = {https://github.com/ADSCIAN/ssalib}
 }
 ```
