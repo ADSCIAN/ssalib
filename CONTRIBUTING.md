@@ -155,6 +155,6 @@ flake8
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-same license as the main project (see [LICENSE.md](LICENSE.md)).
+same license as the main project (see [LICENSE](LICENSE)).
 
 Thank you for contributing to **SSALib**!
