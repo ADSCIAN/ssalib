@@ -13,7 +13,7 @@ authors:
     affiliation: "1, 2"
   - name: Alice Alonso
     orcid: 0000-0001-8869-6759
-    affiliation: "1, 3"
+    affiliation: "2, 3"
   - name: Olivier de Viron
     orcid: 0000-0003-3112-9686
     affiliation: "4"
@@ -22,22 +22,22 @@ authors:
     affiliation: "3"
   - name: Niko Speybroeck
     orcid: 0000-0003-3322-3502
-    affiliation: "2"
+    affiliation: "1"
 
 affiliations:
-  - name: AD Scientific Consulting & Environmental Systems Analytics (ADSCIAN), Brussels, Belgium.
+  - name: Université catholique de Louvain, Institute of Health & Society, Brussels, Belgium.
     index: 1
-  - name: University of Louvain (UCLouvain), Institute of Health & Society, Brussels, Belgium.
-    index: 2
     ror: 02495e989
-  - name: University of Louvain (UCLouvain), Earth & Life Institute, Louvain-la-Neuve, Belgium.
+  - name: AD Scientific Consulting & Environmental Systems Analytics (ADSCIAN), Brussels, Belgium.
+    index: 2
+  - name: Université catholique de Louvain, Earth & Life Institute, Louvain-la-Neuve, Belgium.
     index: 3
     ror: 02495e989
   - name: Littoral, Environnement et Sociétés, La Rochelle Université and CNRS (UMR7266), La Rochelle, France
     index: 4
     ror: 00r8amq78
       
-date: 23 April 2025
+date: 25 June 2025
 bibliography: paper.bib
 ---
 
