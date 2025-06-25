@@ -170,7 +170,7 @@ using:
   author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Vanclooster, Marnik AND Speybroeck, Niko},
   title     = {{SSALib}: A {Python} Library for {Singular Spectrum Analysis}},
   year      = {2025},
-  version   = {0.1.1b1},
+  version   = {0.1.2b1},
   url       = {https://github.com/ADSCIAN/ssalib}
 }
 ```
