@@ -52,7 +52,7 @@ pip install git+https://github.com/ADSCIAN/ssalib.git
 or
 
 ```bach
-pip install vassal==0.1.1b1
+pip install ssalib
 ```
 
 ### Basic Usage
