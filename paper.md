@@ -77,12 +77,13 @@ two (trend or pseudo-periodic cycles) eigenvectors (or components). In the
 third step, the eigenvectors are then grouped, for pseudo-periodic components,
 and their contributions to the time series are reconstructed via projection.
 
-For testing the significance of the retrieved mode, @allen_monte_1996 
-proposed a Monte-Carlo approach, by comparison of the variance captured by the 
-eigenvector on the original time series with that captured in many random 
-autoregressive surrogate time series. Many extensions have been proposed for 
-the methods, paving the way for future developments, such as multi-time 
-series method (M-SSA), SSA-based interpolation and extrapolation, or causality 
+For testing the significance of the retrieved mode, @allen_monte_1996
+proposed a Monte-Carlo approach, by comparison of the variance captured by the
+eigenvector on the original time series with that captured in many random
+autoregressive surrogate time series [@schreiber_surrogate_2000]. Many
+extensions have been proposed for
+the methods, paving the way for future developments, such as multi-time
+series method (M-SSA), SSA-based interpolation and extrapolation, or causality
 tests.
 
 As a nonparametric method, SSA provides a low-assumption framework for
@@ -110,7 +111,7 @@ identifying significant components by comparison to randomly generated data
 (i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010]
 for fitting autoregressive (AR) processes and generate the surrogate data. In
 SSALib, an autoregressive (AR) process of a specified maximum order is fitted
-relying on a state space modeling framework [@durbin_time_2012], which enables  
+relying on a state space modeling framework [@durbin_time_2012], which enables
 fitting AR processes from time series that contains masked or missing values.
 
 # Related Work
