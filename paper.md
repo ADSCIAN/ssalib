@@ -36,7 +36,7 @@ affiliations:
   - name: Littoral, Environnement et Sociétés, La Rochelle Université and CNRS (UMR7266), La Rochelle, France
     index: 4
     ror: 00r8amq78
-      
+
 date: 25 June 2025
 bibliography: paper.bib
 ---
@@ -46,36 +46,36 @@ bibliography: paper.bib
 Singular Spectrum Analysis (SSA) is a method developed in the 1980s for
 analyzing and decomposing time series. Using time-delayed
 trajectories or covariance matrices, SSA takes advantage of temporal
-dependencies to identify structured components such as trends and cycles. 
-Time series decomposition has various applications, including denoising, 
-filtering, signal modeling, interpolation (or gap filling), and extrapolation 
-(or forecasting). The Singular Spectrum Analysis Library (SSALib) is a Python 
-package that simplifies SSA implementation and visualization for the 
-decomposition of univariate time series, featuring component significance 
-testing.  
+dependencies to identify structured components such as trends and cycles.
+Time series decomposition has various applications, including denoising,
+filtering, signal modeling, interpolation (or gap filling), and extrapolation
+(or forecasting). The Singular Spectrum Analysis Library (SSALib) is a Python
+package that simplifies SSA implementation and visualization for the
+decomposition of univariate time series, featuring component significance
+testing.
 
 # Statement of Needs
 
 SSA is a non-parametric method that allows for the analysis and decomposition of
 time series into nonlinear trends and pseudo-periodic signatures, without prior
-knowledge of their underlying dynamics 
-[@elsner_singular_1996; @golyandina_singular_2020]. The basic Singular Spectrum 
-Analysis (SSA) algorithm for univariate time series, as described by 
-@broomhead_extracting_1986 and @vautard_singular_1989, applies to univariate 
-time series. It consists of three major steps [@golyandina_singular_2020].The 
-first step is the Time-Delayed Matrix Construction. The second step consists in 
-a Singular Value Decomposition of the trajectory matrix. The BK-SSA approach is 
-based on a time-delayed trajectory matrix with dimensions depending on the 
-window parameter and the number of unit lags. This matrix consists of lagged 
-copies of time series segments of a specified length, forming a Hankel matrix,
-i.e., with equal anti-diagonal values. In contrast, the VG-SSA approach 
-captures time dependencies by constructing a special type of covariance matrix 
-that has a Toeplitz structure, meaning that its diagonal values are identical. 
-The eigenvalues of the SVD depend on the variance captured by each mode, 
-either composed of one (trend) or two (trend or pseudo-periodic cycles) 
-eigenvectors (or components). In the third step, the eigenvectors are 
-then grouped, for pseudo-periodic components, and their contributions to the 
-time series are reconstructed by projection. 
+knowledge of their underlying dynamics
+[@elsner_singular_1996; @golyandina_singular_2020]. The basic Singular Spectrum
+Analysis (SSA) algorithm for univariate time series, as described by
+@broomhead_extracting_1986 (BK-SSA) or @vautard_singular_1989 (VG-SSA), applies
+to univariate time series. It consists of three major steps
+[@golyandina_singular_2020]. The first step is the time-delayed matrix
+construction. The second step consists in a Singular Value Decomposition of the
+trajectory matrix. The BK-SSA approach is based on a time-delayed trajectory
+matrix with dimensions depending on the window parameter and the number of unit
+lags. This matrix consists of lagged copies of time series segments of a
+specified length, forming a Hankel matrix, i.e., with equal anti-diagonal
+values. In contrast, the VG-SSA approach captures time dependencies by
+constructing a special type of covariance matrix that has a Toeplitz structure,
+meaning that its diagonal values are identical. The eigenvalues of the SVD
+depend on the variance captured by each mode, either composed of one (trend) or
+two (trend or pseudo-periodic cycles) eigenvectors (or components). In the
+third step, the eigenvectors are then grouped, for pseudo-periodic components,
+and their contributions to the time series are reconstructed via projection.
 
 For testing the significance of the retrieved mode, @allen_monte_1996 
 proposed a Monte-Carlo approach, by comparison of the variance captured by the 
@@ -85,27 +85,35 @@ the methods, paving the way for future developments, such as multi-time
 series method (M-SSA), SSA-based interpolation and extrapolation, or causality 
 tests.
 
+As a nonparametric method, SSA provides a low-assumption framework for
+exploring, discovering, and decomposing linear or nonlinear patterns in time
+series data, in contrast to methods that require strong _a priori_ hypotheses
+about signal components. The SSALib package includes Monte Carlo SSA to support
+statistical inference and reduce subjective user guidance. Its Python
+Application Programming Interface is designed to streamline the SSA workflow and
+facilitate time series exploration, including built-in plotting features.
+
 # Implementation Details
 
-The Singular Spectrum Analysis Library (SSALib) Python package interfaces 
-time series as `numpy.Array` [@harris_array_2020] or `pandas.Series` 
-[@mckinney_data_2010] objects. It uses decomposition algorithms from 
-acknowledged Python scientific packages like `numpy` [@harris_array_2020], 
-`scipy` [@virtanen_scipy_2020], and `sklearn` [@pedregosa_scikit-learn_2011]. 
-In particular, scikit-learn features a randomized SVD algorithm for efficient 
-decomposition [@halko_finding_2010]. Visualization features rely on 
-Matplotlib, drawing inspiration from the R rSSA package 
+The Singular Spectrum Analysis Library (SSALib) Python package interfaces
+time series as `numpy.Array` [@harris_array_2020] or `pandas.Series`
+[@mckinney_data_2010] objects. It uses decomposition algorithms from
+acknowledged Python scientific packages like `numpy` [@harris_array_2020],
+`scipy` [@virtanen_scipy_2020], and `sklearn` [@pedregosa_scikit-learn_2011].
+In particular, scikit-learn features a randomized SVD algorithm for efficient
+decomposition [@halko_finding_2010]. Visualization features rely on
+Matplotlib, drawing inspiration from the R rSSA package
 [@golyandina_singular_2018].
 
-SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for 
-identifying significant components by comparison to randomly generated data 
-(i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010] 
-for fitting autoregressive (AR) processes and generate the surrogate data. In 
+SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for
+identifying significant components by comparison to randomly generated data
+(i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010]
+for fitting autoregressive (AR) processes and generate the surrogate data. In
 SSALib, an autoregressive (AR) process of a specified maximum order is fitted
 relying on a state space modeling framework [@durbin_time_2012], which enables  
 fitting AR processes from time series that contains masked or missing values.
 
-# Related Works
+# Related Work
 
 @golyandina_singular_2020 mention some existing software dedicated to
 SSA, such as the GUI-based SSA-MTM toolkit, Caterpillar-SSA software, and the
@@ -113,7 +121,7 @@ rSSA R package. In Python, most SSA implementations are basic and part of large
 software packages, including `pyts` [@faouzi_pyts_2020], `pyleoclim`
 [@khider_pyleoclim_2023], or `pyactigraphy` [@hammad_pyactigraphy_2024], or are
 available primarily as unmaintained and untested projects. To address this gap,
-SSALib was developed as a fully dedicated SSA Python package
-that is both tested and suitable for teaching and research purposes.
+SSALib was developed as a fully dedicated and tested SSA Python package
+that is suitable for both teaching and research purposes.
 
 # References
