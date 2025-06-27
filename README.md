@@ -5,6 +5,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-97%25-green)](https://github.com/ADSCIAN/ssalib/actions)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Development Status](https://img.shields.io/badge/Development%20Status-beta-blue)](https://pypi.org/project/ssalib/)
+[![status](https://joss.theoj.org/papers/c91368235cd1e27f08824ba32f041873/status.svg)](https://joss.theoj.org/papers/c91368235cd1e27f08824ba32f041873)
 
 ## Overview
 
