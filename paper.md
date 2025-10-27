@@ -74,11 +74,11 @@ sciences, geophysics, neuroscience, econometrics, or epidemiology.
 
 The mathematical background of Singular Spectrum Analysis (SSA) has been
 primarily developed during the 1980–2000 period
-[@golyandina_particularities_2020, @elsner_singular_1996; @golyandina_singular_2020].
+[@golyandina_particularities_2020; @elsner_singular_1996; @golyandina_singular_2020].
 The basic Singular Spectrum Analysis (SSA) algorithm for univariate time
 series, as described by @broomhead_extracting_1986 (BK-SSA) or
 @vautard_singular_1989 (VG-SSA), applies to univariate time series. It consists
-of three major steps [hassani_singular_2007, @golyandina_singular_2020]. The
+of three major steps [@hassani_singular_2007; @golyandina_singular_2020]. The
 first step is the time-delayed matrix construction. The second step consists in
 a Singular Value Decomposition of the trajectory matrix. The BK-SSA approach is
 based on a time-delayed trajectory matrix with dimensions depending on the
