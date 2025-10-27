@@ -37,7 +37,7 @@ affiliations:
     index: 4
     ror: 00r8amq78
 
-date: 25 June 2025
+date: 27 October 2025
 bibliography: paper.bib
 ---
 
@@ -56,43 +56,50 @@ testing.
 
 # Statement of Needs
 
-SSA is a non-parametric method that allows for the analysis and decomposition of
-time series into nonlinear trends and pseudo-periodic signatures, without prior
-knowledge of their underlying dynamics
-[@elsner_singular_1996; @golyandina_singular_2020]. The basic Singular Spectrum
-Analysis (SSA) algorithm for univariate time series, as described by
-@broomhead_extracting_1986 (BK-SSA) or @vautard_singular_1989 (VG-SSA), applies
-to univariate time series. It consists of three major steps
-[@golyandina_singular_2020]. The first step is the time-delayed matrix
-construction. The second step consists in a Singular Value Decomposition of the
-trajectory matrix. The BK-SSA approach is based on a time-delayed trajectory
-matrix with dimensions depending on the window parameter and the number of unit
-lags. This matrix consists of lagged copies of time series segments of a
-specified length, forming a Hankel matrix, i.e., with equal anti-diagonal
-values. In contrast, the VG-SSA approach captures time dependencies by
-constructing a special type of covariance matrix that has a Toeplitz structure,
-meaning that its diagonal values are identical. The eigenvalues of the SVD
-depend on the variance captured by each mode, either composed of one (trend) or
-two (trend or pseudo-periodic cycles) eigenvectors (or components). In the
-third step, the eigenvectors are then grouped, for pseudo-periodic components,
-and their contributions to the time series are reconstructed via projection.
+SSA is a non-parametric method that provides a low-assumption framework for
+exploring, discovering, and decomposing linear or nonlinear or pseudo-periodic
+patterns in time series data, in contrast to methods that require strong
+_a priori_ hypotheses about signal components
+[@elsner_singular_1996; @golyandina_singular_2020].
+The SSALib package includes Monte Carlo SSA to support statistical inference and
+reduce subjective user guidance. Its Python Application Programming Interface is
+designed to streamline the SSA workflow and facilitate time series exploration,
+including built-in plotting features.
+
+SSALib is particularly relevant for researchers and practitioners working in
+domains where time series analysis is central, i.e., climate and environmental
+sciences, geophysics, neuroscience, econometrics, or epidemiology.
+
+# Mathematical Background
+
+The mathematical background of Singular Spectrum Analysis (SSA) has been
+primarily developed during the 1980–2000 period
+[@golyandina_particularities_2020, @elsner_singular_1996; @golyandina_singular_2020].
+The basic Singular Spectrum Analysis (SSA) algorithm for univariate time
+series, as described by @broomhead_extracting_1986 (BK-SSA) or
+@vautard_singular_1989 (VG-SSA), applies to univariate time series. It consists
+of three major steps [hassani_singular_2007, @golyandina_singular_2020]. The
+first step is the time-delayed matrix construction. The second step consists in
+a Singular Value Decomposition of the trajectory matrix. The BK-SSA approach is
+based on a time-delayed trajectory matrix with dimensions depending on the
+window parameter and the number of unit lags. This matrix consists of lagged
+copies of time series segments of a specified length, forming a Hankel matrix,
+i.e., with equal anti-diagonal values. In contrast, the VG-SSA approach captures
+time dependencies by constructing a special type of covariance matrix that has a
+Toeplitz structure, meaning that its diagonal values are identical. The
+eigenvalues of the SVD depend on the variance captured by each mode, either
+composed of one (trend) or two (trend or pseudo-periodic cycles) eigenvectors
+(or components). In the third step, the eigenvectors are then grouped, for
+pseudo-periodic components, and their contributions to the time series are
+reconstructed via projection.
 
 For testing the significance of the retrieved mode, @allen_monte_1996
 proposed a Monte-Carlo approach, by comparison of the variance captured by the
 eigenvector on the original time series with that captured in many random
 autoregressive surrogate time series [@schreiber_surrogate_2000]. Many
-extensions have been proposed for
-the methods, paving the way for future developments, such as multi-time
-series method (M-SSA), SSA-based interpolation and extrapolation, or causality
-tests.
-
-As a nonparametric method, SSA provides a low-assumption framework for
-exploring, discovering, and decomposing linear or nonlinear patterns in time
-series data, in contrast to methods that require strong _a priori_ hypotheses
-about signal components. The SSALib package includes Monte Carlo SSA to support
-statistical inference and reduce subjective user guidance. Its Python
-Application Programming Interface is designed to streamline the SSA workflow and
-facilitate time series exploration, including built-in plotting features.
+extensions have been proposed for the methods, paving the way for future
+developments, such as multi-time series method (M-SSA), SSA-based interpolation
+and extrapolation, or causality tests [@golyandina_singular_2020].
 
 # Implementation Details
 
