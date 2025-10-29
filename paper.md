@@ -27,15 +27,15 @@ authors:
 affiliations:
   - name: Université catholique de Louvain, Institute of Health & Society, Brussels, Belgium.
     index: 1
-    ror: 02495e989
+    ror: "02495e989"
   - name: AD Scientific Consulting & Environmental Systems Analytics (ADSCIAN), Brussels, Belgium.
     index: 2
   - name: Université catholique de Louvain, Earth & Life Institute, Louvain-la-Neuve, Belgium.
     index: 3
-    ror: 02495e989
+    ror: "02495e989"
   - name: Littoral, Environnement et Sociétés, La Rochelle Université and CNRS (UMR7266), La Rochelle, France
     index: 4
-    ror: 00r8amq78
+    ror: "00r8amq78"
 
 date: 25 June 2025
 bibliography: paper.bib
