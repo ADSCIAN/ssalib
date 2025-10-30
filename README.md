@@ -41,6 +41,7 @@ the Sea Surface Temperature Time Series_
 - Matplotlib
 - Scikit-learn
 - Statsmodels
+- Joblib
 
 ### Installation
 
