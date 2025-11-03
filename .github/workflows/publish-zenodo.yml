@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Publish to Zenodo
-        uses: zenodraft/actions@v1
+        uses: zenodraft/action@v1
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
         with:
