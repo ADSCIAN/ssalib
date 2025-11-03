@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ssalib',
-    version='0.1.2b1',
+    version='0.1.3',
     packages=find_packages(),
     package_data={
         'ssalib': ['datasets/*.txt', 'datasets/*.csv', 'datasets/*.json']
