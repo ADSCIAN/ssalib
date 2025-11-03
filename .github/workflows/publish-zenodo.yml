@@ -4,11 +4,9 @@ on:
   release:
     types: [published]
 
-    # Filter out prereleases
-    if: "!github.event.release.prerelease"
-
 jobs:
   publish:
+    if: ${{ !github.event.release.prerelease }}  # Skip pre-releases
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,4 +22,4 @@ jobs:
           collection: ${{ secrets.ZENODO_COLLECTION_ID }} # Optional
           draft: false
           publish: true
-          sandbox: false # Set to true for testing
+          sandbox: true # Set to true for testing
