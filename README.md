@@ -164,15 +164,14 @@ The main references used to develop SSALib were:
 
 ## How to Cite
 
-Awaiting the release of the first non-beta version, you can refer to SSALib
-using:
+You can refer to SSALib using:
 
 ```bibtex
 @software{ssalib2025,
   author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Vanclooster, Marnik AND Speybroeck, Niko},
   title     = {{SSALib}: A {Python} Library for {Singular Spectrum Analysis}},
   year      = {2025},
-  version   = {0.1.2b1},
+  version   = {0.1.2},
   url       = {https://github.com/ADSCIAN/ssalib}
 }
 ```
