@@ -97,7 +97,7 @@ reconstructed via projection.
 For testing the significance of the retrieved mode, @allen_monte_1996
 proposed a Monte Carlo approach, by comparison of the variance captured by the
 eigenvectors on the original time series with that captured in many random
-autoregressive surrogate time series [@schreiber_surrogate_2000]. Many
+autoregressive (AR) surrogate time series [@schreiber_surrogate_2000]. Many
 extensions have been proposed for the methods, paving the way for future
 developments, such as multivariate (or multichannel) SSA (M-SSA), 
 SSA-based interpolation and extrapolation, 
@@ -118,7 +118,7 @@ decomposition [@halko_finding_2010]. Visualization features rely on
 SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for
 identifying significant components by comparison to randomly generated data
 (i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010]
-for fitting autoregressive (AR) processes and generate the surrogate data. In
+for fitting AR processes and generate the surrogate data. In
 SSALib, an AR process of a specified maximum order is fitted
 relying on a state space modeling framework [@durbin_time_2012], which enables
 fitting AR processes from time series that contain masked or missing values.
