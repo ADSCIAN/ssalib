@@ -57,7 +57,7 @@ testing.
 # Statement of Needs
 
 SSA is a non-parametric method that provides a low-assumption framework for
-exploring, discovering, and decomposing linear or nonlinear or pseudo-periodic
+exploring, discovering, and decomposing linear, nonlinear, or pseudo-periodic
 patterns in time series data, in contrast to methods that require strong
 _a priori_ hypotheses about signal components
 [@elsner_singular_1996; @golyandina_singular_2020].
@@ -75,8 +75,8 @@ sciences, geophysics, neuroscience, econometrics, or epidemiology.
 The mathematical background of Singular Spectrum Analysis (SSA) has been
 primarily developed during the 1980–2000 period
 [@golyandina_particularities_2020; @elsner_singular_1996; @golyandina_singular_2020].
-The basic Singular Spectrum Analysis (SSA) algorithm for univariate time
-series, as described by @broomhead_extracting_1986 (BK-SSA) or
+The basic Singular Spectrum Analysis (SSA) algorithm, as described by
+@broomhead_extracting_1986 (BK-SSA) or
 @vautard_singular_1989 (VG-SSA), applies to univariate time series. It consists
 of three major steps [@hassani_singular_2007; @golyandina_singular_2020]. The
 first step is the time-delayed matrix construction. The second step consists in
@@ -87,19 +87,21 @@ copies of time series segments of a specified length, forming a Hankel matrix,
 i.e., with equal anti-diagonal values. In contrast, the VG-SSA approach captures
 time dependencies by constructing a special type of covariance matrix that has a
 Toeplitz structure, meaning that its diagonal values are identical. The
-eigenvalues of the SVD depend on the variance captured by each mode, either
-composed of one (trend) or two (trend or pseudo-periodic cycles) eigenvectors
-(or components). In the third step, the eigenvectors are then grouped, for
+eigenvalues of the SVD depend on the variance captured by each component, either
+composed of one eigenvector, for monotonic trends, or two eigenvectors,
+representing nonlinear trends, pseudo-periodic cycles or oscillations. 
+In the third step, the eigenvectors are then grouped, for
 pseudo-periodic components, and their contributions to the time series are
 reconstructed via projection.
 
 For testing the significance of the retrieved mode, @allen_monte_1996
-proposed a Monte-Carlo approach, by comparison of the variance captured by the
-eigenvector on the original time series with that captured in many random
+proposed a Monte Carlo approach, by comparison of the variance captured by the
+eigenvectors on the original time series with that captured in many random
 autoregressive surrogate time series [@schreiber_surrogate_2000]. Many
 extensions have been proposed for the methods, paving the way for future
-developments, such as multi-time series method (M-SSA), SSA-based interpolation
-and extrapolation, or causality tests [@golyandina_singular_2020].
+developments, such as multivariate (or multichannel) SSA (M-SSA), 
+SSA-based interpolation and extrapolation, 
+or causality tests [@golyandina_singular_2020].
 
 # Implementation Details
 
@@ -108,18 +110,18 @@ time series as `numpy.Array` [@harris_array_2020] or `pandas.Series`
 [@mckinney_data_2010] objects. It uses decomposition algorithms from
 acknowledged Python scientific packages like `numpy` [@harris_array_2020],
 `scipy` [@virtanen_scipy_2020], and `sklearn` [@pedregosa_scikit-learn_2011].
-In particular, scikit-learn features a randomized SVD algorithm for efficient
+In particular, `sklearn` features a randomized SVD algorithm for efficient
 decomposition [@halko_finding_2010]. Visualization features rely on
-Matplotlib, drawing inspiration from the R rSSA package
+`matplotlib`, drawing inspiration from the R `rSSA` package
 [@golyandina_singular_2018].
 
 SSALib also incorporates the Monte Carlo SSA approach [@allen_monte_1996] for
 identifying significant components by comparison to randomly generated data
 (i.e., surrogate data), relying on `statsmodels` [@seabold_statsmodels_2010]
 for fitting autoregressive (AR) processes and generate the surrogate data. In
-SSALib, an autoregressive (AR) process of a specified maximum order is fitted
+SSALib, an AR process of a specified maximum order is fitted
 relying on a state space modeling framework [@durbin_time_2012], which enables
-fitting AR processes from time series that contains masked or missing values.
+fitting AR processes from time series that contain masked or missing values.
 
 # Related Work
 
@@ -129,7 +131,7 @@ rSSA R package. In Python, most SSA implementations are basic and part of large
 software packages, including `pyts` [@faouzi_pyts_2020], `pyleoclim`
 [@khider_pyleoclim_2023], or `pyactigraphy` [@hammad_pyactigraphy_2024], or are
 available primarily as unmaintained and untested projects. To address this gap,
-SSALib was developed as a fully dedicated and tested SSA Python package
+SSALib was developed as a fully dedicated and tested Python package for SSA
 that is suitable for both teaching and research purposes.
 
 # References
