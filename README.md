@@ -166,13 +166,23 @@ The main references used to develop SSALib were:
 
 You can refer to SSALib using:
 
+> Delforge et al., (2025). SSALib: a Python Library for Time Series Decomposition using Singular Spectrum Analysis. Journal of Open Source Software, 10(115), 8600, https://doi.org/10.21105/joss.08600
+
 ```bibtex
-@software{ssalib2025,
-  author    = {Delforge, Damien AND Alonso, Alice AND de Viron, Olivier AND Vanclooster, Marnik AND Speybroeck, Niko},
-  title     = {{SSALib}: A {Python} Library for {Singular Spectrum Analysis}},
+@article{Delforge2025,
+  author    = {Damien Delforge and Alice Alonso and Olivier de Viron
+               and Marnik Vanclooster and Niko Speybroeck},
+  title     = {SSALib: a Python Library for Time Series Decomposition
+               using Singular Spectrum Analysis},
+  journal   = {Journal of Open Source Software},
   year      = {2025},
-  version   = {0.1.3},
-  url       = {https://github.com/ADSCIAN/ssalib}
+  volume    = {10},
+  number    = {115},
+  pages     = {8600},
+  publisher = {The Open Journal},
+  doi       = {10.21105/joss.08600},
+  url       = {https://doi.org/10.21105/joss.08600}
 }
+
 ```
 
