@@ -84,7 +84,7 @@ a Singular Value Decomposition of the trajectory matrix. The BK-SSA approach is
 based on a time-delayed trajectory matrix with dimensions depending on the
 window parameter and the number of unit lags. This matrix consists of lagged
 copies of time series segments of a specified length, forming a Hankel matrix,
-i.e., with equal anti-diagonal values. In contrast, the VG-SSA approach captures
+i.e., a matrix with equal anti-diagonal values. In contrast, the VG-SSA approach captures
 time dependencies by constructing a special type of covariance matrix that has a
 Toeplitz structure, meaning that its diagonal values are identical. The
 eigenvalues of the SVD depend on the variance captured by each component, either
@@ -101,7 +101,7 @@ autoregressive (AR) surrogate time series [@schreiber_surrogate_2000]. Many
 extensions have been proposed for the methods, paving the way for future
 developments, such as multivariate (or multichannel) SSA (M-SSA), 
 SSA-based interpolation and extrapolation, 
-or causality tests [@golyandina_singular_2020].
+and causality tests [@golyandina_singular_2020].
 
 # Implementation Details
 
